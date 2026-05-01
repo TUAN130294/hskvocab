@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉语 · Học từ vựng tiếng Trung HSK 1-2-3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script src="tweaks.js" defer></script>
+    <template id="__bundler_thumbnail" data-bg-color="#0e1411">
+        <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+            <rect width="1200" height="800" fill="#0e1411"/>
+            <text x="600" y="500" font-family="serif" font-size="420" font-weight="500" fill="#e8b339" text-anchor="middle">汉</text>
+            <text x="600" y="640" font-family="sans-serif" font-size="44" font-weight="600" fill="#c4bca8" text-anchor="middle" letter-spacing="8">HSK · 1 · 2 · 3</text>
+        </svg>
+    </template>
+</head>
+
+<body>
+
+    <div id="app">
+        <header>
+            <div class="brand">
+                <div class="seal">學</div>
+                <div class="title-block">
+                    <h1>汉语词汇</h1>
+                    <div class="sub">Hán ngữ từ vựng · HSK 1 · 2 · 3</div>
+                </div>
+            </div>
+            <div class="header-stats" id="headerStats"></div>
+            <div class="streak-badge" id="streakBadge" title="Chuỗi ngày học liên tục"><span class="streak-fire">🔥</span><span class="streak-num" id="streakNum">0</span><span>ngày</span></div>
+        </header>
+
+        <div class="tip-banner" id="tipBanner">
+            <span class="icon">訣</span>
+            <div>
+                <b>Mẹo cho người Việt:</b> Chú ý <b>âm Hán Việt</b> (chữ vàng) — 60-80% từ tiếng Việt vay mượn từ Hán!
+                Ví dụ 学校 = HỌC HIỆU, 重要 = TRỌNG YẾU. Bấm 🔊 để nghe phát âm chuẩn.
+            </div>
+            <button class="close-tip" id="closeTip" aria-label="Đóng">×</button>
+        </div>
+
+        <div class="level-bar" id="levelBar">
+            <button class="level-btn active" data-lv="all">Tất cả <span class="lv-count" id="cntAll">0</span></button>
+            <button class="level-btn" data-lv="1"><span class="lv-num">1</span> HSK 1 <span class="lv-count"
+                    id="cnt1">0</span></button>
+            <button class="level-btn" data-lv="2"><span class="lv-num">2</span> HSK 2 <span class="lv-count"
+                    id="cnt2">0</span></button>
+            <button class="level-btn" data-lv="3"><span class="lv-num">3</span> HSK 3 <span class="lv-count"
+                    id="cnt3">0</span></button>
+        </div>
+
+        <div class="alpha-range-bar" id="alphaRangeBar">
+            <span class="ar-label">Pinyin</span>
+            <div class="ar-letters" id="arLetters"></div>
+            <div class="ar-divider"></div>
+            <span class="ar-info" id="arInfo">599 từ</span>
+            <button class="ar-clear" id="arClear" disabled>✕ Xóa</button>
+        </div>
+
+        <nav class="tabs" id="tabs">
+            <button class="tab active" data-view="flash"><span class="ch">卡</span> Thẻ học</button>
+            <button class="tab" data-view="quiz"><span class="ch">测</span> Trắc nghiệm</button>
+            <button class="tab" data-view="match"><span class="ch">配</span> Ghép cặp</button>
+            <button class="tab" data-view="browse"><span class="ch">典</span> Từ điển</button>
+            <button class="tab" data-view="write"><span class="ch">笔</span> Viết chữ</button>
+            <button class="tab" data-view="similar"><span class="ch">辨</span> Phân biệt</button>
+            <button class="tab" data-view="stats"><span class="ch">计</span> Tiến độ</button>
+        </nav>
+
+        <section class="view active" id="view-flash">
+            <div class="flash-wrap">
+                <div class="flash-progress">
+                    <div class="meta">
+                        <span><span class="ch" id="flashIdx">1</span> / <span id="flashTotal">0</span></span>
+                        <span id="flashStatus">Mới bắt đầu</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="fill" id="flashFill" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="card-stage">
+                    <div class="card" id="card">
+                        <div class="face front">
+                            <div class="face-status" id="cardStatusFront"><span class="dot"></span><span>Mới</span>
+                            </div>
+                            <button class="speak-btn" id="speakFront" aria-label="Nghe phát âm">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                </svg>
+                            </button>
+                            <div class="face-corner" id="frontCorner">汉字 · hanzi</div>
+                            <div class="hanzi-big" id="cardHanzi">—</div>
+                            <div class="tap-hint">Chạm để lật thẻ</div>
+                            <div class="lv-tag" id="cardLv">HSK —</div>
+                        </div>
+                        <div class="face back">
+                            <div class="face-status" id="cardStatusBack"><span class="dot"></span><span>Mới</span></div>
+                            <button class="speak-btn" id="speakBack" aria-label="Nghe phát âm">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                </svg>
+                            </button>
+                            <div class="face-corner" id="backCorner">意思 · ý nghĩa</div>
+                            <div class="back-content" id="backContent">
+                                <div class="back-hanzi" id="backHanzi">—</div>
+                                <div class="pinyin" id="backPinyin">—</div>
+                                <div class="han-viet" id="backHV">—</div>
+                                <div class="meaning" id="backMeaning">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-actions" id="cardActions">
+                    <button class="action-btn hard" data-rate="hard">Khó · Học lại<span class="kbd">1</span></button>
+                    <button class="action-btn ok" data-rate="ok">Bình thường<span class="kbd">2</span></button>
+                    <button class="action-btn easy" data-rate="easy">Dễ · Thuộc rồi<span class="kbd">3</span></button>
+                </div>
+
+                <div class="nav-row">
+                    <button class="nav-btn" id="prevCard">← Trước</button>
+                    <button class="nav-btn" id="shuffleCards">⚄ Trộn ngẫu nhiên</button>
+                    <button class="nav-btn" id="nextCard">Sau →</button>
+                </div>
+
+                <div class="flash-toggles" id="flashToggles">
+                    <button class="flash-toggle" id="toggleReverse">↔ Đảo ngược</button>
+                    <button class="flash-toggle" id="toggleAutoPlay">🔊 Tự động phát</button>
+                </div>
+                <div class="swipe-hint">
+                    <span><span class="sh-icon">👈</span> Khó</span>
+                    <span><span class="sh-icon">☝️</span> Lật</span>
+                    <span><span class="sh-icon">👆</span> Bình thường</span>
+                    <span><span class="sh-icon">👉</span> Dễ</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="view" id="view-quiz">
+            <div class="quiz-wrap">
+                <div class="quiz-header">
+                    <div class="qnum">Câu <strong id="qNum">1</strong> / <span id="qTotal">10</span></div>
+                    <div class="qscore">
+                        <span>Đúng: <span class="right" id="qRight">0</span></span>
+                        <span>Sai: <span class="wrong" id="qWrong">0</span></span>
+                    </div>
+                </div>
+                <div class="quiz-card" id="quizCard">
+                    <div class="quiz-question-label" id="qLabel">Chọn nghĩa đúng</div>
+                    <div class="quiz-question" id="quizQuestion"></div>
+                    <div class="quiz-options" id="quizOptions"></div>
+                    <div class="quiz-feedback" id="quizFeedback"></div>
+                    <button class="quiz-next" id="quizNext" disabled>Câu tiếp →</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="view" id="view-match">
+            <div class="match-wrap">
+                <div class="match-header">
+                    <div class="match-info">Đã ghép: <strong id="matchScore">0</strong> / <span id="matchTotal">8</span>
+                        · Sai: <strong id="matchMistakes">0</strong></div>
+                    <button class="btn-secondary" id="newMatch">⟲ Ván mới</button>
+                </div>
+                <div class="match-grid">
+                    <div class="match-col" id="matchLeft"></div>
+                    <div class="match-col" id="matchRight"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="view" id="view-browse">
+            <div class="browse-controls">
+                <input type="text" class="search-input" id="searchInput"
+                    placeholder="Tìm Hán tự, pinyin, Hán Việt hoặc tiếng Việt...">
+                <div class="filter-pills" id="statusPills">
+                    <button class="filter-pill active" data-filter="all">Tất cả</button>
+                    <button class="filter-pill" data-filter="new">Mới</button>
+                    <button class="filter-pill" data-filter="learning">Đang học</button>
+                    <button class="filter-pill" data-filter="mastered">Đã thuộc</button>
+                </div>
+            </div>
+            <div class="alphabet-bar" id="alphabetBar"></div>
+            <div class="word-grid" id="wordGrid"></div>
+        </section>
+
+        <section class="view" id="view-stats">
+            <div class="stats-grid" id="statsGrid"></div>
+            <div class="progress-section">
+                <h3>Tiến độ theo cấp độ</h3>
+                <div id="levelProgressList"></div>
+                <div class="legend">
+                    <div class="legend-item mastered"><span class="sw"></span> Đã thuộc</div>
+                    <div class="legend-item learning"><span class="sw"></span> Đang học</div>
+                    <div class="legend-item new"><span class="sw"></span> Chưa học</div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <h3>Quản lý dữ liệu</h3>
+                <p style="color:var(--ink-soft);font-size:14px;margin-bottom:16px;line-height:1.5">
+                    Tiến độ học tập của bạn được lưu tự động và sẽ hiện lại khi mở app lần sau.
+                </p>
+                <div class="reset-section">
+                    <button class="danger-btn" id="resetProgress">↺ Đặt lại tất cả tiến độ</button>
+                </div>
+            </div>
+        </section>
+        <section class="view" id="view-write">
+            <div class="write-wrap">
+                <div class="write-mode-pills">
+                    <button class="write-mode-pill active" data-wmode="stroke">Xem nét bút</button>
+                    <button class="write-mode-pill" data-wmode="practice">Tập viết</button>
+                </div>
+                <div class="write-char-display">
+                    <div class="write-info">
+                        <div class="wi-hanzi" id="writeHanzi">学</div>
+                        <div class="wi-pinyin" id="writePinyin">xué</div>
+                        <div class="wi-meaning" id="writeMeaning">học</div>
+                    </div>
+                    <div class="writer-container" id="writerTarget"></div>
+                </div>
+                <div class="write-result" id="writeResult"></div>
+                <div class="write-controls">
+                    <button class="write-btn" id="writePrev">← Trước</button>
+                    <button class="write-btn" id="writeAnimate">▶ Chạy nét</button>
+                    <button class="write-btn" id="writeNext">Sau →</button>
+                </div>
+                <div class="write-nav">
+                    <span class="wn-label" id="writeCounter">1 / 0</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="view" id="view-similar">
+            <div class="similar-wrap">
+                <div class="browse-controls">
+                    <input type="text" class="search-input" id="similarSearch" placeholder="Tìm chữ dễ nhầm...">
+                </div>
+                <div class="similar-grid" id="similarGrid"></div>
+            </div>
+        </section>
+
+    </div><!-- #app -->
+
+    <!-- Bottom navigation (mobile only) -->
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="bn-tab active" data-view="flash">
+            <span class="bn-icon">卡</span>
+            <span class="bn-lbl">Thẻ học</span>
+        </button>
+        <button class="bn-tab" data-view="quiz">
+            <span class="bn-icon">测</span>
+            <span class="bn-lbl">Quiz</span>
+        </button>
+        <button class="bn-tab" data-view="match">
+            <span class="bn-icon">配</span>
+            <span class="bn-lbl">Ghép cặp</span>
+        </button>
+        <button class="bn-tab" data-view="browse">
+            <span class="bn-icon">典</span>
+            <span class="bn-lbl">Từ điển</span>
+        </button>
+        <button class="bn-tab" data-view="write">
+            <span class="bn-icon">笔</span>
+            <span class="bn-lbl">Viết</span>
+        </button>
+        <button class="bn-tab" data-view="similar">
+            <span class="bn-icon">辨</span>
+            <span class="bn-lbl">Phân biệt</span>
+        </button>
+        <button class="bn-tab" data-view="stats">
+            <span class="bn-icon">计</span>
+            <span class="bn-lbl">Tiến độ</span>
+        </button>
+    </nav>
+
+    <div class="toast" id="toast"></div>
+    <script>
+        // ============ VOCABULARY DATA ============
+        const VOCAB = [
+            // HSK 1
+            { h: "爱", p: "ài", hv: "ÁI", v: "yêu", lv: 1 }, { h: "八", p: "bā", hv: "BÁT", v: "tám (số 8)", lv: 1 }, { h: "爸爸", p: "bàba", hv: "BA BA", v: "bố", lv: 1 }, { h: "杯子", p: "bēizi", hv: "BÔI TỬ", v: "cái cốc", lv: 1 }, { h: "北京", p: "Běijīng", hv: "BẮC KINH", v: "Bắc Kinh", lv: 1 }, { h: "本", p: "běn", hv: "BẢN", v: "cuốn (lượng từ)", lv: 1 }, { h: "不", p: "bù", hv: "BẤT", v: "không", lv: 1 }, { h: "不客气", p: "bú kèqi", hv: "BẤT KHÁCH KHÍ", v: "không có chi", lv: 1 }, { h: "菜", p: "cài", hv: "THÁI", v: "rau, món ăn", lv: 1 }, { h: "茶", p: "chá", hv: "TRÀ", v: "trà", lv: 1 },
+            { h: "吃", p: "chī", hv: "NGẬT", v: "ăn", lv: 1 }, { h: "出租车", p: "chūzūchē", hv: "XUẤT TÔ XA", v: "xe taxi", lv: 1 }, { h: "打电话", p: "dǎ diànhuà", hv: "ĐẢ ĐIỆN THOẠI", v: "gọi điện thoại", lv: 1 }, { h: "大", p: "dà", hv: "ĐẠI", v: "to, lớn", lv: 1 }, { h: "的", p: "de", hv: "ĐÍCH", v: "(trợ từ sở hữu)", lv: 1 }, { h: "点", p: "diǎn", hv: "ĐIỂM", v: "giờ; điểm", lv: 1 }, { h: "电脑", p: "diànnǎo", hv: "ĐIỆN NÃO", v: "máy tính", lv: 1 }, { h: "电视", p: "diànshì", hv: "ĐIỆN THỊ", v: "tivi", lv: 1 }, { h: "电影", p: "diànyǐng", hv: "ĐIỆN ẢNH", v: "phim", lv: 1 }, { h: "东西", p: "dōngxi", hv: "ĐÔNG TÂY", v: "đồ vật", lv: 1 },
+            { h: "都", p: "dōu", hv: "ĐÔ", v: "đều", lv: 1 }, { h: "读", p: "dú", hv: "ĐỘC", v: "đọc", lv: 1 }, { h: "对不起", p: "duìbuqǐ", hv: "ĐỐI BẤT KHỞI", v: "xin lỗi", lv: 1 }, { h: "多", p: "duō", hv: "ĐA", v: "nhiều", lv: 1 }, { h: "多少", p: "duōshao", hv: "ĐA THIỂU", v: "bao nhiêu", lv: 1 }, { h: "儿子", p: "érzi", hv: "NHI TỬ", v: "con trai", lv: 1 }, { h: "二", p: "èr", hv: "NHỊ", v: "hai (số 2)", lv: 1 }, { h: "饭店", p: "fàndiàn", hv: "PHẠN ĐIẾM", v: "nhà hàng", lv: 1 }, { h: "飞机", p: "fēijī", hv: "PHI CƠ", v: "máy bay", lv: 1 }, { h: "分钟", p: "fēnzhōng", hv: "PHÂN CHUNG", v: "phút", lv: 1 },
+            { h: "高兴", p: "gāoxìng", hv: "CAO HƯNG", v: "vui mừng", lv: 1 }, { h: "个", p: "gè", hv: "CÁ", v: "cái (lượng từ)", lv: 1 }, { h: "工作", p: "gōngzuò", hv: "CÔNG TÁC", v: "công việc", lv: 1 }, { h: "狗", p: "gǒu", hv: "CẨU", v: "con chó", lv: 1 }, { h: "汉语", p: "Hànyǔ", hv: "HÁN NGỮ", v: "tiếng Trung", lv: 1 }, { h: "好", p: "hǎo", hv: "HẢO", v: "tốt, hay", lv: 1 }, { h: "号", p: "hào", hv: "HIỆU", v: "số, ngày", lv: 1 }, { h: "喝", p: "hē", hv: "HẠT", v: "uống", lv: 1 }, { h: "和", p: "hé", hv: "HÒA", v: "và, với", lv: 1 }, { h: "很", p: "hěn", hv: "HẨN", v: "rất", lv: 1 },
+            { h: "后面", p: "hòumiàn", hv: "HẬU DIỆN", v: "phía sau", lv: 1 }, { h: "回", p: "huí", hv: "HỒI", v: "quay về", lv: 1 }, { h: "会", p: "huì", hv: "HỘI", v: "biết, sẽ, có thể", lv: 1 }, { h: "几", p: "jǐ", hv: "KỶ", v: "mấy", lv: 1 }, { h: "家", p: "jiā", hv: "GIA", v: "nhà, gia đình", lv: 1 }, { h: "叫", p: "jiào", hv: "KHIẾU", v: "gọi, tên là", lv: 1 }, { h: "今天", p: "jīntiān", hv: "KIM THIÊN", v: "hôm nay", lv: 1 }, { h: "九", p: "jiǔ", hv: "CỬU", v: "chín (số 9)", lv: 1 }, { h: "开", p: "kāi", hv: "KHAI", v: "mở", lv: 1 }, { h: "看", p: "kàn", hv: "KHÁN", v: "nhìn, xem", lv: 1 },
+            { h: "看见", p: "kànjiàn", hv: "KHÁN KIẾN", v: "nhìn thấy", lv: 1 }, { h: "块", p: "kuài", hv: "KHỐI", v: "đồng (tiền)", lv: 1 }, { h: "来", p: "lái", hv: "LAI", v: "đến", lv: 1 }, { h: "老师", p: "lǎoshī", hv: "LÃO SƯ", v: "giáo viên", lv: 1 }, { h: "了", p: "le", hv: "LIỄU", v: "(trợ từ hoàn thành)", lv: 1 }, { h: "冷", p: "lěng", hv: "LÃNH", v: "lạnh", lv: 1 }, { h: "里", p: "lǐ", hv: "LÝ", v: "trong", lv: 1 }, { h: "六", p: "liù", hv: "LỤC", v: "sáu (số 6)", lv: 1 }, { h: "妈妈", p: "māma", hv: "MA MA", v: "mẹ", lv: 1 }, { h: "吗", p: "ma", hv: "MA", v: "(trợ từ nghi vấn)", lv: 1 },
+            { h: "买", p: "mǎi", hv: "MÃI", v: "mua", lv: 1 }, { h: "猫", p: "māo", hv: "MIÊU", v: "con mèo", lv: 1 }, { h: "没关系", p: "méi guānxi", hv: "MỘT QUAN HỆ", v: "không sao", lv: 1 }, { h: "没有", p: "méiyǒu", hv: "MỘT HỮU", v: "không có", lv: 1 }, { h: "米饭", p: "mǐfàn", hv: "MỄ PHẠN", v: "cơm", lv: 1 }, { h: "明天", p: "míngtiān", hv: "MINH THIÊN", v: "ngày mai", lv: 1 }, { h: "名字", p: "míngzi", hv: "DANH TỰ", v: "tên", lv: 1 }, { h: "哪", p: "nǎ", hv: "NA", v: "nào", lv: 1 }, { h: "哪儿", p: "nǎr", hv: "NA NHI", v: "ở đâu", lv: 1 }, { h: "那", p: "nà", hv: "NA", v: "đó, kia", lv: 1 },
+            { h: "呢", p: "ne", hv: "NI", v: "(trợ từ nghi vấn)", lv: 1 }, { h: "能", p: "néng", hv: "NĂNG", v: "có thể", lv: 1 }, { h: "你", p: "nǐ", hv: "NHĨ", v: "bạn, anh, em", lv: 1 }, { h: "年", p: "nián", hv: "NIÊN", v: "năm", lv: 1 }, { h: "女儿", p: "nǚ'ér", hv: "NỮ NHI", v: "con gái", lv: 1 }, { h: "朋友", p: "péngyou", hv: "BẰNG HỮU", v: "bạn bè", lv: 1 }, { h: "漂亮", p: "piàoliang", hv: "PHIÊU LƯỢNG", v: "xinh đẹp", lv: 1 }, { h: "苹果", p: "píngguǒ", hv: "BÌNH QUẢ", v: "quả táo", lv: 1 }, { h: "七", p: "qī", hv: "THẤT", v: "bảy (số 7)", lv: 1 }, { h: "钱", p: "qián", hv: "TIỀN", v: "tiền", lv: 1 },
+            { h: "前面", p: "qiánmiàn", hv: "TIỀN DIỆN", v: "phía trước", lv: 1 }, { h: "请", p: "qǐng", hv: "THỈNH", v: "mời, xin", lv: 1 }, { h: "去", p: "qù", hv: "KHỨ", v: "đi", lv: 1 }, { h: "热", p: "rè", hv: "NHIỆT", v: "nóng", lv: 1 }, { h: "人", p: "rén", hv: "NHÂN", v: "người", lv: 1 }, { h: "认识", p: "rènshi", hv: "NHẬN THỨC", v: "quen biết", lv: 1 }, { h: "三", p: "sān", hv: "TAM", v: "ba (số 3)", lv: 1 }, { h: "商店", p: "shāngdiàn", hv: "THƯƠNG ĐIẾM", v: "cửa hàng", lv: 1 }, { h: "上", p: "shàng", hv: "THƯỢNG", v: "trên", lv: 1 }, { h: "上午", p: "shàngwǔ", hv: "THƯỢNG NGỌ", v: "buổi sáng", lv: 1 },
+            { h: "少", p: "shǎo", hv: "THIỂU", v: "ít", lv: 1 }, { h: "谁", p: "shéi", hv: "THÙY", v: "ai", lv: 1 }, { h: "什么", p: "shénme", hv: "THẬM MẠ", v: "cái gì", lv: 1 }, { h: "十", p: "shí", hv: "THẬP", v: "mười", lv: 1 }, { h: "时候", p: "shíhou", hv: "THỜI HẦU", v: "lúc, khi", lv: 1 }, { h: "是", p: "shì", hv: "THỊ", v: "là", lv: 1 }, { h: "书", p: "shū", hv: "THƯ", v: "sách", lv: 1 }, { h: "水", p: "shuǐ", hv: "THỦY", v: "nước", lv: 1 }, { h: "水果", p: "shuǐguǒ", hv: "THỦY QUẢ", v: "hoa quả", lv: 1 }, { h: "睡觉", p: "shuìjiào", hv: "THỤY GIÁC", v: "ngủ", lv: 1 },
+            { h: "说", p: "shuō", hv: "THUYẾT", v: "nói", lv: 1 }, { h: "四", p: "sì", hv: "TỨ", v: "bốn (số 4)", lv: 1 }, { h: "岁", p: "suì", hv: "TUẾ", v: "tuổi", lv: 1 }, { h: "他", p: "tā", hv: "THA", v: "anh ấy, ông ấy", lv: 1 }, { h: "她", p: "tā", hv: "THA", v: "cô ấy, bà ấy", lv: 1 }, { h: "太", p: "tài", hv: "THÁI", v: "quá, lắm", lv: 1 }, { h: "天气", p: "tiānqì", hv: "THIÊN KHÍ", v: "thời tiết", lv: 1 }, { h: "听", p: "tīng", hv: "THÍNH", v: "nghe", lv: 1 }, { h: "同学", p: "tóngxué", hv: "ĐỒNG HỌC", v: "bạn học", lv: 1 }, { h: "喂", p: "wèi", hv: "VỊ", v: "alo (gọi điện)", lv: 1 },
+            { h: "我", p: "wǒ", hv: "NGÃ", v: "tôi, mình", lv: 1 }, { h: "我们", p: "wǒmen", hv: "NGÃ MÔN", v: "chúng tôi", lv: 1 }, { h: "五", p: "wǔ", hv: "NGŨ", v: "năm (số 5)", lv: 1 }, { h: "喜欢", p: "xǐhuan", hv: "HỶ HOAN", v: "thích", lv: 1 }, { h: "下", p: "xià", hv: "HẠ", v: "dưới", lv: 1 }, { h: "下午", p: "xiàwǔ", hv: "HẠ NGỌ", v: "buổi chiều", lv: 1 }, { h: "下雨", p: "xiàyǔ", hv: "HẠ VŨ", v: "trời mưa", lv: 1 }, { h: "先生", p: "xiānsheng", hv: "TIÊN SINH", v: "ông, ngài", lv: 1 }, { h: "现在", p: "xiànzài", hv: "HIỆN TẠI", v: "hiện tại", lv: 1 }, { h: "想", p: "xiǎng", hv: "TƯỞNG", v: "muốn, nghĩ", lv: 1 },
+            { h: "小", p: "xiǎo", hv: "TIỂU", v: "nhỏ, bé", lv: 1 }, { h: "小姐", p: "xiǎojiě", hv: "TIỂU THƯ", v: "cô (xưng hô)", lv: 1 }, { h: "些", p: "xiē", hv: "TA", v: "vài, một số", lv: 1 }, { h: "写", p: "xiě", hv: "TẢ", v: "viết", lv: 1 }, { h: "谢谢", p: "xièxie", hv: "TẠ TẠ", v: "cảm ơn", lv: 1 }, { h: "星期", p: "xīngqī", hv: "TINH KỲ", v: "tuần", lv: 1 }, { h: "学生", p: "xuésheng", hv: "HỌC SINH", v: "học sinh", lv: 1 }, { h: "学习", p: "xuéxí", hv: "HỌC TẬP", v: "học tập", lv: 1 }, { h: "学校", p: "xuéxiào", hv: "HỌC HIỆU", v: "trường học", lv: 1 }, { h: "一", p: "yī", hv: "NHẤT", v: "một (số 1)", lv: 1 },
+            { h: "一点儿", p: "yìdiǎnr", hv: "NHẤT ĐIỂM NHI", v: "một chút", lv: 1 }, { h: "衣服", p: "yīfu", hv: "Y PHỤC", v: "quần áo", lv: 1 }, { h: "医生", p: "yīshēng", hv: "Y SINH", v: "bác sĩ", lv: 1 }, { h: "医院", p: "yīyuàn", hv: "Y VIỆN", v: "bệnh viện", lv: 1 }, { h: "椅子", p: "yǐzi", hv: "Ỷ TỬ", v: "cái ghế", lv: 1 }, { h: "有", p: "yǒu", hv: "HỮU", v: "có", lv: 1 }, { h: "月", p: "yuè", hv: "NGUYỆT", v: "tháng, mặt trăng", lv: 1 }, { h: "在", p: "zài", hv: "TẠI", v: "tại, đang, ở", lv: 1 }, { h: "再见", p: "zàijiàn", hv: "TÁI KIẾN", v: "tạm biệt", lv: 1 }, { h: "怎么", p: "zěnme", hv: "TÁ MA", v: "như thế nào", lv: 1 },
+            { h: "怎么样", p: "zěnmeyàng", hv: "TÁ MA DẠNG", v: "thế nào, ra sao", lv: 1 }, { h: "这", p: "zhè", hv: "GIÁ", v: "này, đây", lv: 1 }, { h: "中国", p: "Zhōngguó", hv: "TRUNG QUỐC", v: "Trung Quốc", lv: 1 }, { h: "中午", p: "zhōngwǔ", hv: "TRUNG NGỌ", v: "buổi trưa", lv: 1 }, { h: "住", p: "zhù", hv: "TRỤ", v: "ở, sống", lv: 1 }, { h: "桌子", p: "zhuōzi", hv: "TRÁC TỬ", v: "cái bàn", lv: 1 }, { h: "字", p: "zì", hv: "TỰ", v: "chữ", lv: 1 }, { h: "昨天", p: "zuótiān", hv: "TẠC THIÊN", v: "hôm qua", lv: 1 }, { h: "做", p: "zuò", hv: "TÁC", v: "làm", lv: 1 }, { h: "坐", p: "zuò", hv: "TỌA", v: "ngồi", lv: 1 },
+
+            // HSK 2
+            { h: "吧", p: "ba", hv: "BA", v: "(trợ từ ngữ khí)", lv: 2 }, { h: "白", p: "bái", hv: "BẠCH", v: "trắng", lv: 2 }, { h: "百", p: "bǎi", hv: "BÁCH", v: "trăm", lv: 2 }, { h: "帮助", p: "bāngzhù", hv: "BANG TRỢ", v: "giúp đỡ", lv: 2 }, { h: "报纸", p: "bàozhǐ", hv: "BÁO CHỈ", v: "báo (giấy)", lv: 2 }, { h: "比", p: "bǐ", hv: "TỈ", v: "so với, so sánh", lv: 2 }, { h: "别", p: "bié", hv: "BIỆT", v: "đừng; khác", lv: 2 }, { h: "宾馆", p: "bīnguǎn", hv: "TÂN QUÁN", v: "khách sạn", lv: 2 }, { h: "长", p: "cháng", hv: "TRƯỜNG", v: "dài", lv: 2 }, { h: "唱歌", p: "chànggē", hv: "XƯỚNG CA", v: "hát", lv: 2 },
+            { h: "出", p: "chū", hv: "XUẤT", v: "ra (ngoài)", lv: 2 }, { h: "穿", p: "chuān", hv: "XUYÊN", v: "mặc, xỏ", lv: 2 }, { h: "次", p: "cì", hv: "THỨ", v: "lần, thứ", lv: 2 }, { h: "从", p: "cóng", hv: "TÒNG", v: "từ (nơi/lúc)", lv: 2 }, { h: "错", p: "cuò", hv: "THÁC", v: "sai, lỗi", lv: 2 }, { h: "打篮球", p: "dǎ lánqiú", hv: "ĐẢ LAM CẦU", v: "chơi bóng rổ", lv: 2 }, { h: "大家", p: "dàjiā", hv: "ĐẠI GIA", v: "mọi người", lv: 2 }, { h: "但是", p: "dànshì", hv: "ĐẢN THỊ", v: "nhưng", lv: 2 }, { h: "到", p: "dào", hv: "ĐÁO", v: "đến, tới", lv: 2 }, { h: "得", p: "de", hv: "ĐẮC", v: "(trợ từ kết quả)", lv: 2 },
+            { h: "等", p: "děng", hv: "ĐẲNG", v: "đợi, chờ", lv: 2 }, { h: "弟弟", p: "dìdi", hv: "ĐỆ ĐỆ", v: "em trai", lv: 2 }, { h: "第一", p: "dì-yī", hv: "ĐỆ NHẤT", v: "thứ nhất", lv: 2 }, { h: "懂", p: "dǒng", hv: "ĐỔNG", v: "hiểu", lv: 2 }, { h: "对", p: "duì", hv: "ĐỐI", v: "đúng, đối với", lv: 2 }, { h: "房间", p: "fángjiān", hv: "PHÒNG GIAN", v: "căn phòng", lv: 2 }, { h: "非常", p: "fēicháng", hv: "PHI THƯỜNG", v: "rất, vô cùng", lv: 2 }, { h: "服务员", p: "fúwùyuán", hv: "PHỤC VỤ VIÊN", v: "nhân viên phục vụ", lv: 2 }, { h: "高", p: "gāo", hv: "CAO", v: "cao", lv: 2 }, { h: "告诉", p: "gàosu", hv: "CÁO TỐ", v: "nói cho biết", lv: 2 },
+            { h: "哥哥", p: "gēge", hv: "CA CA", v: "anh trai", lv: 2 }, { h: "给", p: "gěi", hv: "CẤP", v: "cho, đưa cho", lv: 2 }, { h: "公共汽车", p: "gōnggòng qìchē", hv: "CÔNG CỘNG KHÍ XA", v: "xe buýt", lv: 2 }, { h: "公司", p: "gōngsī", hv: "CÔNG TY", v: "công ty", lv: 2 }, { h: "贵", p: "guì", hv: "QUÝ", v: "đắt; quý", lv: 2 }, { h: "还", p: "hái", hv: "HOÀN", v: "vẫn, còn", lv: 2 }, { h: "孩子", p: "háizi", hv: "HÀI TỬ", v: "trẻ con", lv: 2 }, { h: "好吃", p: "hǎochī", hv: "HẢO NGẬT", v: "ngon (ăn)", lv: 2 }, { h: "黑", p: "hēi", hv: "HẮC", v: "đen", lv: 2 }, { h: "红", p: "hóng", hv: "HỒNG", v: "đỏ", lv: 2 },
+            { h: "火车站", p: "huǒchēzhàn", hv: "HỎA XA TRẠM", v: "ga tàu hỏa", lv: 2 }, { h: "机场", p: "jīchǎng", hv: "CƠ TRƯỜNG", v: "sân bay", lv: 2 }, { h: "鸡蛋", p: "jīdàn", hv: "KÊ ĐẢN", v: "trứng gà", lv: 2 }, { h: "件", p: "jiàn", hv: "KIỆN", v: "chiếc (lượng từ áo)", lv: 2 }, { h: "觉得", p: "juéde", hv: "GIÁC ĐẮC", v: "cảm thấy", lv: 2 }, { h: "教室", p: "jiàoshì", hv: "GIÁO THẤT", v: "phòng học", lv: 2 }, { h: "姐姐", p: "jiějie", hv: "TỶ TỶ", v: "chị gái", lv: 2 }, { h: "介绍", p: "jièshào", hv: "GIỚI THIỆU", v: "giới thiệu", lv: 2 }, { h: "进", p: "jìn", hv: "TIẾN", v: "vào, tiến lên", lv: 2 }, { h: "近", p: "jìn", hv: "CẬN", v: "gần", lv: 2 },
+            { h: "就", p: "jiù", hv: "TỰU", v: "liền, ngay", lv: 2 }, { h: "咖啡", p: "kāfēi", hv: "CÀ PHÊ", v: "cà phê", lv: 2 }, { h: "开始", p: "kāishǐ", hv: "KHAI THỦY", v: "bắt đầu", lv: 2 }, { h: "考试", p: "kǎoshì", hv: "KHẢO THỊ", v: "thi, kỳ thi", lv: 2 }, { h: "可能", p: "kěnéng", hv: "KHẢ NĂNG", v: "có thể", lv: 2 }, { h: "可以", p: "kěyǐ", hv: "KHẢ DĨ", v: "có thể, được", lv: 2 }, { h: "课", p: "kè", hv: "KHÓA", v: "tiết học, bài", lv: 2 }, { h: "快", p: "kuài", hv: "KHOÁI", v: "nhanh", lv: 2 }, { h: "快乐", p: "kuàilè", hv: "KHOÁI LẠC", v: "vui vẻ", lv: 2 }, { h: "累", p: "lèi", hv: "LŨY", v: "mệt", lv: 2 },
+            { h: "离", p: "lí", hv: "LY", v: "cách, rời", lv: 2 }, { h: "两", p: "liǎng", hv: "LƯỠNG", v: "hai (đếm)", lv: 2 }, { h: "零", p: "líng", hv: "LINH", v: "không (số 0)", lv: 2 }, { h: "路", p: "lù", hv: "LỘ", v: "đường", lv: 2 }, { h: "旅游", p: "lǚyóu", hv: "LỮ DU", v: "du lịch", lv: 2 }, { h: "卖", p: "mài", hv: "MẠI", v: "bán", lv: 2 }, { h: "慢", p: "màn", hv: "MẠN", v: "chậm", lv: 2 }, { h: "忙", p: "máng", hv: "MANG", v: "bận", lv: 2 }, { h: "每", p: "měi", hv: "MỖI", v: "mỗi", lv: 2 }, { h: "妹妹", p: "mèimei", hv: "MUỘI MUỘI", v: "em gái", lv: 2 },
+            { h: "门", p: "mén", hv: "MÔN", v: "cửa, môn", lv: 2 }, { h: "面条", p: "miàntiáo", hv: "DIỆN ĐIỀU", v: "mì sợi", lv: 2 }, { h: "男", p: "nán", hv: "NAM", v: "nam (giới)", lv: 2 }, { h: "您", p: "nín", hv: "NHẪN", v: "ngài (kính ngữ)", lv: 2 }, { h: "牛奶", p: "niúnǎi", hv: "NGƯU NÃI", v: "sữa bò", lv: 2 }, { h: "女", p: "nǚ", hv: "NỮ", v: "nữ (giới)", lv: 2 }, { h: "旁边", p: "pángbiān", hv: "BÀNG BIÊN", v: "bên cạnh", lv: 2 }, { h: "跑步", p: "pǎobù", hv: "BÃO BỘ", v: "chạy bộ", lv: 2 }, { h: "便宜", p: "piányi", hv: "TIỆN NGHI", v: "rẻ", lv: 2 }, { h: "票", p: "piào", hv: "PHIẾU", v: "vé", lv: 2 },
+            { h: "妻子", p: "qīzi", hv: "THÊ TỬ", v: "vợ", lv: 2 }, { h: "起床", p: "qǐchuáng", hv: "KHỞI SÀNG", v: "thức dậy", lv: 2 }, { h: "千", p: "qiān", hv: "THIÊN", v: "nghìn", lv: 2 }, { h: "铅笔", p: "qiānbǐ", hv: "DUYÊN BÚT", v: "bút chì", lv: 2 }, { h: "晴", p: "qíng", hv: "TÌNH", v: "trời nắng", lv: 2 }, { h: "去年", p: "qùnián", hv: "KHỨ NIÊN", v: "năm ngoái", lv: 2 }, { h: "让", p: "ràng", hv: "NHƯỢNG", v: "để, bảo", lv: 2 }, { h: "日", p: "rì", hv: "NHẬT", v: "ngày, mặt trời", lv: 2 }, { h: "上班", p: "shàngbān", hv: "THƯỢNG BAN", v: "đi làm", lv: 2 }, { h: "身体", p: "shēntǐ", hv: "THÂN THỂ", v: "sức khỏe", lv: 2 },
+            { h: "生病", p: "shēngbìng", hv: "SINH BỆNH", v: "bị bệnh", lv: 2 }, { h: "生日", p: "shēngrì", hv: "SINH NHẬT", v: "sinh nhật", lv: 2 }, { h: "时间", p: "shíjiān", hv: "THỜI GIAN", v: "thời gian", lv: 2 }, { h: "事情", p: "shìqing", hv: "SỰ TÌNH", v: "việc", lv: 2 }, { h: "手表", p: "shǒubiǎo", hv: "THỦ BIỂU", v: "đồng hồ đeo tay", lv: 2 }, { h: "手机", p: "shǒujī", hv: "THỦ CƠ", v: "điện thoại", lv: 2 }, { h: "说话", p: "shuōhuà", hv: "THUYẾT THOẠI", v: "nói chuyện", lv: 2 }, { h: "送", p: "sòng", hv: "TỐNG", v: "tặng, đưa", lv: 2 }, { h: "虽然", p: "suīrán", hv: "TUY NHIÊN", v: "tuy, mặc dù", lv: 2 }, { h: "所以", p: "suǒyǐ", hv: "SỞ DĨ", v: "cho nên", lv: 2 },
+            { h: "它", p: "tā", hv: "THA", v: "nó (vật, động vật)", lv: 2 }, { h: "踢足球", p: "tī zúqiú", hv: "ĐÍCH TÚC CẦU", v: "đá bóng", lv: 2 }, { h: "题", p: "tí", hv: "ĐỀ", v: "đề, câu hỏi", lv: 2 }, { h: "跳舞", p: "tiàowǔ", hv: "KHIÊU VŨ", v: "nhảy múa", lv: 2 }, { h: "外", p: "wài", hv: "NGOẠI", v: "ngoài", lv: 2 }, { h: "完", p: "wán", hv: "HOÀN", v: "xong, hết", lv: 2 }, { h: "玩儿", p: "wánr", hv: "NGOẠN NHI", v: "chơi", lv: 2 }, { h: "晚上", p: "wǎnshang", hv: "VÃN THƯỢNG", v: "buổi tối", lv: 2 }, { h: "往", p: "wǎng", hv: "VÃNG", v: "về phía", lv: 2 }, { h: "为什么", p: "wèishénme", hv: "VỊ THẬM MẠ", v: "tại sao", lv: 2 },
+            { h: "问", p: "wèn", hv: "VẤN", v: "hỏi", lv: 2 }, { h: "问题", p: "wèntí", hv: "VẤN ĐỀ", v: "câu hỏi, vấn đề", lv: 2 }, { h: "西瓜", p: "xīguā", hv: "TÂY QUA", v: "dưa hấu", lv: 2 }, { h: "希望", p: "xīwàng", hv: "HY VỌNG", v: "hy vọng", lv: 2 }, { h: "洗", p: "xǐ", hv: "TẨY", v: "rửa, giặt", lv: 2 }, { h: "小时", p: "xiǎoshí", hv: "TIỂU THỜI", v: "tiếng (giờ)", lv: 2 }, { h: "笑", p: "xiào", hv: "TIẾU", v: "cười", lv: 2 }, { h: "新", p: "xīn", hv: "TÂN", v: "mới", lv: 2 }, { h: "姓", p: "xìng", hv: "TÍNH", v: "họ (tên)", lv: 2 }, { h: "休息", p: "xiūxi", hv: "HƯU TỨC", v: "nghỉ ngơi", lv: 2 },
+            { h: "雪", p: "xuě", hv: "TUYẾT", v: "tuyết", lv: 2 }, { h: "颜色", p: "yánsè", hv: "NHAN SẮC", v: "màu sắc", lv: 2 }, { h: "眼睛", p: "yǎnjing", hv: "NHÃN TINH", v: "mắt", lv: 2 }, { h: "羊肉", p: "yángròu", hv: "DƯƠNG NHỤC", v: "thịt cừu", lv: 2 }, { h: "药", p: "yào", hv: "DƯỢC", v: "thuốc", lv: 2 }, { h: "要", p: "yào", hv: "YẾU", v: "cần, muốn", lv: 2 }, { h: "也", p: "yě", hv: "DÃ", v: "cũng", lv: 2 }, { h: "一下", p: "yíxià", hv: "NHẤT HẠ", v: "một chút", lv: 2 }, { h: "已经", p: "yǐjīng", hv: "DĨ KINH", v: "đã (rồi)", lv: 2 }, { h: "一起", p: "yìqǐ", hv: "NHẤT KHỞI", v: "cùng nhau", lv: 2 },
+            { h: "意思", p: "yìsi", hv: "Ý TƯ", v: "ý nghĩa", lv: 2 }, { h: "因为", p: "yīnwèi", hv: "NHÂN VI", v: "vì, bởi vì", lv: 2 }, { h: "阴", p: "yīn", hv: "ÂM", v: "âm u, mây mù", lv: 2 }, { h: "游泳", p: "yóuyǒng", hv: "DU VỊNH", v: "bơi", lv: 2 }, { h: "右边", p: "yòubian", hv: "HỮU BIÊN", v: "bên phải", lv: 2 }, { h: "鱼", p: "yú", hv: "NGƯ", v: "cá", lv: 2 }, { h: "远", p: "yuǎn", hv: "VIỄN", v: "xa", lv: 2 }, { h: "运动", p: "yùndòng", hv: "VẬN ĐỘNG", v: "vận động", lv: 2 }, { h: "再", p: "zài", hv: "TÁI", v: "lại, nữa", lv: 2 }, { h: "早上", p: "zǎoshang", hv: "TẢO THƯỢNG", v: "buổi sáng sớm", lv: 2 },
+            { h: "丈夫", p: "zhàngfu", hv: "TRƯỢNG PHU", v: "chồng", lv: 2 }, { h: "找", p: "zhǎo", hv: "TRẢO", v: "tìm", lv: 2 }, { h: "着", p: "zhe", hv: "TRƯỚC", v: "(trợ từ tiếp diễn)", lv: 2 }, { h: "真", p: "zhēn", hv: "CHÂN", v: "thật, thực sự", lv: 2 }, { h: "正在", p: "zhèngzài", hv: "CHÍNH TẠI", v: "đang (làm gì)", lv: 2 }, { h: "知道", p: "zhīdào", hv: "TRI ĐẠO", v: "biết", lv: 2 }, { h: "准备", p: "zhǔnbèi", hv: "CHUẨN BỊ", v: "chuẩn bị", lv: 2 }, { h: "走", p: "zǒu", hv: "TẨU", v: "đi (bộ), rời", lv: 2 }, { h: "最", p: "zuì", hv: "TỐI", v: "nhất", lv: 2 }, { h: "左边", p: "zuǒbian", hv: "TẢ BIÊN", v: "bên trái", lv: 2 },
+
+            // HSK 3
+            { h: "啊", p: "a", hv: "A", v: "à (thán từ)", lv: 3 }, { h: "阿姨", p: "āyí", hv: "A DI", v: "dì, cô", lv: 3 }, { h: "矮", p: "ǎi", hv: "AI", v: "thấp, lùn", lv: 3 }, { h: "爱好", p: "àihào", hv: "ÁI HIẾU", v: "sở thích", lv: 3 }, { h: "安静", p: "ānjìng", hv: "AN TĨNH", v: "yên tĩnh", lv: 3 }, { h: "把", p: "bǎ", hv: "BẢ", v: "cầm; (giới từ)", lv: 3 }, { h: "班", p: "bān", hv: "BAN", v: "lớp, ca làm", lv: 3 }, { h: "搬", p: "bān", hv: "BAN", v: "chuyển, dời", lv: 3 }, { h: "办法", p: "bànfǎ", hv: "BẠN PHÁP", v: "cách, biện pháp", lv: 3 }, { h: "办公室", p: "bàngōngshì", hv: "BẠN CÔNG THẤT", v: "văn phòng", lv: 3 },
+            { h: "半", p: "bàn", hv: "BÁN", v: "nửa", lv: 3 }, { h: "帮忙", p: "bāngmáng", hv: "BANG MANG", v: "giúp đỡ", lv: 3 }, { h: "包", p: "bāo", hv: "BAO", v: "bao, túi; gói", lv: 3 }, { h: "饱", p: "bǎo", hv: "BÃO", v: "no", lv: 3 }, { h: "北方", p: "běifāng", hv: "BẮC PHƯƠNG", v: "phương Bắc", lv: 3 }, { h: "被", p: "bèi", hv: "BỊ", v: "bị, được (bị động)", lv: 3 }, { h: "鼻子", p: "bízi", hv: "TỴ TỬ", v: "mũi", lv: 3 }, { h: "比较", p: "bǐjiào", hv: "TỈ GIẢO", v: "so sánh", lv: 3 }, { h: "比赛", p: "bǐsài", hv: "TỈ TÁI", v: "thi đấu", lv: 3 }, { h: "笔记本", p: "bǐjìběn", hv: "BÚT KÝ BẢN", v: "sổ tay, laptop", lv: 3 },
+            { h: "必须", p: "bìxū", hv: "TẤT TU", v: "phải, cần thiết", lv: 3 }, { h: "变化", p: "biànhuà", hv: "BIẾN HÓA", v: "thay đổi", lv: 3 }, { h: "别人", p: "biérén", hv: "BIỆT NHÂN", v: "người khác", lv: 3 }, { h: "冰箱", p: "bīngxiāng", hv: "BĂNG TƯƠNG", v: "tủ lạnh", lv: 3 }, { h: "不但", p: "búdàn", hv: "BẤT ĐÃN", v: "không những", lv: 3 }, { h: "才", p: "cái", hv: "TÀI", v: "mới, vừa mới", lv: 3 }, { h: "菜单", p: "càidān", hv: "THÁI ĐƠN", v: "thực đơn", lv: 3 }, { h: "参加", p: "cānjiā", hv: "THAM GIA", v: "tham gia", lv: 3 }, { h: "草", p: "cǎo", hv: "THẢO", v: "cỏ", lv: 3 }, { h: "层", p: "céng", hv: "TẦNG", v: "tầng, lớp", lv: 3 },
+            { h: "差", p: "chà", hv: "SAI", v: "kém, thiếu", lv: 3 }, { h: "超市", p: "chāoshì", hv: "SIÊU THỊ", v: "siêu thị", lv: 3 }, { h: "衬衫", p: "chènshān", hv: "SẤN SAM", v: "áo sơ mi", lv: 3 }, { h: "成绩", p: "chéngjì", hv: "THÀNH TÍCH", v: "thành tích", lv: 3 }, { h: "城市", p: "chéngshì", hv: "THÀNH THỊ", v: "thành phố", lv: 3 }, { h: "迟到", p: "chídào", hv: "TRÌ ĐÁO", v: "đến muộn", lv: 3 }, { h: "除了", p: "chúle", hv: "TRỪ LIỄU", v: "ngoài, ngoại trừ", lv: 3 }, { h: "船", p: "chuán", hv: "THUYỀN", v: "thuyền, tàu", lv: 3 }, { h: "春天", p: "chūntiān", hv: "XUÂN THIÊN", v: "mùa xuân", lv: 3 }, { h: "词典", p: "cídiǎn", hv: "TỪ ĐIỂN", v: "từ điển", lv: 3 },
+            { h: "聪明", p: "cōngmíng", hv: "THÔNG MINH", v: "thông minh", lv: 3 }, { h: "打扫", p: "dǎsǎo", hv: "ĐẢ TẢO", v: "dọn dẹp", lv: 3 }, { h: "打算", p: "dǎsuàn", hv: "ĐẢ TOÁN", v: "dự định", lv: 3 }, { h: "带", p: "dài", hv: "ĐỚI", v: "mang, đem theo", lv: 3 }, { h: "担心", p: "dānxīn", hv: "ĐAM TÂM", v: "lo lắng", lv: 3 }, { h: "蛋糕", p: "dàngāo", hv: "ĐẢN CAO", v: "bánh kem", lv: 3 }, { h: "当然", p: "dāngrán", hv: "ĐƯƠNG NHIÊN", v: "đương nhiên", lv: 3 }, { h: "灯", p: "dēng", hv: "ĐĂNG", v: "đèn", lv: 3 }, { h: "地", p: "de", hv: "ĐỊA", v: "(trợ từ trạng ngữ)", lv: 3 }, { h: "地方", p: "dìfang", hv: "ĐỊA PHƯƠNG", v: "nơi, địa phương", lv: 3 },
+            { h: "地铁", p: "dìtiě", hv: "ĐỊA THIẾT", v: "tàu điện ngầm", lv: 3 }, { h: "地图", p: "dìtú", hv: "ĐỊA ĐỒ", v: "bản đồ", lv: 3 }, { h: "电梯", p: "diàntī", hv: "ĐIỆN THANG", v: "thang máy", lv: 3 }, { h: "邮件", p: "yóujiàn", hv: "BƯU KIỆN", v: "thư, email", lv: 3 }, { h: "东", p: "dōng", hv: "ĐÔNG", v: "phía đông", lv: 3 }, { h: "冬天", p: "dōngtiān", hv: "ĐÔNG THIÊN", v: "mùa đông", lv: 3 }, { h: "动物", p: "dòngwù", hv: "ĐỘNG VẬT", v: "động vật", lv: 3 }, { h: "短", p: "duǎn", hv: "ĐOẢN", v: "ngắn", lv: 3 }, { h: "段", p: "duàn", hv: "ĐOẠN", v: "đoạn", lv: 3 }, { h: "锻炼", p: "duànliàn", hv: "ĐOÀN LUYỆN", v: "rèn luyện", lv: 3 },
+            { h: "多么", p: "duōme", hv: "ĐA MA", v: "biết bao", lv: 3 }, { h: "饿", p: "è", hv: "NGẠ", v: "đói", lv: 3 }, { h: "耳朵", p: "ěrduo", hv: "NHĨ ĐÓA", v: "tai", lv: 3 }, { h: "而且", p: "érqiě", hv: "NHI THẢ", v: "hơn nữa", lv: 3 }, { h: "发", p: "fā", hv: "PHÁT", v: "phát, gửi", lv: 3 }, { h: "发烧", p: "fāshāo", hv: "PHÁT THIÊU", v: "sốt", lv: 3 }, { h: "发现", p: "fāxiàn", hv: "PHÁT HIỆN", v: "phát hiện", lv: 3 }, { h: "方便", p: "fāngbiàn", hv: "PHƯƠNG TIỆN", v: "tiện lợi", lv: 3 }, { h: "放", p: "fàng", hv: "PHÓNG", v: "đặt, để; thả", lv: 3 }, { h: "放心", p: "fàngxīn", hv: "PHÓNG TÂM", v: "yên tâm", lv: 3 },
+            { h: "分", p: "fēn", hv: "PHÂN", v: "phút; phân chia", lv: 3 }, { h: "附近", p: "fùjìn", hv: "PHỤ CẬN", v: "gần đây", lv: 3 }, { h: "复习", p: "fùxí", hv: "PHỤC TẬP", v: "ôn tập", lv: 3 }, { h: "干净", p: "gānjìng", hv: "CAN TỊNH", v: "sạch sẽ", lv: 3 }, { h: "感冒", p: "gǎnmào", hv: "CẢM MẠO", v: "cảm cúm", lv: 3 }, { h: "感兴趣", p: "gǎn xìngqù", hv: "CẢM HƯNG THÚ", v: "hứng thú", lv: 3 }, { h: "刚才", p: "gāngcái", hv: "CƯƠNG TÀI", v: "vừa rồi", lv: 3 }, { h: "个子", p: "gèzi", hv: "CÁ TỬ", v: "vóc dáng", lv: 3 }, { h: "根据", p: "gēnjù", hv: "CĂN CỨ", v: "căn cứ, dựa vào", lv: 3 }, { h: "跟", p: "gēn", hv: "CĂN", v: "với, theo", lv: 3 },
+            { h: "更", p: "gèng", hv: "CÁNH", v: "hơn, càng", lv: 3 }, { h: "公斤", p: "gōngjīn", hv: "CÔNG CÂN", v: "kilôgam", lv: 3 }, { h: "公园", p: "gōngyuán", hv: "CÔNG VIÊN", v: "công viên", lv: 3 }, { h: "故事", p: "gùshi", hv: "CỐ SỰ", v: "câu chuyện", lv: 3 }, { h: "刮风", p: "guāfēng", hv: "QUÁT PHONG", v: "gió thổi", lv: 3 }, { h: "关", p: "guān", hv: "QUAN", v: "đóng, tắt", lv: 3 }, { h: "关系", p: "guānxi", hv: "QUAN HỆ", v: "quan hệ", lv: 3 }, { h: "关心", p: "guānxīn", hv: "QUAN TÂM", v: "quan tâm", lv: 3 }, { h: "关于", p: "guānyú", hv: "QUAN VU", v: "về, liên quan đến", lv: 3 }, { h: "国家", p: "guójiā", hv: "QUỐC GIA", v: "quốc gia", lv: 3 },
+            { h: "过", p: "guò", hv: "QUÁ", v: "qua, trải qua", lv: 3 }, { h: "过去", p: "guòqù", hv: "QUÁ KHỨ", v: "quá khứ", lv: 3 }, { h: "还是", p: "háishi", hv: "HOÀN THỊ", v: "hay là, vẫn", lv: 3 }, { h: "害怕", p: "hàipà", hv: "HẠI PHẠ", v: "sợ hãi", lv: 3 }, { h: "黑板", p: "hēibǎn", hv: "HẮC BẢN", v: "bảng đen", lv: 3 }, { h: "后来", p: "hòulái", hv: "HẬU LAI", v: "sau này", lv: 3 }, { h: "护照", p: "hùzhào", hv: "HỘ CHIẾU", v: "hộ chiếu", lv: 3 }, { h: "花", p: "huā", hv: "HOA", v: "hoa; tiêu (tiền)", lv: 3 }, { h: "画", p: "huà", hv: "HỌA", v: "vẽ, bức tranh", lv: 3 }, { h: "坏", p: "huài", hv: "HOẠI", v: "hỏng, xấu", lv: 3 },
+            { h: "欢迎", p: "huānyíng", hv: "HOAN NGHÊNH", v: "hoan nghênh", lv: 3 }, { h: "环境", p: "huánjìng", hv: "HOÀN CẢNH", v: "môi trường", lv: 3 }, { h: "换", p: "huàn", hv: "HOÁN", v: "đổi", lv: 3 }, { h: "黄河", p: "Huánghé", hv: "HOÀNG HÀ", v: "Hoàng Hà", lv: 3 }, { h: "回答", p: "huídá", hv: "HỒI ĐÁP", v: "trả lời", lv: 3 }, { h: "会议", p: "huìyì", hv: "HỘI NGHỊ", v: "hội nghị", lv: 3 }, { h: "或者", p: "huòzhě", hv: "HOẶC GIẢ", v: "hoặc", lv: 3 }, { h: "几乎", p: "jīhū", hv: "KỶ HỒ", v: "hầu như", lv: 3 }, { h: "机会", p: "jīhuì", hv: "CƠ HỘI", v: "cơ hội", lv: 3 }, { h: "极", p: "jí", hv: "CỰC", v: "cực, rất", lv: 3 },
+            { h: "记得", p: "jìde", hv: "KÝ ĐẮC", v: "nhớ", lv: 3 }, { h: "季节", p: "jìjié", hv: "QUÝ TIẾT", v: "mùa", lv: 3 }, { h: "检查", p: "jiǎnchá", hv: "KIỂM TRA", v: "kiểm tra", lv: 3 }, { h: "简单", p: "jiǎndān", hv: "GIẢN ĐƠN", v: "đơn giản", lv: 3 }, { h: "见面", p: "jiànmiàn", hv: "KIẾN DIỆN", v: "gặp mặt", lv: 3 }, { h: "健康", p: "jiànkāng", hv: "KIỆN KHANG", v: "khỏe mạnh", lv: 3 }, { h: "讲", p: "jiǎng", hv: "GIẢNG", v: "nói, giảng", lv: 3 }, { h: "教", p: "jiāo", hv: "GIÁO", v: "dạy", lv: 3 }, { h: "角", p: "jiǎo", hv: "GIÁC", v: "góc; hào (tiền)", lv: 3 }, { h: "脚", p: "jiǎo", hv: "CƯỚC", v: "chân (bàn chân)", lv: 3 },
+            { h: "接", p: "jiē", hv: "TIẾP", v: "đón, nhận, tiếp", lv: 3 }, { h: "街道", p: "jiēdào", hv: "NHAI ĐẠO", v: "đường phố", lv: 3 }, { h: "节目", p: "jiémù", hv: "TIẾT MỤC", v: "tiết mục", lv: 3 }, { h: "节日", p: "jiérì", hv: "TIẾT NHẬT", v: "ngày lễ", lv: 3 }, { h: "结婚", p: "jiéhūn", hv: "KẾT HÔN", v: "kết hôn", lv: 3 }, { h: "结束", p: "jiéshù", hv: "KẾT THÚC", v: "kết thúc", lv: 3 }, { h: "解决", p: "jiějué", hv: "GIẢI QUYẾT", v: "giải quyết", lv: 3 }, { h: "借", p: "jiè", hv: "TÁ", v: "mượn, cho mượn", lv: 3 }, { h: "经常", p: "jīngcháng", hv: "KINH THƯỜNG", v: "thường xuyên", lv: 3 }, { h: "经过", p: "jīngguò", hv: "KINH QUÁ", v: "đi qua", lv: 3 },
+            { h: "经理", p: "jīnglǐ", hv: "KINH LÝ", v: "giám đốc", lv: 3 }, { h: "久", p: "jiǔ", hv: "CỬU", v: "lâu", lv: 3 }, { h: "旧", p: "jiù", hv: "CỰU", v: "cũ", lv: 3 }, { h: "句子", p: "jùzi", hv: "CÚ TỬ", v: "câu", lv: 3 }, { h: "决定", p: "juédìng", hv: "QUYẾT ĐỊNH", v: "quyết định", lv: 3 }, { h: "可爱", p: "kě'ài", hv: "KHẢ ÁI", v: "đáng yêu", lv: 3 }, { h: "渴", p: "kě", hv: "KHÁT", v: "khát", lv: 3 }, { h: "刻", p: "kè", hv: "KHẮC", v: "khắc; 15 phút", lv: 3 }, { h: "客人", p: "kèrén", hv: "KHÁCH NHÂN", v: "khách", lv: 3 }, { h: "空调", p: "kōngtiáo", hv: "KHÔNG ĐIỀU", v: "máy điều hòa", lv: 3 },
+            { h: "口", p: "kǒu", hv: "KHẨU", v: "miệng, cửa", lv: 3 }, { h: "哭", p: "kū", hv: "KHỐC", v: "khóc", lv: 3 }, { h: "裤子", p: "kùzi", hv: "KHỐ TỬ", v: "quần", lv: 3 }, { h: "筷子", p: "kuàizi", hv: "KHOÁI TỬ", v: "đũa", lv: 3 }, { h: "蓝", p: "lán", hv: "LAM", v: "xanh dương", lv: 3 }, { h: "老", p: "lǎo", hv: "LÃO", v: "già, cũ", lv: 3 }, { h: "离开", p: "líkāi", hv: "LY KHAI", v: "rời khỏi", lv: 3 }, { h: "礼物", p: "lǐwù", hv: "LỄ VẬT", v: "quà tặng", lv: 3 }, { h: "历史", p: "lìshǐ", hv: "LỊCH SỬ", v: "lịch sử", lv: 3 }, { h: "脸", p: "liǎn", hv: "LIỄM", v: "mặt", lv: 3 },
+            { h: "练习", p: "liànxí", hv: "LUYỆN TẬP", v: "luyện tập", lv: 3 }, { h: "辆", p: "liàng", hv: "LƯỢNG", v: "chiếc (lượng từ xe)", lv: 3 }, { h: "聊天儿", p: "liáotiānr", hv: "LIÊU THIÊN NHI", v: "tán gẫu", lv: 3 }, { h: "了解", p: "liǎojiě", hv: "LIỄU GIẢI", v: "hiểu rõ, tìm hiểu", lv: 3 }, { h: "邻居", p: "línjū", hv: "LÂN CƯ", v: "hàng xóm", lv: 3 }, { h: "留学", p: "liúxué", hv: "LƯU HỌC", v: "du học", lv: 3 }, { h: "楼", p: "lóu", hv: "LẦU", v: "tầng lầu", lv: 3 }, { h: "绿", p: "lǜ", hv: "LỤC", v: "xanh lá", lv: 3 }, { h: "马", p: "mǎ", hv: "MÃ", v: "ngựa", lv: 3 }, { h: "马上", p: "mǎshàng", hv: "MÃ THƯỢNG", v: "ngay lập tức", lv: 3 },
+            { h: "满意", p: "mǎnyì", hv: "MÃN Ý", v: "hài lòng", lv: 3 }, { h: "帽子", p: "màozi", hv: "MẠO TỬ", v: "mũ, nón", lv: 3 }, { h: "米", p: "mǐ", hv: "MỄ", v: "mét; gạo", lv: 3 }, { h: "面包", p: "miànbāo", hv: "DIỆN BAO", v: "bánh mì", lv: 3 }, { h: "明白", p: "míngbai", hv: "MINH BẠCH", v: "hiểu rõ", lv: 3 }, { h: "拿", p: "ná", hv: "NÃ", v: "cầm, lấy", lv: 3 }, { h: "奶奶", p: "nǎinai", hv: "NÃI NÃI", v: "bà nội", lv: 3 }, { h: "南", p: "nán", hv: "NAM", v: "phía nam", lv: 3 }, { h: "难", p: "nán", hv: "NAN", v: "khó", lv: 3 }, { h: "难过", p: "nánguò", hv: "NAN QUÁ", v: "buồn, khó chịu", lv: 3 },
+            { h: "年级", p: "niánjí", hv: "NIÊN CẤP", v: "khối lớp", lv: 3 }, { h: "年轻", p: "niánqīng", hv: "NIÊN KHINH", v: "trẻ tuổi", lv: 3 }, { h: "鸟", p: "niǎo", hv: "ĐIỂU", v: "chim", lv: 3 }, { h: "努力", p: "nǔlì", hv: "NỖ LỰC", v: "nỗ lực, cố gắng", lv: 3 }, { h: "爬山", p: "páshān", hv: "BÀ SƠN", v: "leo núi", lv: 3 }, { h: "盘子", p: "pánzi", hv: "BÀN TỬ", v: "đĩa", lv: 3 }, { h: "胖", p: "pàng", hv: "BÀNG", v: "béo, mập", lv: 3 }, { h: "皮鞋", p: "píxié", hv: "BÌ HÀI", v: "giày da", lv: 3 }, { h: "啤酒", p: "píjiǔ", hv: "BÌ TỬU", v: "bia", lv: 3 }, { h: "瓶子", p: "píngzi", hv: "BÌNH TỬ", v: "chai, bình", lv: 3 },
+            { h: "其实", p: "qíshí", hv: "KỲ THỰC", v: "thực ra", lv: 3 }, { h: "其他", p: "qítā", hv: "KỲ THA", v: "khác", lv: 3 }, { h: "奇怪", p: "qíguài", hv: "KỲ QUÁI", v: "kỳ lạ", lv: 3 }, { h: "骑", p: "qí", hv: "KỴ", v: "cưỡi (xe đạp, ngựa)", lv: 3 }, { h: "起飞", p: "qǐfēi", hv: "KHỞI PHI", v: "cất cánh", lv: 3 }, { h: "起来", p: "qǐlái", hv: "KHỞI LAI", v: "đứng lên, dậy", lv: 3 }, { h: "清楚", p: "qīngchu", hv: "THANH SỞ", v: "rõ ràng", lv: 3 }, { h: "请假", p: "qǐngjià", hv: "THỈNH GIẢ", v: "xin nghỉ phép", lv: 3 }, { h: "秋", p: "qiū", hv: "THU", v: "mùa thu", lv: 3 }, { h: "裙子", p: "qúnzi", hv: "QUẦN TỬ", v: "váy", lv: 3 },
+            { h: "然后", p: "ránhòu", hv: "NHIÊN HẬU", v: "sau đó", lv: 3 }, { h: "热情", p: "rèqíng", hv: "NHIỆT TÌNH", v: "nhiệt tình", lv: 3 }, { h: "认为", p: "rènwéi", hv: "NHẬN VI", v: "cho rằng", lv: 3 }, { h: "认真", p: "rènzhēn", hv: "NHẬN CHÂN", v: "nghiêm túc", lv: 3 }, { h: "容易", p: "róngyì", hv: "DUNG DỊ", v: "dễ dàng", lv: 3 }, { h: "如果", p: "rúguǒ", hv: "NHƯ QUẢ", v: "nếu", lv: 3 }, { h: "伞", p: "sǎn", hv: "TÁN", v: "ô, dù", lv: 3 }, { h: "上网", p: "shàngwǎng", hv: "THƯỢNG VÕNG", v: "lên mạng", lv: 3 }, { h: "生气", p: "shēngqì", hv: "SINH KHÍ", v: "tức giận", lv: 3 }, { h: "声音", p: "shēngyīn", hv: "THANH ÂM", v: "âm thanh", lv: 3 },
+            { h: "世界", p: "shìjiè", hv: "THẾ GIỚI", v: "thế giới", lv: 3 }, { h: "试", p: "shì", hv: "THÍ", v: "thử", lv: 3 }, { h: "瘦", p: "shòu", hv: "SẤU", v: "gầy", lv: 3 }, { h: "叔叔", p: "shūshu", hv: "THÚC THÚC", v: "chú", lv: 3 }, { h: "舒服", p: "shūfu", hv: "THƯ PHỤC", v: "dễ chịu", lv: 3 }, { h: "树", p: "shù", hv: "THỤ", v: "cây", lv: 3 }, { h: "数学", p: "shùxué", hv: "SỐ HỌC", v: "toán học", lv: 3 }, { h: "刷牙", p: "shuāyá", hv: "SOÁT NHA", v: "đánh răng", lv: 3 }, { h: "双", p: "shuāng", hv: "SONG", v: "đôi (lượng từ)", lv: 3 }, { h: "水平", p: "shuǐpíng", hv: "THỦY BÌNH", v: "trình độ", lv: 3 },
+            { h: "司机", p: "sījī", hv: "TƯ CƠ", v: "tài xế", lv: 3 }, { h: "太阳", p: "tàiyáng", hv: "THÁI DƯƠNG", v: "mặt trời", lv: 3 }, { h: "特别", p: "tèbié", hv: "ĐẶC BIỆT", v: "đặc biệt", lv: 3 }, { h: "疼", p: "téng", hv: "ĐỒNG", v: "đau", lv: 3 }, { h: "提高", p: "tígāo", hv: "ĐỀ CAO", v: "nâng cao", lv: 3 }, { h: "体育", p: "tǐyù", hv: "THỂ DỤC", v: "thể dục", lv: 3 }, { h: "甜", p: "tián", hv: "ĐIỀM", v: "ngọt", lv: 3 }, { h: "条", p: "tiáo", hv: "ĐIỀU", v: "cái (lượng từ dài)", lv: 3 }, { h: "同事", p: "tóngshì", hv: "ĐỒNG SỰ", v: "đồng nghiệp", lv: 3 }, { h: "同意", p: "tóngyì", hv: "ĐỒNG Ý", v: "đồng ý", lv: 3 },
+            { h: "头发", p: "tóufa", hv: "ĐẦU PHÁT", v: "tóc", lv: 3 }, { h: "突然", p: "tūrán", hv: "ĐỘT NHIÊN", v: "đột nhiên", lv: 3 }, { h: "图书馆", p: "túshūguǎn", hv: "ĐỒ THƯ QUÁN", v: "thư viện", lv: 3 }, { h: "腿", p: "tuǐ", hv: "THỐI", v: "chân (đùi)", lv: 3 }, { h: "完成", p: "wánchéng", hv: "HOÀN THÀNH", v: "hoàn thành", lv: 3 }, { h: "碗", p: "wǎn", hv: "UYỂN", v: "bát, chén", lv: 3 }, { h: "万", p: "wàn", hv: "VẠN", v: "vạn", lv: 3 }, { h: "忘记", p: "wàngjì", hv: "VONG KÝ", v: "quên", lv: 3 }, { h: "为", p: "wèi", hv: "VỊ", v: "vì, cho", lv: 3 }, { h: "为了", p: "wèile", hv: "VỊ LIỄU", v: "để, vì", lv: 3 },
+            { h: "位", p: "wèi", hv: "VỊ", v: "vị (lượng từ kính ngữ)", lv: 3 }, { h: "文化", p: "wénhuà", hv: "VĂN HÓA", v: "văn hóa", lv: 3 }, { h: "西", p: "xī", hv: "TÂY", v: "phía tây", lv: 3 }, { h: "习惯", p: "xíguàn", hv: "TẬP QUÁN", v: "thói quen", lv: 3 }, { h: "洗手间", p: "xǐshǒujiān", hv: "TẨY THỦ GIAN", v: "nhà vệ sinh", lv: 3 }, { h: "洗澡", p: "xǐzǎo", hv: "TẨY TÁO", v: "tắm", lv: 3 }, { h: "夏", p: "xià", hv: "HẠ", v: "mùa hè", lv: 3 }, { h: "先", p: "xiān", hv: "TIÊN", v: "trước, trước hết", lv: 3 }, { h: "相信", p: "xiāngxìn", hv: "TƯƠNG TÍN", v: "tin tưởng", lv: 3 }, { h: "香蕉", p: "xiāngjiāo", hv: "HƯƠNG TIÊU", v: "chuối", lv: 3 },
+            { h: "向", p: "xiàng", hv: "HƯỚNG", v: "hướng về", lv: 3 }, { h: "像", p: "xiàng", hv: "TƯỢNG", v: "giống, tựa", lv: 3 }, { h: "小心", p: "xiǎoxīn", hv: "TIỂU TÂM", v: "cẩn thận", lv: 3 }, { h: "校长", p: "xiàozhǎng", hv: "HIỆU TRƯỞNG", v: "hiệu trưởng", lv: 3 }, { h: "新闻", p: "xīnwén", hv: "TÂN VĂN", v: "tin tức", lv: 3 }, { h: "新鲜", p: "xīnxiān", hv: "TÂN TIÊN", v: "tươi mới", lv: 3 }, { h: "信用卡", p: "xìnyòngkǎ", hv: "TÍN DỤNG KA", v: "thẻ tín dụng", lv: 3 }, { h: "行李箱", p: "xínglǐxiāng", hv: "HÀNH LÝ TƯƠNG", v: "vali", lv: 3 }, { h: "熊猫", p: "xióngmāo", hv: "HÙNG MIÊU", v: "gấu trúc", lv: 3 }, { h: "需要", p: "xūyào", hv: "NHU YẾU", v: "cần, cần thiết", lv: 3 },
+            { h: "选择", p: "xuǎnzé", hv: "TUYỂN TRẠCH", v: "chọn lựa", lv: 3 }, { h: "要求", p: "yāoqiú", hv: "YÊU CẦU", v: "yêu cầu", lv: 3 }, { h: "爷爷", p: "yéye", hv: "DA DA", v: "ông nội", lv: 3 }, { h: "一定", p: "yídìng", hv: "NHẤT ĐỊNH", v: "nhất định", lv: 3 }, { h: "一共", p: "yígòng", hv: "NHẤT CỘNG", v: "tổng cộng", lv: 3 }, { h: "一会儿", p: "yíhuìr", hv: "NHẤT HỘI NHI", v: "một lúc", lv: 3 }, { h: "一样", p: "yíyàng", hv: "NHẤT DẠNG", v: "giống nhau", lv: 3 }, { h: "以前", p: "yǐqián", hv: "DĨ TIỀN", v: "trước đây", lv: 3 }, { h: "一般", p: "yìbān", hv: "NHẤT BAN", v: "bình thường", lv: 3 }, { h: "一边", p: "yìbiān", hv: "NHẤT BIÊN", v: "một bên; vừa...vừa", lv: 3 },
+            { h: "一直", p: "yìzhí", hv: "NHẤT TRỰC", v: "luôn, liên tục", lv: 3 }, { h: "音乐", p: "yīnyuè", hv: "ÂM NHẠC", v: "âm nhạc", lv: 3 }, { h: "银行", p: "yínháng", hv: "NGÂN HÀNG", v: "ngân hàng", lv: 3 }, { h: "饮料", p: "yǐnliào", hv: "ẨM LIỆU", v: "đồ uống", lv: 3 }, { h: "应该", p: "yīnggāi", hv: "ƯNG CAI", v: "nên, phải", lv: 3 }, { h: "影响", p: "yǐngxiǎng", hv: "ẢNH HƯỞNG", v: "ảnh hưởng", lv: 3 }, { h: "用", p: "yòng", hv: "DỤNG", v: "dùng, sử dụng", lv: 3 }, { h: "游戏", p: "yóuxì", hv: "DU HÝ", v: "trò chơi", lv: 3 }, { h: "有名", p: "yǒumíng", hv: "HỮU DANH", v: "nổi tiếng", lv: 3 }, { h: "又", p: "yòu", hv: "HỰU", v: "lại", lv: 3 },
+            { h: "遇到", p: "yùdào", hv: "NGỘ ĐÁO", v: "gặp, tình cờ gặp", lv: 3 }, { h: "元", p: "yuán", hv: "NGUYÊN", v: "tệ (đơn vị tiền)", lv: 3 }, { h: "愿意", p: "yuànyì", hv: "NGUYỆN Ý", v: "bằng lòng", lv: 3 }, { h: "月亮", p: "yuèliang", hv: "NGUYỆT LƯỢNG", v: "mặt trăng", lv: 3 }, { h: "越", p: "yuè", hv: "VIỆT", v: "càng", lv: 3 }, { h: "站", p: "zhàn", hv: "TRẠM", v: "đứng; trạm, ga", lv: 3 }, { h: "张", p: "zhāng", hv: "TRƯƠNG", v: "tờ (lượng từ)", lv: 3 }, { h: "长", p: "zhǎng", hv: "TRƯỞNG", v: "lớn lên", lv: 3 }, { h: "着急", p: "zháojí", hv: "TRƯỚC CẤP", v: "sốt ruột", lv: 3 }, { h: "照顾", p: "zhàogu", hv: "CHIẾU CỐ", v: "chăm sóc", lv: 3 },
+            { h: "照片", p: "zhàopiàn", hv: "CHIẾU PHIẾN", v: "ảnh", lv: 3 }, { h: "照相机", p: "zhàoxiàngjī", hv: "CHIẾU TƯỚNG CƠ", v: "máy ảnh", lv: 3 }, { h: "只", p: "zhǐ", hv: "CHỈ", v: "chỉ", lv: 3 }, { h: "只有", p: "zhǐyǒu", hv: "CHỈ HỮU", v: "chỉ có (mới)", lv: 3 }, { h: "中间", p: "zhōngjiān", hv: "TRUNG GIAN", v: "ở giữa", lv: 3 }, { h: "终于", p: "zhōngyú", hv: "CHUNG VU", v: "cuối cùng", lv: 3 }, { h: "种", p: "zhǒng", hv: "CHỦNG", v: "loại; gieo trồng", lv: 3 }, { h: "重要", p: "zhòngyào", hv: "TRỌNG YẾU", v: "quan trọng", lv: 3 }, { h: "周末", p: "zhōumò", hv: "CHU MẠT", v: "cuối tuần", lv: 3 }, { h: "主要", p: "zhǔyào", hv: "CHỦ YẾU", v: "chủ yếu", lv: 3 },
+            { h: "注意", p: "zhùyì", hv: "CHÚ Ý", v: "chú ý", lv: 3 }, { h: "自己", p: "zìjǐ", hv: "TỰ KỶ", v: "bản thân", lv: 3 }, { h: "自行车", p: "zìxíngchē", hv: "TỰ HÀNH XA", v: "xe đạp", lv: 3 }, { h: "总是", p: "zǒngshì", hv: "TỔNG THỊ", v: "luôn luôn", lv: 3 }, { h: "嘴", p: "zuǐ", hv: "CHỦY", v: "miệng", lv: 3 }, { h: "最后", p: "zuìhòu", hv: "TỐI HẬU", v: "cuối cùng", lv: 3 }, { h: "最近", p: "zuìjìn", hv: "TỐI CẬN", v: "gần đây", lv: 3 }, { h: "作业", p: "zuòyè", hv: "TÁC NGHIỆP", v: "bài tập", lv: 3 }, { h: "中文", p: "Zhōngwén", hv: "TRUNG VĂN", v: "tiếng Trung", lv: 3 }
+        ];
+
+        // Tag each word with a unique key (h + lv to avoid collisions for same hanzi different levels)
+        VOCAB.forEach(w => { w.key = w.h + "_" + w.lv; });
+
+        // ============ STATE ============
+        const STORAGE_KEY = "hsk123_progress_v2";
+        const STATUS = { NEW: "new", LEARNING: "learning", MASTERED: "mastered" };
+        const STATUS_LABEL = { new: "Chưa học", learning: "Đang học", mastered: "Đã thuộc" };
+
+        let state = {
+            progress: {},
+            level: "all",
+            alphaFrom: "all",
+            alphaTo: "all",
+            flashOrder: [],
+            flashIdx: 0,
+            quiz: null,
+            match: null,
+            browseFilter: "all",
+            browseAlpha: "all",
+            browseQuery: "",
+            reverseMode: false,
+            autoPlay: false,
+            writeIdx: 0,
+            writeMode: "stroke",
+            writerInstance: null
+        };
+
+        // ============ RADICAL BREAKDOWN DATA ============
+        const RADICALS = {
+            "爱":  {p:["爫","冖","友"], m:["móng","mái che","bạn"], s:"Dùng tay (爫) che chở (冖) bạn (友) → yêu thương"},
+            "爸":  {p:["父","巴"], m:["cha","bám"], s:"Người cha (父) con bám (巴) theo → bố"},
+            "杯":  {p:["木","不"], m:["gỗ","không"], s:"Đồ gỗ (木) không (不) thể thiếu khi uống → cái cốc"},
+            "吃":  {p:["口","乞"], m:["miệng","xin"], s:"Miệng (口) xin (乞) thức ăn → ăn"},
+            "打":  {p:["扌","丁"], m:["tay","đinh"], s:"Tay (扌) đóng đinh (丁) → đánh, gọi"},
+            "电":  {p:["日","乚"], m:["mặt trời","móc"], s:"Tia sáng (日) xẹt xuống (乚) → điện"},
+            "读":  {p:["讠","卖"], m:["lời","bán"], s:"Phát ra lời (讠) khi giới thiệu (卖) → đọc"},
+            "多":  {p:["夕","夕"], m:["tối","tối"], s:"Hai buổi tối (夕夕) liên tiếp → nhiều"},
+            "饭":  {p:["饣","反"], m:["ăn","ngược"], s:"Thức ăn (饣) ngược lại đói (反) → cơm"},
+            "好":  {p:["女","子"], m:["nữ","con"], s:"Mẹ (女) bên con (子) → tốt đẹp"},
+            "喝":  {p:["口","曷"], m:["miệng","sao"], s:"Miệng (口) khát nên uống → uống"},
+            "和":  {p:["禾","口"], m:["lúa","miệng"], s:"Có lúa (禾) ăn (口) thì hòa bình → và, hòa"},
+            "回":  {p:["囗","口"], m:["vây","miệng"], s:"Miệng (口) trong vòng tròn (囗) → quay về"},
+            "家":  {p:["宀","豕"], m:["mái nhà","lợn"], s:"Lợn (豕) dưới mái nhà (宀) → gia đình (xưa nuôi lợn trong nhà)"},
+            "叫":  {p:["口","丩"], m:["miệng","kêu"], s:"Miệng (口) phát tiếng → gọi, kêu"},
+            "看":  {p:["手","目"], m:["tay","mắt"], s:"Tay (手) che trên mắt (目) nhìn xa → xem"},
+            "妈":  {p:["女","马"], m:["nữ","ngựa"], s:"Người nữ (女) khỏe như ngựa (马) → mẹ"},
+            "买":  {p:["乛","头"], m:["móc","đầu"], s:"Vươn tay (乛) lấy đồ → mua"},
+            "卖":  {p:["十","买"], m:["mười","mua"], s:"Mua (买) gấp 10 (十) lần công sức → bán"},
+            "猫":  {p:["犭","苗"], m:["thú","mạ"], s:"Con thú (犭) ẩn trong ruộng mạ (苗) → mèo"},
+            "没":  {p:["氵","殳"], m:["nước","đánh"], s:"Chìm trong nước (氵) mất tích → không có"},
+            "明":  {p:["日","月"], m:["mặt trời","mặt trăng"], s:"Mặt trời (日) + trăng (月) cùng chiếu → sáng rõ"},
+            "名":  {p:["夕","口"], m:["tối","miệng"], s:"Trong bóng tối (夕) phải hô tên bằng miệng (口) → tên"},
+            "朋":  {p:["月","月"], m:["trăng","trăng"], s:"Hai mặt trăng (月月) sánh đôi → bạn bè"},
+            "请":  {p:["讠","青"], m:["lời","xanh"], s:"Lời nói (讠) trong sáng (青) → mời, xin"},
+            "认":  {p:["讠","人"], m:["lời","người"], s:"Lời (讠) người (人) quen → nhận biết"},
+            "说":  {p:["讠","兑"], m:["lời","đổi"], s:"Lời nói (讠) trao đổi (兑) → nói"},
+            "听":  {p:["口","斤"], m:["miệng","cân"], s:"Tai nghe (口) cân nhắc (斤) → nghe"},
+            "学":  {p:["⺍","冖","子"], m:["tay","mái","trẻ"], s:"Tay (⺍) che (冖) cho trẻ (子) → học"},
+            "要":  {p:["西","女"], m:["tây","nữ"], s:"Phụ nữ (女) ở phương tây (西) → cần, muốn"},
+            "医":  {p:["匚","矢"], m:["hộp","mũi tên"], s:"Hộp (匚) đựng dụng cụ (矢) chữa bệnh → bác sĩ"},
+            "在":  {p:["一","土"], m:["ngang","đất"], s:"Đứng (一) trên đất (土) → ở, tại"},
+            "字":  {p:["宀","子"], m:["mái nhà","con"], s:"Con (子) dưới mái nhà (宀) học chữ → chữ"},
+            "做":  {p:["亻","故"], m:["người","cũ/việc"], s:"Người (亻) tạo ra việc (故) → làm"},
+            "坐":  {p:["人","人","土"], m:["người","người","đất"], s:"Hai người (人人) trên đất (土) → ngồi"},
+            "白":  {p:["日","丿"], m:["trời","phẩy"], s:"Ánh mặt trời (日) chiếu → trắng"},
+            "别":  {p:["口","刂"], m:["miệng","dao"], s:"Dao (刂) cắt ngang (口) → đừng, khác"},
+            "唱":  {p:["口","昌"], m:["miệng","sáng"], s:"Miệng (口) hát vang (昌) → hát"},
+            "穿":  {p:["穴","牙"], m:["hang","răng"], s:"Xuyên (牙) qua hang (穴) → mặc, xỏ"},
+            "快":  {p:["忄","夬"], m:["tim","quyết"], s:"Lòng (忄) quyết đoán (夬) → nhanh, vui"},
+            "累":  {p:["田","糸"], m:["ruộng","sợi"], s:"Làm ruộng (田) kéo sợi (糸) → mệt"},
+            "给":  {p:["纟","合"], m:["sợi","hợp"], s:"Dệt sợi (纟) hợp lại (合) tặng → cho"},
+            "红":  {p:["纟","工"], m:["sợi","công"], s:"Sợi tơ (纟) nhuộm bằng công (工) → đỏ"},
+            "黑":  {p:["里","灬"], m:["trong","lửa"], s:"Trong (里) lửa (灬) cháy thành than → đen"},
+            "花":  {p:["艹","化"], m:["cỏ","biến"], s:"Cỏ cây (艹) biến hóa (化) → hoa"},
+            "近":  {p:["辶","斤"], m:["đi","cân"], s:"Đi (辶) một cân (斤) đường → gần"},
+            "课":  {p:["讠","果"], m:["lời","quả"], s:"Lời giảng (讠) cho ra quả (果) → bài học"},
+            "时":  {p:["日","寸"], m:["trời","tấc"], s:"Mặt trời (日) đo bằng tấc (寸) → thời gian"},
+            "走":  {p:["土","止"], m:["đất","dừng"], s:"Chân bước trên đất → đi bộ"},
+            "懂":  {p:["忄","董"], m:["tim","quản lý"], s:"Lòng (忄) quản lý (董) kiến thức → hiểu"},
+            "房":  {p:["户","方"], m:["cửa","vuông"], s:"Cửa (户) vuông vắn (方) → phòng"},
+            "告":  {p:["牛","口"], m:["trâu","miệng"], s:"Trâu (牛) mở miệng (口) → nói cho biết"},
+            "换":  {p:["扌","奂"], m:["tay","sáng"], s:"Tay (扌) đổi (奂) cái khác → đổi"},
+            "教":  {p:["孝","攵"], m:["hiếu","đánh"], s:"Dạy đạo hiếu (孝) bằng roi (攵) → dạy"},
+            "借":  {p:["亻","昔"], m:["người","xưa"], s:"Người (亻) thời xưa (昔) → mượn"},
+            "忘":  {p:["亡","心"], m:["mất","tim"], s:"Tim (心) bị mất (亡) trí nhớ → quên"},
+            "想":  {p:["相","心"], m:["xem","tim"], s:"Tim (心) ngắm nhìn (相) → nghĩ, muốn"},
+            "休":  {p:["亻","木"], m:["người","cây"], s:"Người (亻) tựa gốc cây (木) → nghỉ ngơi"}
+        };
+
+        // ============ SIMILAR CHARACTERS DATA ============
+        const SIMILAR_GROUPS = [
+            {chars:["买","卖"],tips:"<b>买</b> (mǎi·mua) vs <b>卖</b> (mài·bán) — 卖 thêm 十 ở trên: phải bỏ công gấp 10 mới bán được"},
+            {chars:["大","太","天"],tips:"<b>大</b> (dà·to) → thêm chấm = <b>太</b> (tài·quá) → thêm ngang trên = <b>天</b> (tiān·trời)"},
+            {chars:["人","入"],tips:"<b>人</b> (rén·người) nét phải dài, <b>入</b> (rù·vào) nét trái dài hơn"},
+            {chars:["日","目","白"],tips:"<b>日</b> (rì·mặt trời) nhỏ, <b>目</b> (mù·mắt) thêm ngang, <b>白</b> (bái·trắng) thêm phẩy"},
+            {chars:["土","士"],tips:"<b>土</b> (tǔ·đất) ngang dưới dài, <b>士</b> (shì·sĩ) ngang trên dài"},
+            {chars:["了","子"],tips:"<b>了</b> (le·rồi) chỉ có móc, <b>子</b> (zǐ·con) thêm ngang"},
+            {chars:["己","已","巳"],tips:"<b>己</b> (jǐ·mình) mở, <b>已</b> (yǐ·đã) hé, <b>巳</b> (sì·tỵ) đóng kín"},
+            {chars:["问","间"],tips:"<b>问</b> (wèn·hỏi) = cửa+miệng(口), <b>间</b> (jiān·giữa) = cửa+mặt trời(日)"},
+            {chars:["请","清","晴","情"],tips:"Cùng bộ <b>青</b>: 讠→<b>请</b>(mời), 氵→<b>清</b>(trong), 日→<b>晴</b>(nắng), 忄→<b>情</b>(tình)"},
+            {chars:["他","她","它"],tips:"<b>他</b> (tā·anh ấy)=亻, <b>她</b> (tā·cô ấy)=女, <b>它</b> (tā·nó)=宀 — cùng đọc tā"},
+            {chars:["又","右","左"],tips:"<b>又</b> (yòu·lại), <b>右</b> (yòu·phải)=口+又, <b>左</b> (zuǒ·trái)=工+丿"},
+            {chars:["住","往"],tips:"<b>住</b> (zhù·ở)=亻+主, <b>往</b> (wǎng·về phía)=彳+主"},
+            {chars:["近","远"],tips:"<b>近</b> (jìn·gần)=辶+斤, <b>远</b> (yuǎn·xa)=辶+元 — cùng bộ chước (辶=đi)"},
+            {chars:["快","块"],tips:"<b>快</b> (kuài·nhanh)=忄+夬, <b>块</b> (kuài·khối)=土+夬 — bộ trái khác"},
+            {chars:["以","已"],tips:"<b>以</b> (yǐ·lấy) có thêm chấm, <b>已</b> (yǐ·đã) không có"},
+            {chars:["对","时"],tips:"<b>对</b> (duì·đúng)=又+寸, <b>时</b> (shí·thời gian)=日+寸 — cùng bộ thốn (寸)"},
+            {chars:["午","牛"],tips:"<b>午</b> (wǔ·ngọ/trưa) nét sổ không xuyên trên, <b>牛</b> (niú·trâu) xuyên qua"},
+            {chars:["干","千","于"],tips:"<b>干</b> (gān·khô) ngang bằng, <b>千</b> (qiān·nghìn) phẩy trên, <b>于</b> (yú·ở) móc dưới"},
+            {chars:["睛","晴"],tips:"<b>睛</b> (jīng·mắt)=目+青, <b>晴</b> (qíng·nắng)=日+青 — mắt vs mặt trời"},
+            {chars:["跟","很","银"],tips:"<b>跟</b> (gēn·theo)=足+艮, <b>很</b> (hěn·rất)=彳+艮, <b>银</b> (yín·bạc)=钅+艮"}
+        ];
+        // Extra char info for chars used in SIMILAR_GROUPS but not in VOCAB
+        const EXTRA_CHARS = {
+            "入":{h:"入",p:"rù",hv:"NHẬP",v:"vào"},
+            "目":{h:"目",p:"mù",hv:"MỤC",v:"mắt"},
+            "士":{h:"士",p:"shì",hv:"SĨ",v:"sĩ, chiến sĩ"},
+            "巳":{h:"巳",p:"sì",hv:"TỴ",v:"tỵ (chi thứ 6)"},
+            "己":{h:"己",p:"jǐ",hv:"KỶ",v:"mình, bản thân"},
+            "已":{h:"已",p:"yǐ",hv:"DĨ",v:"đã, rồi"},
+            "清":{h:"清",p:"qīng",hv:"THANH",v:"trong, sạch"},
+            "晴":{h:"晴",p:"qíng",hv:"TÌNH",v:"trời nắng"},
+            "情":{h:"情",p:"qíng",hv:"TÌNH",v:"tình cảm"},
+            "它":{h:"它",p:"tā",hv:"THA",v:"nó (vật)"},
+            "右":{h:"右",p:"yòu",hv:"HỮU",v:"bên phải"},
+            "左":{h:"左",p:"zuǒ",hv:"TẢ",v:"bên trái"},
+            "往":{h:"往",p:"wǎng",hv:"VÃNG",v:"về phía, đi"},
+            "以":{h:"以",p:"yǐ",hv:"DĨ",v:"lấy, dùng"},
+            "睛":{h:"睛",p:"jīng",hv:"TÌNH",v:"con ngươi (mắt)"},
+            "跟":{h:"跟",p:"gēn",hv:"CĂN",v:"theo, với"},
+            "银":{h:"银",p:"yín",hv:"NGÂN",v:"bạc"},
+            "块":{h:"块",p:"kuài",hv:"KHỐI",v:"khối, miếng"},
+            "远":{h:"远",p:"yuǎn",hv:"VIỄN",v:"xa"},
+            "千":{h:"千",p:"qiān",hv:"THIÊN",v:"nghìn"},
+            "于":{h:"于",p:"yú",hv:"VU",v:"ở, tại"},
+            "干":{h:"干",p:"gān",hv:"CAN",v:"khô"},
+            "又":{h:"又",p:"yòu",hv:"HỰU",v:"lại, thêm"},
+            "太":{h:"太",p:"tài",hv:"THÁI",v:"quá"},
+            "住":{h:"住",p:"zhù",hv:"TRÚ",v:"ở, sống"},
+            "间":{h:"间",p:"jiān",hv:"GIAN",v:"ở giữa, khoảng"},
+            "午":{h:"午",p:"wǔ",hv:"NGỌ",v:"trưa"},
+            "牛":{h:"牛",p:"niú",hv:"NGƯU",v:"trâu, bò"}
+        };
+        function findChar(ch) {
+            return VOCAB.find(w => w.h === ch) || EXTRA_CHARS[ch] || null;
+        }
+        // Enrich similar groups with vocab data
+        SIMILAR_GROUPS.forEach(g => {
+            g.words = g.chars.map(ch => findChar(ch)).filter(Boolean);
+        });
+
+        // ============ STORAGE ============
+        async function loadProgress() {
+            try {
+                if (window.storage && typeof window.storage.get === 'function') {
+                    const r = await window.storage.get(STORAGE_KEY);
+                    if (r && r.value) state.progress = JSON.parse(r.value);
+                }
+            } catch (e) { state.progress = {}; }
+            VOCAB.forEach(w => { if (!state.progress[w.key]) state.progress[w.key] = STATUS.NEW; });
+        }
+
+        async function saveProgress() {
+            try {
+                if (window.storage && typeof window.storage.set === 'function') {
+                    await window.storage.set(STORAGE_KEY, JSON.stringify(state.progress));
+                }
+            } catch (e) { }
+        }
+
+        async function resetAllProgress() {
+            state.progress = {};
+            VOCAB.forEach(w => state.progress[w.key] = STATUS.NEW);
+            try {
+                if (window.storage && typeof window.storage.delete === 'function') {
+                    await window.storage.delete(STORAGE_KEY);
+                }
+            } catch (e) { }
+            state.flashOrder = [];
+            refreshAll();
+            toast("Đã đặt lại toàn bộ tiến độ");
+        }
+
+        // ============ HELPERS ============
+        function $(s) { return document.querySelector(s); }
+        function $$(s) { return document.querySelectorAll(s); }
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // Get pinyin first letter (without tone marks)
+        const TONE_MAP = { 'ā': 'a', 'á': 'a', 'ǎ': 'a', 'à': 'a', 'ē': 'e', 'é': 'e', 'ě': 'e', 'è': 'e', 'ī': 'i', 'í': 'i', 'ǐ': 'i', 'ì': 'i', 'ō': 'o', 'ó': 'o', 'ǒ': 'o', 'ò': 'o', 'ū': 'u', 'ú': 'u', 'ǔ': 'u', 'ù': 'u', 'ǖ': 'u', 'ǘ': 'u', 'ǚ': 'u', 'ǜ': 'u', 'ü': 'u', 'ñ': 'n' };
+        function firstLetter(pinyin) {
+            const c = pinyin.toLowerCase().charAt(0);
+            return TONE_MAP[c] || c;
+        }
+
+        // Get currently selected vocab pool (filtered by level)
+        function getPool() {
+            let pool = state.level === "all" ? VOCAB : VOCAB.filter(w => w.lv === parseInt(state.level));
+            // Global pinyin alpha range filter
+            if (state.alphaFrom !== "all" || state.alphaTo !== "all") {
+                const from = state.alphaFrom === "all" ? "a" : state.alphaFrom;
+                const to = state.alphaTo === "all" ? "z" : state.alphaTo;
+                pool = pool.filter(w => { const l = firstLetter(w.p); return l >= from && l <= to; });
+            }
+            return pool;
+        }
+
+        function counts(pool) {
+            pool = pool || getPool();
+            let n = 0, l = 0, m = 0;
+            pool.forEach(w => {
+                const s = state.progress[w.key];
+                if (s === STATUS.MASTERED) m++;
+                else if (s === STATUS.LEARNING) l++;
+                else n++;
+            });
+            return { total: pool.length, new: n, learning: l, mastered: m };
+        }
+
+        let toastTimer;
+        function toast(msg) {
+            const el = $("#toast");
+            el.textContent = msg;
+            el.classList.add("show");
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
+        }
+
+        // ============ AUDIO (Web Speech API) ============
+        let zhVoice = null;
+        function pickVoice() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = speechSynthesis.getVoices();
+            // Prefer Chinese (Mainland) voices
+            zhVoice = voices.find(v => /zh-CN|zh_CN|cmn-Hans|zh-Hans/i.test(v.lang)) ||
+                voices.find(v => /zh/i.test(v.lang)) || null;
+        }
+        if ('speechSynthesis' in window) {
+            pickVoice();
+            speechSynthesis.onvoiceschanged = pickVoice;
+        }
+
+        function speak(text, btn) {
+            if (!('speechSynthesis' in window)) {
+                toast("Trình duyệt không hỗ trợ phát âm tự động");
+                return;
+            }
+            speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'zh-CN';
+            u.rate = 0.8;
+            u.pitch = 1.0;
+            if (zhVoice) u.voice = zhVoice;
+            if (btn) {
+                btn.classList.add("speaking");
+                u.onend = () => btn.classList.remove("speaking");
+                u.onerror = () => btn.classList.remove("speaking");
+            }
+            speechSynthesis.speak(u);
+        }
+
+        // ============ HEADER STATS & LEVEL COUNTS ============
+        function renderHeaderStats() {
+            const c = counts();
+            $("#headerStats").innerHTML = `
+    <div class="stat-pill mastered"><div class="num">${c.mastered}</div><div class="lbl">Thuộc</div></div>
+    <div class="stat-pill learning"><div class="num">${c.learning}</div><div class="lbl">Đang học</div></div>
+    <div class="stat-pill new"><div class="num">${c.new}</div><div class="lbl">Chưa học</div></div>
+  `;
+            $("#cntAll").textContent = `(${VOCAB.length})`;
+            $("#cnt1").textContent = `(${VOCAB.filter(w => w.lv === 1).length})`;
+            $("#cnt2").textContent = `(${VOCAB.filter(w => w.lv === 2).length})`;
+            $("#cnt3").textContent = `(${VOCAB.filter(w => w.lv === 3).length})`;
+        }
+
+        // ============ LEVEL SWITCHING ============
+        $$(".level-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                $$(".level-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                state.level = btn.dataset.lv;
+                state.flashOrder = [];
+                state.quiz = null;
+                state.match = null;
+                state.browseAlpha = "all";
+                renderAlphaRangeBar(); // rebuild letters for new level pool
+                refreshActiveView();
+                renderHeaderStats();
+            });
+        });
+
+        // ============ ALPHA RANGE BAR ============
+        // All pinyin initials present in full vocab (stable, pre-computed)
+        const ALL_LETTERS = "abcdefghjklmnpqrstwxyz".split("");
+
+        function getLettersForCurrentLevel() {
+            // Only show letters that exist in the level pool (ignoring alpha range for this)
+            const lvPool = state.level === "all" ? VOCAB : VOCAB.filter(w => w.lv === parseInt(state.level));
+            const s = new Set();
+            lvPool.forEach(w => s.add(firstLetter(w.p)));
+            return s;
+        }
+
+        function renderAlphaRangeBar() {
+            const avail = getLettersForCurrentLevel();
+            const from = state.alphaFrom;
+            const to = state.alphaTo;
+            const hasFilter = from !== "all" || to !== "all";
+
+            // Build letters
+            let html = `<button class="ar-btn all-btn ${!hasFilter ? 'active' : ''}" data-ar="all">Tất cả</button>`;
+            ALL_LETTERS.forEach(l => {
+                const exists = avail.has(l);
+                let cls = "ar-btn";
+                if (!exists) cls += " disabled-letter";
+                if (hasFilter) {
+                    const ef = from === "all" ? "a" : from;
+                    const et = to === "all" ? "z" : to;
+                    if (l === ef) cls += " range-start";
+                    else if (l === et && from !== "all") cls += " range-end";
+                    else if (l > ef && l < et && from !== "all") cls += " in-range";
+                }
+                html += `<button class="${cls}" data-ar="${l}" ${exists ? "" : "disabled"}>${l}</button>`;
+            });
+            $("#arLetters").innerHTML = html;
+
+            // Info text
+            const poolCount = getPool().length;
+            if (!hasFilter) {
+                $("#arInfo").textContent = `${poolCount} từ`;
+            } else {
+                const ef = from === "all" ? "a" : from;
+                const et = to === "all" ? ef : to;
+                if (from !== "all" && to === "all") {
+                    $("#arInfo").textContent = `${ef.toUpperCase()} → ? · ${poolCount} từ`;
+                } else if (from === "all" && to !== "all") {
+                    $("#arInfo").textContent = `? → ${et.toUpperCase()} · ${poolCount} từ`;
+                } else {
+                    $("#arInfo").textContent = `${ef.toUpperCase()} → ${et.toUpperCase()} · ${poolCount} từ`;
+                }
+            }
+            $("#arClear").disabled = !hasFilter;
+
+            // Attach click handlers
+            $$(".ar-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const v = btn.dataset.ar;
+                    if (v === "all") {
+                        state.alphaFrom = "all";
+                        state.alphaTo = "all";
+                    } else {
+                        // Click logic: first click = set from, second click on different = set to (range)
+                        // If no filter yet, set from
+                        // If from is set but to is not, set to (ensure from <= to, swap if needed)
+                        // If both set, reset and start new from
+                        if (state.alphaFrom === "all") {
+                            state.alphaFrom = v;
+                            state.alphaTo = "all";
+                        } else if (state.alphaTo === "all") {
+                            if (v === state.alphaFrom) {
+                                // click same letter = just that letter (from = to = letter)
+                                state.alphaTo = v;
+                            } else if (v < state.alphaFrom) {
+                                // clicked before from → swap
+                                state.alphaTo = state.alphaFrom;
+                                state.alphaFrom = v;
+                            } else {
+                                state.alphaTo = v;
+                            }
+                        } else {
+                            // Both set → reset to new from
+                            state.alphaFrom = v;
+                            state.alphaTo = "all";
+                        }
+                    }
+                    state.flashOrder = [];
+                    state.quiz = null;
+                    state.match = null;
+                    state.browseAlpha = "all";
+                    renderAlphaRangeBar();
+                    refreshActiveView();
+                    renderHeaderStats();
+                });
+            });
+        }
+
+        $("#arClear").addEventListener("click", () => {
+            state.alphaFrom = "all";
+            state.alphaTo = "all";
+            state.flashOrder = [];
+            state.quiz = null;
+            state.match = null;
+            renderAlphaRangeBar();
+            refreshActiveView();
+            renderHeaderStats();
+        });
+
+        // ============ TAB SWITCHING ============
+        function switchView(v) {
+            $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
+            $$(".bn-tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
+            $$(".view").forEach(s => s.classList.remove("active"));
+            $("#view-" + v).classList.add("active");
+            if (v === "flash") initFlash();
+            if (v === "quiz") initQuiz();
+            if (v === "match") initMatch();
+            if (v === "browse") renderBrowse();
+            if (v === "write") initWrite();
+            if (v === "similar") renderSimilar();
+            if (v === "stats") renderStats();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        $$(".tab").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.view)));
+        $$(".bn-tab").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.view)));
+
+        function refreshActiveView() {
+            const active = document.querySelector(".tab.active")?.dataset.view || "flash";
+            if (active === "flash") initFlash();
+            if (active === "quiz") initQuiz();
+            if (active === "match") initMatch();
+            if (active === "browse") { renderAlphabet(); renderBrowse(); }
+            if (active === "write") initWrite();
+            if (active === "similar") renderSimilar();
+            if (active === "stats") renderStats();
+        }
+
+        // ============ TIP BANNER ============
+        $("#closeTip").addEventListener("click", () => {
+            $("#tipBanner").style.display = "none";
+        });
+
+        // ============ FLASHCARD ============
+        function initFlash() {
+            const pool = getPool();
+            if (pool.length === 0) return;
+            if (state.flashOrder.length === 0) {
+                const newW = pool.filter(w => state.progress[w.key] === STATUS.NEW);
+                const learnW = pool.filter(w => state.progress[w.key] === STATUS.LEARNING);
+                const masterW = pool.filter(w => state.progress[w.key] === STATUS.MASTERED);
+                state.flashOrder = [...shuffle(learnW), ...shuffle(newW), ...shuffle(masterW)];
+                state.flashIdx = 0;
+            }
+            renderFlash();
+        }
+
+        function getRadicalHTML(ch) {
+            const firstChar = ch.charAt(0);
+            const r = RADICALS[firstChar];
+            if (!r || !r.p || r.p.length === 0) return "";
+            let partsHtml = "";
+            r.p.forEach((p, i) => {
+                if (i > 0) partsHtml += `<span class="radical-plus">+</span>`;
+                partsHtml += `<div class="radical-part"><span class="rp-char">${p}</span><span class="rp-mean">${r.m[i]||''}</span></div>`;
+            });
+            return `<div class="radical-box"><div class="radical-title">🔍 Cấu tạo chữ</div><div class="radical-parts">${partsHtml}</div><div class="radical-story">${r.s}</div></div>`;
+        }
+
+        function renderFlash() {
+            if (state.flashOrder.length === 0) {
+                $("#cardHanzi").textContent = "—";
+                $("#flashTotal").textContent = 0;
+                return;
+            }
+            const w = state.flashOrder[state.flashIdx];
+            const s = state.progress[w.key];
+            const card = $("#card");
+            card.classList.remove("flipped");
+
+            if (state.reverseMode) {
+                $("#cardHanzi").textContent = w.v;
+                $("#cardHanzi").classList.add("viet-mode");
+                $("#speakFront").style.display = "none";
+                $("#frontCorner").textContent = "ý nghĩa · tiếng Việt";
+                $("#backCorner").textContent = "汉字 · pinyin";
+                $("#backHanzi").textContent = w.h;
+                $("#backPinyin").textContent = w.p;
+                $("#backHV").textContent = w.hv;
+                $("#backMeaning").textContent = "";
+                $("#backMeaning").style.display = "none";
+            } else {
+                $("#cardHanzi").textContent = w.h;
+                $("#cardHanzi").classList.remove("viet-mode");
+                $("#speakFront").style.display = "";
+                $("#frontCorner").textContent = "汉字 · hanzi";
+                $("#backCorner").textContent = "意思 · ý nghĩa";
+                $("#backHanzi").textContent = w.h;
+                $("#backPinyin").textContent = w.p;
+                $("#backHV").textContent = w.hv;
+                $("#backMeaning").textContent = w.v;
+                $("#backMeaning").style.display = "";
+            }
+            $("#cardLv").textContent = "HSK " + w.lv;
+
+            // Radical breakdown on back
+            const existingRad = $("#backContent .radical-box");
+            if (existingRad) existingRad.remove();
+            const radHtml = getRadicalHTML(w.h);
+            if (radHtml) $("#backContent").insertAdjacentHTML("beforeend", radHtml);
+
+            $("#flashIdx").textContent = state.flashIdx + 1;
+            $("#flashTotal").textContent = state.flashOrder.length;
+            $("#flashStatus").textContent = STATUS_LABEL[s];
+            $("#flashFill").style.width = ((state.flashIdx + 1) / state.flashOrder.length * 100) + "%";
+
+            // Auto-play pronunciation
+            if (state.autoPlay) setTimeout(() => speak(w.h, null), 300);
+
+            const html = `<span class="dot"></span><span>${STATUS_LABEL[s]}</span>`;
+            ["#cardStatusFront", "#cardStatusBack"].forEach(sel => {
+                const el = $(sel);
+                el.className = "face-status status-" + s;
+                el.innerHTML = html;
+            });
+        }
+
+        $("#card").addEventListener("click", (e) => {
+            if (e.target.closest('.speak-btn')) return;
+            $("#card").classList.toggle("flipped");
+        });
+
+        ["#speakFront", "#speakBack"].forEach(sel => {
+            $(sel).addEventListener("click", (e) => {
+                e.stopPropagation();
+                const w = state.flashOrder[state.flashIdx];
+                if (w) speak(w.h, e.currentTarget);
+            });
+        });
+
+        $("#prevCard").addEventListener("click", () => {
+            if (state.flashIdx > 0) { state.flashIdx--; renderFlash(); }
+        });
+        $("#nextCard").addEventListener("click", () => {
+            if (state.flashIdx < state.flashOrder.length - 1) { state.flashIdx++; renderFlash(); }
+            else toast("Đã đến từ cuối cùng");
+        });
+        $("#shuffleCards").addEventListener("click", () => {
+            state.flashOrder = shuffle(state.flashOrder);
+            state.flashIdx = 0;
+            renderFlash();
+            toast("Đã trộn ngẫu nhiên");
+        });
+
+        $$(".action-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const w = state.flashOrder[state.flashIdx];
+                if (!w) return;
+                const r = btn.dataset.rate;
+                if (r === "easy") state.progress[w.key] = STATUS.MASTERED;
+                else state.progress[w.key] = STATUS.LEARNING;
+                await saveProgress();
+                renderHeaderStats();
+                if (state.flashIdx < state.flashOrder.length - 1) {
+                    state.flashIdx++;
+                    setTimeout(renderFlash, 200);
+                } else {
+                    toast("🎉 Hoàn thành lượt học!");
+                    renderFlash();
+                }
+            });
+        });
+
+        // ============ QUIZ ============
+        function initQuiz() {
+            const pool = getPool();
+            if (pool.length < 4) {
+                $("#quizCard").innerHTML = `<div class="empty-state"><div class="ch">少</div><div class="msg">Cần ít nhất 4 từ để chơi quiz</div></div>`;
+                return;
+            }
+            $("#quizCard").innerHTML = `
+    <div class="quiz-question-label" id="qLabel">Chọn nghĩa đúng</div>
+    <div class="quiz-question" id="quizQuestion"></div>
+    <div class="quiz-options" id="quizOptions"></div>
+    <div class="quiz-feedback" id="quizFeedback"></div>
+    <button class="quiz-next" id="quizNext" disabled>Câu tiếp →</button>`;
+            $("#quizNext").addEventListener("click", () => {
+                state.quiz.idx++;
+                state.quiz.answered = false;
+                renderQuiz();
+            });
+            const unmastered = pool.filter(w => state.progress[w.key] !== STATUS.MASTERED);
+            const src = unmastered.length >= 10 ? unmastered : pool;
+            state.quiz = { questions: shuffle(src).slice(0, Math.min(10, pool.length)), idx: 0, right: 0, wrong: 0, answered: false };
+            renderQuiz();
+        }
+
+        function renderQuiz() {
+            const q = state.quiz;
+            if (!q) return;
+            if (q.idx >= q.questions.length) { renderQuizDone(); return; }
+            const w = q.questions[q.idx];
+            const dir = Math.random() < 0.6 ? "h2v" : "v2h";
+            const pool = getPool();
+
+            $("#qNum").textContent = q.idx + 1;
+            $("#qTotal").textContent = q.questions.length;
+            $("#qRight").textContent = q.right;
+            $("#qWrong").textContent = q.wrong;
+            $("#quizFeedback").textContent = "";
+            $("#quizFeedback").className = "quiz-feedback";
+            $("#quizNext").disabled = true;
+
+            const distractors = shuffle(pool.filter(x => x.key !== w.key)).slice(0, 3);
+            const opts = shuffle([w, ...distractors]);
+
+            let qHtml, oHtml;
+            if (dir === "h2v") {
+                $("#qLabel").textContent = "Chọn nghĩa đúng";
+                qHtml = `
+      <button class="speak-btn-q" id="qSpeak" aria-label="Nghe phát âm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+      <div class="qhanzi">${w.h}</div>
+      <div class="qpinyin" id="qPinyin">${w.p}</div>
+      <div class="qhv-hint" id="qHV">${w.hv}</div>`;
+                oHtml = opts.map(o => `<button class="quiz-option" data-correct="${o.key === w.key}">${o.v}</button>`).join("");
+            } else {
+                $("#qLabel").textContent = "Chọn Hán tự đúng";
+                qHtml = `<div class="qvi">${w.v}</div>`;
+                oHtml = opts.map(o => `<button class="quiz-option" data-correct="${o.key === w.key}"><span class="opt-h">${o.h}</span><span class="opt-p">${o.p}</span></button>`).join("");
+            }
+
+            $("#quizQuestion").innerHTML = qHtml;
+            $("#quizOptions").innerHTML = oHtml;
+
+            if (dir === "h2v") {
+                $("#qSpeak").addEventListener("click", (e) => speak(w.h, e.currentTarget));
+            }
+
+            $$(".quiz-option").forEach(b => b.addEventListener("click", () => handleAnswer(b, w, dir)));
+        }
+
+        async function handleAnswer(btn, w, dir) {
+            const q = state.quiz;
+            if (q.answered) return;
+            q.answered = true;
+            const correct = btn.dataset.correct === "true";
+
+            $$(".quiz-option").forEach(b => {
+                b.disabled = true;
+                if (b.dataset.correct === "true") b.classList.add("correct");
+                else if (b === btn && !correct) b.classList.add("wrong");
+            });
+
+            if (dir === "h2v") {
+                const pin = $("#qPinyin"); if (pin) pin.classList.add("show");
+                const hv = $("#qHV"); if (hv) hv.classList.add("show");
+            }
+
+            // Auto-play audio for the answer (helps with listening)
+            setTimeout(() => speak(w.h, null), 250);
+
+            const fb = $("#quizFeedback");
+            if (correct) {
+                q.right++;
+                fb.innerHTML = `✓ Chính xác! <span class="hv-tag">${w.hv}</span>`;
+                fb.className = "quiz-feedback correct";
+                const cur = state.progress[w.key];
+                if (cur === STATUS.NEW) state.progress[w.key] = STATUS.LEARNING;
+                else if (cur === STATUS.LEARNING) state.progress[w.key] = STATUS.MASTERED;
+            } else {
+                q.wrong++;
+                fb.innerHTML = `✗ Đáp án đúng: <strong style="font-family:'Noto Serif SC',serif">${w.h}</strong> (${w.p}) — ${w.v}<br><span class="hv-tag">${w.hv}</span>`;
+                fb.className = "quiz-feedback wrong";
+                if (state.progress[w.key] !== STATUS.NEW) state.progress[w.key] = STATUS.LEARNING;
+            }
+
+            $("#qRight").textContent = q.right;
+            $("#qWrong").textContent = q.wrong;
+            $("#quizNext").disabled = false;
+            await saveProgress();
+            renderHeaderStats();
+        }
+
+        function renderQuizDone() {
+            const q = state.quiz;
+            const pct = Math.round((q.right / q.questions.length) * 100);
+            $("#quizCard").innerHTML = `
+    <div class="done-card">
+      <div class="seal-big">完</div>
+      <h2>Hoàn thành!</h2>
+      <p>Bạn đã trả lời đúng <strong style="color:var(--jade)">${q.right}</strong> / ${q.questions.length} câu (${pct}%)</p>
+      <button class="btn-primary" id="newQuiz">⟲ Làm bài mới</button>
+    </div>`;
+            $("#newQuiz").addEventListener("click", initQuiz);
+        }
+
+        // ============ MATCH ============
+        function initMatch() {
+            const pool = getPool();
+            if (pool.length < 8) {
+                $("#matchLeft").innerHTML = `<div class="empty-state"><div class="ch">少</div><div class="msg">Cần ít nhất 8 từ để chơi ghép cặp</div></div>`;
+                $("#matchRight").innerHTML = "";
+                $("#matchScore").textContent = 0;
+                $("#matchTotal").textContent = 0;
+                return;
+            }
+            const unmastered = pool.filter(w => state.progress[w.key] !== STATUS.MASTERED);
+            const src = unmastered.length >= 8 ? unmastered : pool;
+            const pairs = shuffle(src).slice(0, 8);
+            state.match = {
+                pairs,
+                left: shuffle(pairs.map(w => ({ type: "h", h: w.h, p: w.p, key: w.key }))),
+                right: shuffle(pairs.map(w => ({ type: "v", v: w.v, hv: w.hv, key: w.key }))),
+                selected: null, matched: 0, mistakes: 0
+            };
+            renderMatch();
+        }
+
+        function renderMatch() {
+            const m = state.match;
+            if (!m) return;
+            $("#matchScore").textContent = m.matched;
+            $("#matchTotal").textContent = m.pairs.length;
+            $("#matchMistakes").textContent = m.mistakes;
+            $("#matchLeft").innerHTML = m.left.map(it =>
+                `<div class="match-tile hanzi" data-side="L" data-key="${it.key}">${it.h}<span class="mini-p">${it.p}</span></div>`
+            ).join("");
+            $("#matchRight").innerHTML = m.right.map(it =>
+                `<div class="match-tile meaning" data-side="R" data-key="${it.key}">${it.v}<span class="mini-hv">${it.hv}</span></div>`
+            ).join("");
+            $$(".match-tile").forEach(t => t.addEventListener("click", () => handleMatchClick(t)));
+        }
+
+        async function handleMatchClick(tile) {
+            const m = state.match;
+            if (tile.classList.contains("matched")) return;
+
+            if (!m.selected) {
+                $$(".match-tile.selected").forEach(t => t.classList.remove("selected"));
+                tile.classList.add("selected");
+                m.selected = tile;
+                if (tile.dataset.side === "L") {
+                    const w = VOCAB.find(x => x.key === tile.dataset.key);
+                    if (w) speak(w.h, null);
+                }
+                return;
+            }
+
+            if (m.selected === tile) {
+                tile.classList.remove("selected");
+                m.selected = null;
+                return;
+            }
+
+            if (m.selected.dataset.side === tile.dataset.side) {
+                m.selected.classList.remove("selected");
+                tile.classList.add("selected");
+                m.selected = tile;
+                if (tile.dataset.side === "L") {
+                    const w = VOCAB.find(x => x.key === tile.dataset.key);
+                    if (w) speak(w.h, null);
+                }
+                return;
+            }
+
+            if (m.selected.dataset.key === tile.dataset.key) {
+                m.selected.classList.remove("selected");
+                m.selected.classList.add("matched");
+                tile.classList.add("matched");
+                m.matched++;
+                m.selected = null;
+                $("#matchScore").textContent = m.matched;
+                const k = tile.dataset.key;
+                if (state.progress[k] === STATUS.NEW) state.progress[k] = STATUS.LEARNING;
+                await saveProgress();
+                renderHeaderStats();
+                if (m.matched === m.pairs.length) {
+                    setTimeout(() => toast(`🎉 Hoàn thành! Sai ${m.mistakes} lần.`), 400);
+                }
+            } else {
+                m.mistakes++;
+                $("#matchMistakes").textContent = m.mistakes;
+                const a = m.selected, b = tile;
+                a.classList.remove("selected"); b.classList.remove("selected");
+                a.classList.add("shake"); b.classList.add("shake");
+                setTimeout(() => { a.classList.remove("shake"); b.classList.remove("shake"); }, 400);
+                m.selected = null;
+            }
+        }
+
+        $("#newMatch").addEventListener("click", initMatch);
+
+        // ============ BROWSE ============
+        function getAvailableLetters() {
+            const set = new Set();
+            getPool().forEach(w => set.add(firstLetter(w.p)));
+            return Array.from(set).sort();
+        }
+
+        function renderAlphabet() {
+            const avail = new Set(getAvailableLetters());
+            const allLetters = "abcdefghijklmnopqrstuvwxyz".split("");
+            let html = `<button class="alpha-btn ${state.browseAlpha === "all" ? "active" : ""}" data-alpha="all">All</button>`;
+            allLetters.forEach(l => {
+                const has = avail.has(l);
+                html += `<button class="alpha-btn ${state.browseAlpha === l ? "active" : ""}" data-alpha="${l}" ${has ? "" : "disabled"}>${l}</button>`;
+            });
+            $("#alphabetBar").innerHTML = html;
+            $$(".alpha-btn").forEach(b => {
+                b.addEventListener("click", () => {
+                    if (b.disabled) return;
+                    state.browseAlpha = b.dataset.alpha;
+                    renderAlphabet();
+                    renderBrowse();
+                });
+            });
+        }
+
+        function renderBrowse() {
+            renderAlphabet();
+            const grid = $("#wordGrid");
+            let words = getPool().filter(w => {
+                if (state.browseFilter !== "all" && state.progress[w.key] !== state.browseFilter) return false;
+                if (state.browseAlpha !== "all" && firstLetter(w.p) !== state.browseAlpha) return false;
+                if (state.browseQuery) {
+                    const q = state.browseQuery.toLowerCase();
+                    return w.h.includes(state.browseQuery) ||
+                        w.p.toLowerCase().includes(q) ||
+                        w.hv.toLowerCase().includes(q) ||
+                        w.v.toLowerCase().includes(q);
+                }
+                return true;
+            });
+
+            if (words.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><div class="ch">空</div><div class="msg">Không tìm thấy từ nào</div></div>`;
+                return;
+            }
+
+            grid.innerHTML = words.map(w => {
+                const s = state.progress[w.key];
+                return `
+      <div class="word-card s-${s}" data-key="${w.key}">
+        <div class="h-row">
+          <div class="h">${w.h}</div>
+          <button class="speak-mini" data-h="${w.h}" aria-label="Nghe">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          </button>
+        </div>
+        <div class="p">${w.p}</div>
+        <div class="hv">${w.hv}</div>
+        <div class="m">${w.v}</div>
+        <div class="meta-row">
+          <span>${STATUS_LABEL[s]}</span>
+          <span class="lv-badge">HSK ${w.lv}</span>
+        </div>
+      </div>`;
+            }).join("");
+
+            $$(".speak-mini").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    speak(btn.dataset.h, btn);
+                });
+            });
+            $$(".word-card").forEach(card => {
+                card.addEventListener("click", async () => {
+                    const k = card.dataset.key;
+                    const cur = state.progress[k];
+                    const next = cur === STATUS.NEW ? STATUS.LEARNING :
+                        cur === STATUS.LEARNING ? STATUS.MASTERED : STATUS.NEW;
+                    state.progress[k] = next;
+                    await saveProgress();
+                    renderHeaderStats();
+                    renderBrowse();
+                    const w = VOCAB.find(x => x.key === k);
+                    toast(`${w.h} → ${STATUS_LABEL[next]}`);
+                });
+            });
+        }
+
+        $("#searchInput").addEventListener("input", e => {
+            state.browseQuery = e.target.value.trim();
+            renderBrowse();
+        });
+
+        $$("#statusPills .filter-pill").forEach(p => {
+            p.addEventListener("click", () => {
+                $$("#statusPills .filter-pill").forEach(x => x.classList.remove("active"));
+                p.classList.add("active");
+                state.browseFilter = p.dataset.filter;
+                renderBrowse();
+            });
+        });
+
+        // ============ STATS ============
+        function renderStats() {
+            const c = counts();
+            const pool = getPool();
+            const pct = n => pool.length > 0 ? Math.round((n / pool.length) * 100) : 0;
+            const lvLabel = state.level === "all" ? "Tất cả HSK 1-2-3" : "HSK " + state.level;
+
+            $("#statsGrid").innerHTML = `
+    <div class="stat-card s-total">
+      <div class="label">${lvLabel}</div>
+      <div class="value">${c.total}</div>
+      <div class="pct">tổng số từ</div>
+    </div>
+    <div class="stat-card s-mastered">
+      <div class="label">Đã thuộc</div>
+      <div class="value">${c.mastered}</div>
+      <div class="pct">${pct(c.mastered)}% · 已掌握</div>
+    </div>
+    <div class="stat-card s-learning">
+      <div class="label">Đang học</div>
+      <div class="value">${c.learning}</div>
+      <div class="pct">${pct(c.learning)}% · 学习中</div>
+    </div>
+    <div class="stat-card s-new">
+      <div class="label">Chưa học</div>
+      <div class="value">${c.new}</div>
+      <div class="pct">${pct(c.new)}% · 未学</div>
+    </div>`;
+
+            // Per-level progress bars (always show all 3 levels)
+            let html = "";
+            [1, 2, 3].forEach(lv => {
+                const lvPool = VOCAB.filter(w => w.lv === lv);
+                const lvCounts = counts(lvPool);
+                const p = n => lvPool.length > 0 ? (n / lvPool.length) * 100 : 0;
+                const pm = Math.round(p(lvCounts.mastered));
+                const pl = Math.round(p(lvCounts.learning));
+                const pn = 100 - pm - pl;
+                html += `
+      <div class="level-progress-block">
+        <div class="lpb-header">
+          <span class="lpb-lbl">HSK ${lv}</span>
+          <span>${lvCounts.mastered}/${lvCounts.total} đã thuộc (${Math.round(p(lvCounts.mastered))}%)</span>
+        </div>
+        <div class="big-progress">
+          <div class="seg mastered" style="width:${pm}%">${pm >= 6 ? pm + '%' : ''}</div>
+          <div class="seg learning" style="width:${pl}%">${pl >= 6 ? pl + '%' : ''}</div>
+          <div class="seg new" style="width:${pn}%">${pn >= 6 ? pn + '%' : ''}</div>
+        </div>
+      </div>`;
+            });
+            $("#levelProgressList").innerHTML = html;
+        }
+
+        $("#resetProgress").addEventListener("click", () => {
+            if (confirm("Đặt lại toàn bộ tiến độ học? Hành động này không thể hoàn tác.")) {
+                resetAllProgress();
+            }
+        });
+
+        // ============ SWIPE GESTURES (Flashcard) ============
+        (function () {
+            const stage = document.getElementById("card");
+            let startX = 0, startY = 0, startT = 0;
+            let isDragging = false;
+
+            stage.addEventListener("touchstart", e => {
+                const t = e.touches[0];
+                startX = t.clientX;
+                startY = t.clientY;
+                startT = Date.now();
+                isDragging = false;
+            }, { passive: true });
+
+            stage.addEventListener("touchmove", e => {
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+                if (Math.abs(dx) > 8 || Math.abs(dy) > 8) isDragging = true;
+                // Live tilt feedback
+                if (Math.abs(dx) > 10) {
+                    const tilt = Math.min(dx / 6, 15);
+                    stage.style.transform = `rotate(${tilt}deg) translateX(${dx * 0.15}px)`;
+                    stage.style.transition = "none";
+                }
+            }, { passive: true });
+
+            stage.addEventListener("touchend", e => {
+                stage.style.transform = "";
+                stage.style.transition = "";
+                const dt = Date.now() - startT;
+                const dx = e.changedTouches[0].clientX - startX;
+                const dy = e.changedTouches[0].clientY - startY;
+                const adx = Math.abs(dx), ady = Math.abs(dy);
+
+                // Only process if it was a swipe (moved >40px), not a tap
+                if (!isDragging || (adx < 40 && ady < 40)) {
+                    // Tap = flip (handled by click listener already)
+                    return;
+                }
+
+                // Horizontal swipe = rate the card
+                if (adx > ady && adx > 50) {
+                    e.preventDefault();
+                    const isFlipped = document.getElementById("card").classList.contains("flipped");
+                    if (!isFlipped) {
+                        // Flip first if not yet flipped
+                        document.getElementById("card").classList.add("flipped");
+                        return;
+                    }
+                    if (dx > 0) {
+                        // Swipe right = Easy
+                        document.querySelector(".action-btn.easy").click();
+                        showSwipeFeedback("👍 Thuộc rồi!", "var(--jade)");
+                    } else {
+                        // Swipe left = Hard
+                        document.querySelector(".action-btn.hard").click();
+                        showSwipeFeedback("💪 Học lại!", "var(--vermilion)");
+                    }
+                }
+                // Swipe up = flip
+                else if (ady > adx && dy < -50) {
+                    const card = document.getElementById("card");
+                    if (!card.classList.contains("flipped")) {
+                        card.classList.add("flipped");
+                    } else {
+                        // Swipe up when flipped = Ok
+                        document.querySelector(".action-btn.ok").click();
+                        showSwipeFeedback("✓ Bình thường", "var(--gold)");
+                    }
+                }
+            }, { passive: false });
+
+            function showSwipeFeedback(msg, color) {
+                const el = document.createElement("div");
+                el.textContent = msg;
+                el.style.cssText = `position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:${color};color:#fff8ee;padding:14px 28px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;z-index:200;pointer-events:none;opacity:1;transition:all .4s ease`;
+                document.body.appendChild(el);
+                setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translate(-50%,-80%)"; }, 50);
+                setTimeout(() => el.remove(), 500);
+            }
+        })();
+
+        // ============ KEYBOARD ============
+        document.addEventListener("keydown", e => {
+            if (e.target.tagName === "INPUT") return;
+            const flashActive = $("#view-flash").classList.contains("active");
+            if (flashActive) {
+                if (e.key === " " || e.key === "Enter") { e.preventDefault(); $("#card").classList.toggle("flipped"); }
+                if (e.key === "ArrowLeft") $("#prevCard").click();
+                if (e.key === "ArrowRight") $("#nextCard").click();
+                if (e.key === "1") $("[data-rate=hard]").click();
+                if (e.key === "2") $("[data-rate=ok]").click();
+                if (e.key === "3") $("[data-rate=easy]").click();
+                if (e.key.toLowerCase() === "s") {
+                    const w = state.flashOrder[state.flashIdx];
+                    if (w) speak(w.h, $("#card").classList.contains("flipped") ? $("#speakBack") : $("#speakFront"));
+                }
+            }
+        });
+
+        // ============ WRITING PRACTICE (HanziWriter) ============
+        function initWrite() {
+            const pool = getPool();
+            if (pool.length === 0) return;
+            if (state.writeIdx >= pool.length) state.writeIdx = 0;
+            renderWrite();
+        }
+
+        function renderWrite() {
+            const pool = getPool();
+            if (pool.length === 0) return;
+            const w = pool[state.writeIdx];
+            $("#writeHanzi").textContent = w.h;
+            $("#writePinyin").textContent = w.p;
+            $("#writeMeaning").textContent = w.v + " · " + w.hv;
+            $("#writeCounter").textContent = `${state.writeIdx + 1} / ${pool.length}`;
+            $("#writeResult").textContent = "";
+            $("#writeResult").className = "write-result";
+            createWriter(w.h.charAt(0));
+        }
+
+        function createWriter(char) {
+            const target = document.getElementById("writerTarget");
+            target.innerHTML = "";
+            if (state.writerInstance) state.writerInstance = null;
+            try {
+                const size = target.offsetWidth || 260;
+                if (state.writeMode === "stroke") {
+                    state.writerInstance = HanziWriter.create(target, char, {
+                        width: size, height: size,
+                        padding: 12,
+                        showOutline: true,
+                        strokeAnimationSpeed: 1,
+                        delayBetweenStrokes: 200,
+                        strokeColor: '#1f1c18',
+                        outlineColor: '#e0d3bb',
+                        radicalColor: '#c8412c',
+                        showCharacter: true
+                    });
+                } else {
+                    state.writerInstance = HanziWriter.create(target, char, {
+                        width: size, height: size,
+                        padding: 12,
+                        showOutline: true,
+                        showHintAfterMisses: 3,
+                        strokeColor: '#1f1c18',
+                        outlineColor: '#e0d3bb',
+                        highlightColor: '#c8412c',
+                        drawingColor: '#5a7d3a',
+                        showCharacter: false
+                    });
+                    state.writerInstance.quiz({
+                        onComplete: (res) => {
+                            const el = $("#writeResult");
+                            if (res.totalMistakes === 0) {
+                                el.textContent = "✓ Hoàn hảo! Không sai nét nào!";
+                                el.className = "write-result success";
+                            } else {
+                                el.textContent = `Hoàn thành! Sai ${res.totalMistakes} nét.`;
+                                el.className = "write-result fail";
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                target.innerHTML = `<div style="padding:40px;text-align:center;color:var(--ink-mute)">Không tải được chữ "${char}"</div>`;
+            }
+        }
+
+        $("#writeAnimate").addEventListener("click", () => {
+            if (state.writerInstance && state.writeMode === "stroke") {
+                state.writerInstance.animateCharacter();
+            }
+        });
+        $("#writePrev").addEventListener("click", () => {
+            const pool = getPool();
+            if (state.writeIdx > 0) { state.writeIdx--; renderWrite(); }
+        });
+        $("#writeNext").addEventListener("click", () => {
+            const pool = getPool();
+            if (state.writeIdx < pool.length - 1) { state.writeIdx++; renderWrite(); }
+            else toast("Đã đến chữ cuối");
+        });
+        $$(".write-mode-pill").forEach(btn => {
+            btn.addEventListener("click", () => {
+                $$(".write-mode-pill").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                state.writeMode = btn.dataset.wmode;
+                renderWrite();
+            });
+        });
+
+        // ============ SIMILAR CHARACTERS ============
+        function renderSimilar() {
+            const query = ($("#similarSearch")?.value || "").trim().toLowerCase();
+            let groups = SIMILAR_GROUPS;
+            if (query) {
+                groups = groups.filter(g => {
+                    return g.chars.some(ch => ch.includes(query)) ||
+                           g.tips.toLowerCase().includes(query) ||
+                           g.words.some(w => w && (w.p.toLowerCase().includes(query) || w.v.toLowerCase().includes(query) || w.hv.toLowerCase().includes(query)));
+                });
+            }
+            if (groups.length === 0) {
+                $("#similarGrid").innerHTML = `<div class="empty-state"><div class="ch">空</div><div class="msg">Không tìm thấy nhóm chữ nào</div></div>`;
+                return;
+            }
+            $("#similarGrid").innerHTML = groups.map((g, gi) => {
+                const pairHtml = g.chars.map(ch => {
+                    const w = findChar(ch);
+                    if (!w) return `<div class="similar-char"><div class="sc-h">${ch}</div></div>`;
+                    return `<div class="similar-char" data-h="${ch}"><div class="sc-h">${w.h}</div><div class="sc-p">${w.p}</div><div class="sc-hv">${w.hv}</div><div class="sc-v">${w.v}</div></div>`;
+                }).join("");
+                return `<div class="similar-card"><div class="sc-label">Nhóm ${gi+1}</div><div class="similar-pair">${pairHtml}</div><div class="similar-tip">${g.tips}</div></div>`;
+            }).join("");
+            $$(".similar-char[data-h]").forEach(el => {
+                el.addEventListener("click", () => speak(el.dataset.h, null));
+            });
+        }
+        if ($("#similarSearch")) {
+            $("#similarSearch").addEventListener("input", renderSimilar);
+        }
+
+        // ============ REVERSE MODE & AUTO-PLAY TOGGLES ============
+        $("#toggleReverse").addEventListener("click", () => {
+            state.reverseMode = !state.reverseMode;
+            $("#toggleReverse").classList.toggle("active", state.reverseMode);
+            renderFlash();
+            toast(state.reverseMode ? "Chế độ đảo: xem nghĩa → đoán Hán tự" : "Chế độ bình thường");
+        });
+        $("#toggleAutoPlay").addEventListener("click", () => {
+            state.autoPlay = !state.autoPlay;
+            $("#toggleAutoPlay").classList.toggle("active", state.autoPlay);
+            toast(state.autoPlay ? "🔊 Tự động phát âm BẬT" : "🔇 Tự động phát âm TẮT");
+        });
+
+        // ============ DAILY STREAK ============
+        const STREAK_KEY = "hsk_streak_v1";
+        function loadStreak() {
+            try {
+                const raw = localStorage.getItem(STREAK_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch(e) {}
+            return { count: 0, lastDate: null };
+        }
+        function saveStreak(data) {
+            try { localStorage.setItem(STREAK_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+        function updateStreak() {
+            const data = loadStreak();
+            const today = new Date().toISOString().slice(0, 10);
+            if (data.lastDate === today) {
+                // Already checked in today
+            } else {
+                const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+                if (data.lastDate === yesterday) {
+                    data.count++;
+                } else {
+                    data.count = 1;
+                }
+                data.lastDate = today;
+                saveStreak(data);
+            }
+            $("#streakNum").textContent = data.count;
+        }
+
+        // ============ ENHANCED QUIZ (listening + pinyin) ============
+        // Override renderQuiz to include new quiz types
+        const _origRenderQuiz = renderQuiz;
+        renderQuiz = function() {
+            const q = state.quiz;
+            if (!q) return;
+            if (q.idx >= q.questions.length) { renderQuizDone(); return; }
+
+            // Randomly pick quiz type: 0=h2v, 1=v2h, 2=listen, 3=pinyin
+            const w = q.questions[q.idx];
+            const pool = getPool();
+            const quizType = Math.floor(Math.random() * 4);
+
+            if (quizType === 2 && 'speechSynthesis' in window) {
+                // LISTENING QUIZ
+                renderListenQuiz(w, pool, q);
+                return;
+            }
+            if (quizType === 3) {
+                // PINYIN INPUT QUIZ
+                renderPinyinQuiz(w, q);
+                return;
+            }
+            // Default: original quiz logic
+            _origRenderQuiz();
+        };
+
+        function renderListenQuiz(w, pool, q) {
+            $("#qNum").textContent = q.idx + 1;
+            $("#qTotal").textContent = q.questions.length;
+            $("#qRight").textContent = q.right;
+            $("#qWrong").textContent = q.wrong;
+            $("#quizFeedback").textContent = "";
+            $("#quizFeedback").className = "quiz-feedback";
+            $("#quizNext").disabled = true;
+
+            $("#qLabel").textContent = "Nghe và chọn Hán tự đúng";
+            $("#quizQuestion").innerHTML = `
+                <button class="quiz-listen-big" id="qListenBtn" aria-label="Nghe">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                </button>
+                <div style="font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--ink-mute);margin-top:8px">Bấm để nghe phát âm</div>`;
+
+            const distractors = shuffle(pool.filter(x => x.key !== w.key)).slice(0, 3);
+            const opts = shuffle([w, ...distractors]);
+            $("#quizOptions").innerHTML = opts.map(o =>
+                `<button class="quiz-option" data-correct="${o.key === w.key}"><span class="opt-h">${o.h}</span><span class="opt-p">${o.p}</span></button>`
+            ).join("");
+
+            // Auto play on load
+            setTimeout(() => speak(w.h, $("#qListenBtn")), 400);
+            $("#qListenBtn").addEventListener("click", () => speak(w.h, $("#qListenBtn")));
+            $$(".quiz-option").forEach(b => b.addEventListener("click", () => handleAnswer(b, w, "listen")));
+        }
+
+        function renderPinyinQuiz(w, q) {
+            $("#qNum").textContent = q.idx + 1;
+            $("#qTotal").textContent = q.questions.length;
+            $("#qRight").textContent = q.right;
+            $("#qWrong").textContent = q.wrong;
+            $("#quizFeedback").textContent = "";
+            $("#quizFeedback").className = "quiz-feedback";
+            $("#quizNext").disabled = true;
+
+            $("#qLabel").textContent = "Gõ pinyin cho chữ Hán";
+            $("#quizQuestion").innerHTML = `
+                <div class="qhanzi">${w.h}</div>
+                <div class="qhv-hint" id="qHV" style="opacity:0">${w.hv}</div>`;
+            $("#quizOptions").innerHTML = `
+                <div class="pinyin-input-wrap" style="grid-column:1/-1">
+                    <input type="text" class="pinyin-text-input" id="pinyinInput" placeholder="Gõ pinyin..." autocomplete="off" autocapitalize="off">
+                    <button class="pinyin-submit" id="pinyinSubmit">Kiểm tra</button>
+                </div>`;
+
+            const checkPinyin = () => {
+                if (q.answered) return;
+                const input = $("#pinyinInput");
+                const userVal = input.value.trim().toLowerCase();
+                if (!userVal) return;
+                q.answered = true;
+
+                const correctPinyin = w.p.toLowerCase().replace(/\s+/g, '');
+                const userClean = userVal.replace(/\s+/g, '');
+                // Simple comparison (allow without tones)
+                const stripTones = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ü/g, "v");
+                const isCorrect = userClean === correctPinyin || stripTones(userClean) === stripTones(correctPinyin);
+
+                const fb = $("#quizFeedback");
+                const hvEl = $("#qHV"); if (hvEl) hvEl.style.opacity = "1";
+                setTimeout(() => speak(w.h, null), 250);
+
+                if (isCorrect) {
+                    q.right++;
+                    input.classList.add("correct");
+                    fb.innerHTML = `✓ Chính xác! <span class="hv-tag">${w.hv}</span>`;
+                    fb.className = "quiz-feedback correct";
+                    const cur = state.progress[w.key];
+                    if (cur === STATUS.NEW) state.progress[w.key] = STATUS.LEARNING;
+                    else if (cur === STATUS.LEARNING) state.progress[w.key] = STATUS.MASTERED;
+                } else {
+                    q.wrong++;
+                    input.classList.add("wrong");
+                    fb.innerHTML = `✗ Đáp án: <strong style="font-family:'Fraunces',serif">${w.p}</strong> — ${w.v}<br><span class="hv-tag">${w.hv}</span>`;
+                    fb.className = "quiz-feedback wrong";
+                    if (state.progress[w.key] !== STATUS.NEW) state.progress[w.key] = STATUS.LEARNING;
+                }
+                $("#qRight").textContent = q.right;
+                $("#qWrong").textContent = q.wrong;
+                $("#quizNext").disabled = false;
+                saveProgress();
+                renderHeaderStats();
+            };
+
+            $("#pinyinSubmit").addEventListener("click", checkPinyin);
+            $("#pinyinInput").addEventListener("keydown", e => {
+                if (e.key === "Enter") checkPinyin();
+            });
+            setTimeout(() => $("#pinyinInput")?.focus(), 100);
+        }
+
+        // ============ INIT ============
+        function refreshAll() {
+            renderHeaderStats();
+            renderAlphaRangeBar();
+            renderFlash();
+            renderBrowse();
+            renderStats();
+        }
+
+        (async function init() {
+            await loadProgress();
+            updateStreak();
+            renderHeaderStats();
+            renderAlphaRangeBar();
+            initFlash();
+        })();
+    </script>
+</body>
+
+</html>

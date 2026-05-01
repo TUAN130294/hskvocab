@@ -1,0 +1,17 @@
+# Large bundled file (9.6MB) — regenerable, not needed in repo
+HSK Vocab - Standalone.html
+
+# Backup / scratch
+original.html
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
