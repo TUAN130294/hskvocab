@@ -2,17 +2,18 @@
 
 Web app học từ vựng tiếng Trung HSK 1-2-3 với flashcard, stroke order, quiz và reverse mode (Việt → Trung).
 
-**Live:** https://hoc-tu-vung-hsk.pages.dev
+**Live:** https://hskvocab.pages.dev
 
 ## Cấu trúc
 
 ```
 .
-├── HSK Vocab.html              # Source chính (dev)
-├── styles.css                  # Stylesheet (3 themes: clean / ink / soft)
-├── tweaks.js                   # Theme switcher
+├── HSK Vocab.html                 # Source chính (dev)
+├── styles.css                     # Stylesheet (3 themes: clean / ink / soft)
+├── tweaks.js                      # Theme switcher
 ├── HSK Vocab Bundled Source.html  # Source + bundler thumbnail
-└── dist/                       # Folder deploy Cloudflare Pages
+├── build.sh                       # Sync source → dist/
+└── dist/                          # Folder deploy Cloudflare Pages
     ├── index.html
     ├── styles.css
     └── tweaks.js
@@ -20,13 +21,21 @@ Web app học từ vựng tiếng Trung HSK 1-2-3 với flashcard, stroke order,
 
 ## Deploy
 
-```bash
-# Sync dist
-cp "HSK Vocab.html" dist/index.html
-cp styles.css tweaks.js dist/
+Cloudflare Pages tự deploy mỗi khi push lên `main`.
 
-# Deploy Cloudflare Pages
-wrangler pages deploy dist --project-name=hoc-tu-vung-hsk
+**Build settings (Cloudflare Pages → Settings → Builds & deployments):**
+- Build command: `bash build.sh`
+- Build output directory: `dist`
+- Root directory: `/`
+
+### Local preview / manual deploy
+
+```bash
+# Sync dist từ source
+bash build.sh
+
+# (optional) deploy thủ công
+wrangler pages deploy dist --project-name=hskvocab
 ```
 
 ## Features
