@@ -600,9 +600,13 @@
             speechSynthesis.onvoiceschanged = pickVoice;
         }
 
+        let speakWarned = false;
         function speak(text, btn) {
             if (!('speechSynthesis' in window)) {
-                toast("Trình duyệt không hỗ trợ phát âm tự động");
+                if (!speakWarned) {
+                    speakWarned = true;
+                    toast("Trình duyệt không hỗ trợ phát âm tự động");
+                }
                 return;
             }
             speechSynthesis.cancel();
