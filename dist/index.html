@@ -39,22 +39,30 @@
             <button class="close-tip" id="closeTip" aria-label="Đóng">×</button>
         </div>
 
-        <div class="level-bar" id="levelBar">
-            <button class="level-btn active" data-lv="all">Tất cả <span class="lv-count" id="cntAll">0</span></button>
-            <button class="level-btn" data-lv="1"><span class="lv-num">1</span> HSK 1 <span class="lv-count"
-                    id="cnt1">0</span></button>
-            <button class="level-btn" data-lv="2"><span class="lv-num">2</span> HSK 2 <span class="lv-count"
-                    id="cnt2">0</span></button>
-            <button class="level-btn" data-lv="3"><span class="lv-num">3</span> HSK 3 <span class="lv-count"
-                    id="cnt3">0</span></button>
-        </div>
+        <button class="filter-toggle" id="filterToggle" aria-expanded="true" aria-controls="filterCollapsible">
+            <span class="ft-label">Bộ lọc</span>
+            <span class="ft-summary" id="filterSummary"></span>
+            <span class="ft-chevron" aria-hidden="true">▾</span>
+        </button>
 
-        <div class="alpha-range-bar" id="alphaRangeBar">
-            <span class="ar-label">Pinyin</span>
-            <div class="ar-letters" id="arLetters"></div>
-            <div class="ar-divider"></div>
-            <span class="ar-info" id="arInfo">599 từ</span>
-            <button class="ar-clear" id="arClear" disabled>✕ Xóa</button>
+        <div class="filter-collapsible" id="filterCollapsible">
+            <div class="level-bar" id="levelBar">
+                <button class="level-btn active" data-lv="all">Tất cả <span class="lv-count" id="cntAll">0</span></button>
+                <button class="level-btn" data-lv="1"><span class="lv-num">1</span> HSK 1 <span class="lv-count"
+                        id="cnt1">0</span></button>
+                <button class="level-btn" data-lv="2"><span class="lv-num">2</span> HSK 2 <span class="lv-count"
+                        id="cnt2">0</span></button>
+                <button class="level-btn" data-lv="3"><span class="lv-num">3</span> HSK 3 <span class="lv-count"
+                        id="cnt3">0</span></button>
+            </div>
+
+            <div class="alpha-range-bar" id="alphaRangeBar">
+                <span class="ar-label">Pinyin</span>
+                <div class="ar-letters" id="arLetters"></div>
+                <div class="ar-divider"></div>
+                <span class="ar-info" id="arInfo">599 từ</span>
+                <button class="ar-clear" id="arClear" disabled>✕ Xóa</button>
+            </div>
         </div>
 
         <nav class="tabs" id="tabs">
@@ -793,6 +801,35 @@
         $("#closeTip").addEventListener("click", () => {
             $("#tipBanner").style.display = "none";
         });
+
+        // ============ FILTER COLLAPSE ============
+        const FILTER_VIS_KEY = "hsk_filter_visible_v1";
+        function updateFilterSummary() {
+            const lv = state.level === "all" ? "Tất cả" : "HSK " + state.level;
+            let alpha = "";
+            if (state.alphaFrom !== "all" || state.alphaTo !== "all") {
+                const f = (state.alphaFrom === "all" ? "?" : state.alphaFrom).toUpperCase();
+                const t = (state.alphaTo === "all" ? "?" : state.alphaTo).toUpperCase();
+                alpha = ` · ${f}→${t}`;
+            }
+            $("#filterSummary").textContent = `· ${lv}${alpha}`;
+        }
+        function setFilterVisible(visible) {
+            $("#filterToggle").setAttribute("aria-expanded", String(visible));
+            $("#filterCollapsible").classList.toggle("collapsed", !visible);
+            try { localStorage.setItem(FILTER_VIS_KEY, visible ? "1" : "0"); } catch (e) {}
+            if (!visible) updateFilterSummary();
+            else $("#filterSummary").textContent = "";
+        }
+        (function initFilterToggle() {
+            let saved = null;
+            try { saved = localStorage.getItem(FILTER_VIS_KEY); } catch (e) {}
+            setFilterVisible(saved !== "0"); // default visible
+            $("#filterToggle").addEventListener("click", () => {
+                const cur = $("#filterToggle").getAttribute("aria-expanded") === "true";
+                setFilterVisible(!cur);
+            });
+        })();
 
         // ============ FLASHCARD ============
         function initFlash() {
