@@ -193,6 +193,53 @@ header {
     color: var(--accent);
 }
 
+/* ===== AUTH (Google sign-in) =================================== */
+.auth-box { display: flex; align-items: center; }
+.auth-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-pill);
+    font-family: var(--font-sans);
+    font-size: 13px; font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer; line-height: 1;
+    transition: background .15s ease, border-color .15s ease;
+}
+.auth-btn:hover { background: var(--surface-2, var(--surface)); border-color: var(--ink-mute); }
+.auth-btn svg { display: block; }
+.auth-user {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 10px 5px 5px;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-pill);
+}
+.auth-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    object-fit: cover; background: var(--hairline);
+}
+.auth-sync {
+    font-size: 12px; font-weight: 700; color: var(--ink-mute);
+    font-variant-numeric: tabular-nums; line-height: 1;
+}
+.auth-sync.syncing { color: var(--accent); }
+.auth-sync.ok { color: #2e9c5e; }
+.auth-sync.err { color: #c0392b; }
+.auth-signout {
+    background: none; border: 0; padding: 0;
+    font-family: var(--font-sans); font-size: 12px; font-weight: 600;
+    color: var(--ink-mute); cursor: pointer;
+}
+.auth-signout:hover { color: var(--accent); }
+@media (max-width: 700px) {
+    .auth-btn { padding: 6px 10px; font-size: 12px; }
+    .auth-btn span { display: none; }
+    .auth-user { padding: 4px 8px 4px 4px; }
+    .auth-avatar { width: 22px; height: 22px; }
+}
+
 /* ===== TIP BANNER =============================================== */
 .tip-banner {
     background: var(--surface);
