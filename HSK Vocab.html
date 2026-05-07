@@ -2503,29 +2503,19 @@
         document.getElementById("kbModal")?.addEventListener("click", (e) => {
             if (e.target.dataset.close) closeShortcutsHelp();
         });
+        // Phím tắt mới (Space/←/→/1/2/3/S đã có handler cũ ở trên).
+        // Chỉ thêm: F = lật, R = đảo, ? = mở dialog, Esc = đóng dialog.
         document.addEventListener("keydown", (e) => {
-            // Bỏ qua khi user đang gõ trong input/textarea
             const tag = (e.target.tagName || "").toLowerCase();
             if (tag === "input" || tag === "textarea" || e.target.isContentEditable) return;
-            // Modifier → bỏ qua
             if (e.ctrlKey || e.metaKey || e.altKey) return;
-            const k = e.key.toLowerCase();
-            const flashActive = document.getElementById("view-flash")?.classList.contains("active");
             if (e.key === "?" || (e.shiftKey && e.key === "/")) { e.preventDefault(); openShortcutsHelp(); return; }
             if (e.key === "Escape") { closeShortcutsHelp(); return; }
+            const flashActive = document.getElementById("view-flash")?.classList.contains("active");
             if (!flashActive) return;
-            if (k === "f" || e.key === " ") { e.preventDefault(); document.getElementById("card")?.classList.toggle("flipped"); }
-            else if (k === "s") {
-                e.preventDefault();
-                const w = state.flashOrder[state.flashIdx];
-                if (w) speak(w.h, null);
-            }
-            else if (k === "r") {
-                e.preventDefault();
-                document.getElementById("toggleReverse")?.click();
-            }
-            else if (e.key === "ArrowLeft") { e.preventDefault(); document.getElementById("prevCard")?.click(); }
-            else if (e.key === "ArrowRight") { e.preventDefault(); document.getElementById("nextCard")?.click(); }
+            const k = e.key.toLowerCase();
+            if (k === "f") { e.preventDefault(); document.getElementById("card")?.classList.toggle("flipped"); }
+            else if (k === "r") { e.preventDefault(); document.getElementById("toggleReverse")?.click(); }
         });
 
         (async function init() {
