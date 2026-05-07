@@ -142,6 +142,11 @@
 
         <section class="view active" id="view-flash">
             <div class="flash-wrap">
+                <div class="review-banner" id="reviewBanner" hidden>
+                    <span class="rb-icon">🔥</span>
+                    <span class="rb-text"><strong id="reviewDueCount">0</strong> thẻ tới hạn ôn</span>
+                    <button class="rb-btn" id="reviewNowBtn" type="button">Học ôn ngay</button>
+                </div>
                 <div class="flash-progress">
                     <div class="meta">
                         <span><span class="ch" id="flashIdx">1</span> / <span id="flashTotal">0</span></span>
@@ -274,6 +279,14 @@
                 </div>
             </div>
             <div class="progress-section">
+                <h3>Lịch ôn 7 ngày tới</h3>
+                <div id="reviewForecast"></div>
+            </div>
+            <div class="progress-section">
+                <h3>Nhịp học tập</h3>
+                <div id="streakHeatmap"></div>
+            </div>
+            <div class="progress-section">
                 <h3>Quản lý dữ liệu</h3>
                 <p style="color:var(--ink-soft);font-size:14px;margin-bottom:16px;line-height:1.5">
                     Tiến độ học tập của bạn được lưu tự động và sẽ hiện lại khi mở app lần sau.
@@ -319,6 +332,27 @@
         </section>
 
     </div><!-- #app -->
+
+    <!-- Shortcut help dialog -->
+    <div class="kb-modal" id="kbModal" hidden>
+        <div class="kb-backdrop" data-close="1"></div>
+        <div class="kb-card" role="dialog" aria-modal="true">
+            <div class="kb-head">
+                <h3>Phím tắt</h3>
+                <button class="kb-close" data-close="1" aria-label="Đóng">×</button>
+            </div>
+            <div class="kb-list">
+                <div><kbd>1</kbd> Khó · Học lại</div>
+                <div><kbd>2</kbd> Bình thường</div>
+                <div><kbd>3</kbd> Dễ · Thuộc rồi</div>
+                <div><kbd>F</kbd> Lật thẻ</div>
+                <div><kbd>S</kbd> Phát âm</div>
+                <div><kbd>R</kbd> Đảo ngược (Việt → Trung)</div>
+                <div><kbd>←</kbd> / <kbd>→</kbd> Thẻ trước / sau</div>
+                <div><kbd>?</kbd> Mở bảng phím tắt này</div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bottom navigation (mobile only) -->
     <nav class="bottom-nav" id="bottomNav">
@@ -888,6 +922,7 @@
                 await storageWrite(STORAGE_KEY, JSON.stringify(state.progress));
                 await storageWrite(SRS_KEY, JSON.stringify(state.srs));
             } catch (e) { }
+            try { markStudyDay(); } catch (e) {}
             scheduleCloudSync();
         }
 
@@ -1061,6 +1096,82 @@
             const s = state.srs[key];
             if (!s) return -Infinity; // chưa từng học → ưu tiên thấp hơn từ overdue nhưng cao hơn future
             return s.due;
+        }
+
+        // Số thẻ tới hạn ôn trong pool hiện tại
+        function dueCount(pool) {
+            const now = Date.now();
+            pool = pool || (typeof getPool === 'function' ? getPool() : VOCAB);
+            return pool.filter(w => {
+                const s = state.srs[w.key];
+                return s && s.due <= now && state.progress[w.key] !== STATUS.MASTERED;
+            }).length;
+        }
+
+        function renderReviewBanner() {
+            const banner = document.getElementById("reviewBanner");
+            if (!banner) return;
+            const n = dueCount();
+            if (n === 0) { banner.hidden = true; return; }
+            banner.hidden = false;
+            document.getElementById("reviewDueCount").textContent = n;
+        }
+
+        function renderReviewForecast() {
+            const root = document.getElementById("reviewForecast");
+            if (!root) return;
+            const pool = getPool();
+            const now = Date.now();
+            const startOfDay = (offset) => {
+                const d = new Date();
+                d.setHours(0,0,0,0);
+                d.setDate(d.getDate() + offset);
+                return d.getTime();
+            };
+            const buckets = Array.from({length: 7}, () => 0);
+            let overdue = 0;
+            pool.forEach(w => {
+                if (state.progress[w.key] === STATUS.MASTERED) return;
+                const s = state.srs[w.key];
+                if (!s) return;
+                if (s.due <= now) {
+                    overdue++;
+                    buckets[0]++;
+                    return;
+                }
+                for (let i = 0; i < 7; i++) {
+                    const lo = startOfDay(i);
+                    const hi = startOfDay(i + 1);
+                    if (s.due >= lo && s.due < hi) { buckets[i]++; break; }
+                }
+            });
+            const max = Math.max(1, ...buckets);
+            const labels = ["Hôm nay","Mai","T2","T3","T4","T5","T6"];
+            // Generate proper short day labels for next 7 days starting today
+            const dayShort = ["CN","T2","T3","T4","T5","T6","T7"];
+            const today = new Date();
+            const labelArr = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                if (i === 0) labelArr.push("Hôm nay");
+                else if (i === 1) labelArr.push("Mai");
+                else labelArr.push(dayShort[d.getDay()]);
+            }
+            const html = buckets.map((c, i) => {
+                const h = Math.round((c / max) * 90);
+                const isToday = i === 0;
+                return `
+                    <div class="fc-day">
+                      <div class="fc-bar-wrap">
+                        <div class="fc-bar ${isToday ? 'today' : ''}" style="height:${h}px">
+                          ${c > 0 ? `<span class="fc-num">${c}</span>` : ''}
+                        </div>
+                      </div>
+                      <div class="fc-label ${isToday ? 'today' : ''}">${labelArr[i]}</div>
+                    </div>`;
+            }).join("");
+            root.innerHTML = html + (overdue > 0 ? `<div style="position:absolute"></div>` : "");
         }
 
         // ============ HELPERS ============
@@ -1301,7 +1412,8 @@
             if (v === "browse") renderBrowse();
             if (v === "write") initWrite();
             if (v === "similar") renderSimilar();
-            if (v === "stats") renderStats();
+            if (v === "stats") { renderStats(); renderReviewForecast(); renderStreakHeatmap(); }
+            if (v === "flash") renderReviewBanner();
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
 
@@ -1316,7 +1428,8 @@
             if (active === "browse") { renderAlphabet(); renderBrowse(); }
             if (active === "write") initWrite();
             if (active === "similar") renderSimilar();
-            if (active === "stats") renderStats();
+            if (active === "stats") { renderStats(); renderReviewForecast(); renderStreakHeatmap(); }
+            if (active === "flash") renderReviewBanner();
         }
 
         // ============ TIP BANNER ============
@@ -1483,6 +1596,7 @@
                 srsApply(w.key, r);
                 await saveProgress();
                 renderHeaderStats();
+                renderReviewBanner();
                 if (state.flashIdx < state.flashOrder.length - 1) {
                     state.flashIdx++;
                     setTimeout(renderFlash, 200);
@@ -1750,10 +1864,18 @@
                 if (state.browseAlpha !== "all" && firstLetter(w.p) !== state.browseAlpha) return false;
                 if (state.browseQuery) {
                     const q = state.browseQuery.toLowerCase();
+                    const stripDiacritics = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ü/g, "v").replace(/đ/g, "d");
+                    const qBare = stripDiacritics(q);
+                    const pBare = stripDiacritics(w.p.toLowerCase()).replace(/\s+/g, "");
+                    const hvBare = stripDiacritics(w.hv.toLowerCase());
+                    const vBare = stripDiacritics(w.v.toLowerCase());
                     return w.h.includes(state.browseQuery) ||
                         w.p.toLowerCase().includes(q) ||
+                        pBare.includes(qBare.replace(/\s+/g, "")) ||
                         w.hv.toLowerCase().includes(q) ||
-                        w.v.toLowerCase().includes(q);
+                        hvBare.includes(qBare) ||
+                        w.v.toLowerCase().includes(q) ||
+                        vBare.includes(qBare);
                 }
                 return true;
             });
@@ -2116,33 +2238,105 @@
         });
 
         // ============ DAILY STREAK ============
-        const STREAK_KEY = "hsk_streak_v1";
+        const STREAK_KEY = "hsk_streak_v2";
+        const STREAK_KEY_OLD = "hsk_streak_v1";
+        function todayStr() { return new Date().toISOString().slice(0, 10); }
         function loadStreak() {
             try {
                 const raw = localStorage.getItem(STREAK_KEY);
-                if (raw) return JSON.parse(raw);
+                if (raw) {
+                    const d = JSON.parse(raw);
+                    if (!d.days) d.days = {};
+                    return d;
+                }
+                // migrate v1
+                const old = localStorage.getItem(STREAK_KEY_OLD);
+                if (old) {
+                    const o = JSON.parse(old);
+                    const days = {};
+                    if (o.lastDate) days[o.lastDate] = 1;
+                    return { count: o.count || 0, lastDate: o.lastDate || null, days };
+                }
             } catch(e) {}
-            return { count: 0, lastDate: null };
+            return { count: 0, lastDate: null, days: {} };
         }
         function saveStreak(data) {
             try { localStorage.setItem(STREAK_KEY, JSON.stringify(data)); } catch(e) {}
         }
-        function updateStreak() {
+        function markStudyDay() {
             const data = loadStreak();
-            const today = new Date().toISOString().slice(0, 10);
-            if (data.lastDate === today) {
-                // Already checked in today
-            } else {
+            const today = todayStr();
+            data.days = data.days || {};
+            data.days[today] = (data.days[today] || 0) + 1;
+            // tính lại streak
+            if (data.lastDate !== today) {
                 const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-                if (data.lastDate === yesterday) {
-                    data.count++;
-                } else {
-                    data.count = 1;
-                }
+                if (data.lastDate === yesterday) data.count = (data.count || 0) + 1;
+                else data.count = 1;
                 data.lastDate = today;
-                saveStreak(data);
             }
-            $("#streakNum").textContent = data.count;
+            saveStreak(data);
+            const el = document.getElementById("streakNum");
+            if (el) el.textContent = data.count;
+            // vẽ lại heatmap nếu đang xem stats
+            const hm = document.getElementById("streakHeatmap");
+            if (hm) renderStreakHeatmap();
+        }
+        function updateStreak() {
+            // chỉ đảm bảo hiển thị, không tự +1 streak khi mở app
+            const data = loadStreak();
+            const el = document.getElementById("streakNum");
+            if (el) el.textContent = data.count;
+        }
+        function renderStreakHeatmap() {
+            const root = document.getElementById("streakHeatmap");
+            if (!root) return;
+            const data = loadStreak();
+            const days = data.days || {};
+            const today = new Date(); today.setHours(0,0,0,0);
+            // 12 tuần x 7 ngày = 84 ô. Bắt đầu từ thứ 2 cách đây 12 tuần.
+            const WEEKS = 12;
+            const cells = [];
+            const start = new Date(today);
+            // dịch về Chủ nhật của tuần (JS getDay: 0=Sun)
+            start.setDate(today.getDate() - today.getDay() - (WEEKS - 1) * 7);
+            let max = 0;
+            for (const k in days) if (days[k] > max) max = days[k];
+            const cols = [];
+            for (let w = 0; w < WEEKS; w++) {
+                const col = [];
+                for (let d = 0; d < 7; d++) {
+                    const dt = new Date(start);
+                    dt.setDate(start.getDate() + w * 7 + d);
+                    const k = dt.toISOString().slice(0,10);
+                    const c = days[k] || 0;
+                    const future = dt > today;
+                    let lvl = 0;
+                    if (!future && c > 0) {
+                        if (max <= 3) lvl = c >= 1 ? 2 : 0;
+                        else lvl = Math.min(4, Math.ceil((c / max) * 4));
+                    }
+                    const isToday = k === todayStr();
+                    col.push(`<div class="hm-cell lvl-${lvl}${future ? ' future' : ''}${isToday ? ' today' : ''}" data-d="${k}" data-c="${c}" title="${k}: ${c} hành động"></div>`);
+                }
+                cols.push(`<div class="hm-col">${col.join("")}</div>`);
+            }
+            const total = Object.values(days).reduce((a,b)=>a+b,0);
+            const activeDays = Object.values(days).filter(v => v > 0).length;
+            root.innerHTML = `
+                <div class="hm-header">
+                    <span><strong>${activeDays}</strong> ngày học · <strong>${total}</strong> hành động · 12 tuần qua</span>
+                    <div class="hm-legend">
+                        <span>Ít</span>
+                        <span class="hm-cell lvl-0"></span>
+                        <span class="hm-cell lvl-1"></span>
+                        <span class="hm-cell lvl-2"></span>
+                        <span class="hm-cell lvl-3"></span>
+                        <span class="hm-cell lvl-4"></span>
+                        <span>Nhiều</span>
+                    </div>
+                </div>
+                <div class="hm-grid">${cols.join("")}</div>`;
         }
 
         // ============ ENHANCED QUIZ (listening + pinyin) ============
@@ -2274,7 +2468,65 @@
             renderFlash();
             renderBrowse();
             renderStats();
+            renderReviewBanner();
+            renderReviewForecast();
+            renderStreakHeatmap();
         }
+
+        // ===== Review Today: filter flashOrder to chỉ thẻ tới hạn =====
+        document.getElementById("reviewNowBtn")?.addEventListener("click", () => {
+            const pool = getPool();
+            const now = Date.now();
+            const due = pool.filter(w => {
+                const s = state.srs[w.key];
+                return s && s.due <= now && state.progress[w.key] !== STATUS.MASTERED;
+            }).sort((a,b) => srsDue(a.key) - srsDue(b.key));
+            if (due.length === 0) { toast("Không còn thẻ nào tới hạn 🎉"); return; }
+            state.flashOrder = due;
+            state.flashIdx = 0;
+            // chuyển sang tab flash nếu đang ở chỗ khác
+            const flashTab = document.querySelector('[data-view="flash"]');
+            if (flashTab) flashTab.click();
+            renderFlash();
+            toast(`Bắt đầu ôn ${due.length} thẻ`);
+        });
+
+        // ===== Phím tắt =====
+        function openShortcutsHelp() {
+            const m = document.getElementById("kbModal");
+            if (m) m.hidden = false;
+        }
+        function closeShortcutsHelp() {
+            const m = document.getElementById("kbModal");
+            if (m) m.hidden = true;
+        }
+        document.getElementById("kbModal")?.addEventListener("click", (e) => {
+            if (e.target.dataset.close) closeShortcutsHelp();
+        });
+        document.addEventListener("keydown", (e) => {
+            // Bỏ qua khi user đang gõ trong input/textarea
+            const tag = (e.target.tagName || "").toLowerCase();
+            if (tag === "input" || tag === "textarea" || e.target.isContentEditable) return;
+            // Modifier → bỏ qua
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            const k = e.key.toLowerCase();
+            const flashActive = document.getElementById("view-flash")?.classList.contains("active");
+            if (e.key === "?" || (e.shiftKey && e.key === "/")) { e.preventDefault(); openShortcutsHelp(); return; }
+            if (e.key === "Escape") { closeShortcutsHelp(); return; }
+            if (!flashActive) return;
+            if (k === "f" || e.key === " ") { e.preventDefault(); document.getElementById("card")?.classList.toggle("flipped"); }
+            else if (k === "s") {
+                e.preventDefault();
+                const w = state.flashOrder[state.flashIdx];
+                if (w) speak(w.h, null);
+            }
+            else if (k === "r") {
+                e.preventDefault();
+                document.getElementById("toggleReverse")?.click();
+            }
+            else if (e.key === "ArrowLeft") { e.preventDefault(); document.getElementById("prevCard")?.click(); }
+            else if (e.key === "ArrowRight") { e.preventDefault(); document.getElementById("nextCard")?.click(); }
+        });
 
         (async function init() {
             await loadProgress();
@@ -2282,6 +2534,7 @@
             renderHeaderStats();
             renderAlphaRangeBar();
             initFlash();
+            renderReviewBanner();
             // Firebase module load bất đồng bộ → đợi nếu chưa sẵn sàng
             if (window.hskAuth) setupAuth();
             else window.addEventListener("hskAuthReady", setupAuth, { once: true });
