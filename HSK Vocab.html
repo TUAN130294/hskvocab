@@ -2089,8 +2089,8 @@
             const flashActive = $("#view-flash").classList.contains("active");
             if (flashActive) {
                 if (e.key === " " || e.key === "Enter") { e.preventDefault(); $("#card").classList.toggle("flipped"); }
-                if (e.key === "ArrowLeft") $("#prevCard").click();
-                if (e.key === "ArrowRight") $("#nextCard").click();
+                if (e.key === "ArrowLeft") { e.preventDefault(); $("#prevCard").click(); }
+                if (e.key === "ArrowRight") { e.preventDefault(); $("#nextCard").click(); }
                 if (e.key === "1") $("[data-rate=hard]").click();
                 if (e.key === "2") $("[data-rate=ok]").click();
                 if (e.key === "3") $("[data-rate=easy]").click();
