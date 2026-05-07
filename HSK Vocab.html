@@ -13,6 +13,60 @@
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <link rel="stylesheet" href="styles.css">
     <script src="tweaks.js" defer></script>
+
+    <!-- ============ FIREBASE AUTH + FIRESTORE ============ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        import {
+            getAuth, GoogleAuthProvider, signInWithPopup, signOut,
+            onAuthStateChanged, browserLocalPersistence, setPersistence
+        } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+        import {
+            getFirestore, doc, getDoc, setDoc, serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdI2v3Fty_508qEvFBaGn1VQhOB_ms-dM",
+            authDomain: "hskapp-4bd00.firebaseapp.com",
+            projectId: "hskapp-4bd00",
+            storageBucket: "hskapp-4bd00.firebasestorage.app",
+            messagingSenderId: "425491048722",
+            appId: "1:425491048722:web:3550bbb2c527a4c6746bcb",
+            measurementId: "G-0RS28VPJ6S"
+        };
+
+        const enabled = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
+        if (!enabled) {
+            console.warn("[hskvocab] Firebase chưa cấu hình — tính năng đăng nhập tắt.");
+            window.hskAuth = { enabled: false };
+            window.dispatchEvent(new CustomEvent("hskAuthReady"));
+        } else {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const provider = new GoogleAuthProvider();
+            try { await setPersistence(auth, browserLocalPersistence); } catch (e) {}
+
+            window.hskAuth = {
+                enabled: true,
+                user: null,
+                signIn: () => signInWithPopup(auth, provider),
+                signOut: () => signOut(auth),
+                onChange: (cb) => onAuthStateChanged(auth, (u) => { window.hskAuth.user = u; cb(u); }),
+                async loadCloud(uid) {
+                    const snap = await getDoc(doc(db, "users", uid));
+                    return snap.exists() ? snap.data() : null;
+                },
+                async saveCloud(uid, payload) {
+                    await setDoc(doc(db, "users", uid), {
+                        ...payload,
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                }
+            };
+            window.dispatchEvent(new CustomEvent("hskAuthReady"));
+        }
+    </script>
 </head>
 
 <body>
@@ -28,6 +82,17 @@
             </div>
             <div class="header-stats" id="headerStats"></div>
             <div class="streak-badge" id="streakBadge" title="Chuỗi ngày học liên tục"><span class="streak-fire">🔥</span><span class="streak-num" id="streakNum">0</span><span>ngày</span></div>
+            <div class="auth-box" id="authBox">
+                <button class="auth-btn" id="signInBtn" type="button" hidden>
+                    <svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.08-1.79 2.72v2.26h2.9c1.7-1.56 2.69-3.87 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.83.86-3.06.86-2.36 0-4.36-1.59-5.07-3.74H.96v2.34A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.93 10.68A5.4 5.4 0 0 1 3.64 9c0-.58.1-1.15.29-1.68V4.98H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.02l2.97-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.98l2.97 2.34C4.64 5.17 6.64 3.58 9 3.58z"/></svg>
+                    <span>Đăng nhập</span>
+                </button>
+                <div class="auth-user" id="authUser" hidden>
+                    <img class="auth-avatar" id="authAvatar" alt="" referrerpolicy="no-referrer">
+                    <span class="auth-sync" id="authSync" title="Trạng thái đồng bộ">·</span>
+                    <button class="auth-signout" id="signOutBtn" type="button" title="Đăng xuất">Thoát</button>
+                </div>
+            </div>
         </header>
 
         <div class="tip-banner" id="tipBanner">
@@ -562,6 +627,7 @@
                 await storageWrite(STORAGE_KEY, JSON.stringify(state.progress));
                 await storageWrite(SRS_KEY, JSON.stringify(state.srs));
             } catch (e) { }
+            scheduleCloudSync();
         }
 
         async function resetAllProgress() {
@@ -573,6 +639,131 @@
             state.flashOrder = [];
             refreshAll();
             toast("Đã đặt lại toàn bộ tiến độ");
+            scheduleCloudSync();
+        }
+
+        // ============ CLOUD SYNC (Firebase) ============
+        const STATUS_RANK = { new: 0, learning: 1, mastered: 2 };
+        let cloudSyncTimer = null;
+        let cloudSyncInflight = false;
+        function setSyncBadge(kind, title) {
+            const el = document.getElementById("authSync");
+            if (!el) return;
+            el.classList.remove("syncing", "ok", "err");
+            if (kind) el.classList.add(kind);
+            const map = { syncing: "⟳", ok: "✓", err: "!" };
+            el.textContent = map[kind] || "·";
+            if (title) el.title = title;
+        }
+        function scheduleCloudSync() {
+            if (!window.hskAuth?.user) return;
+            clearTimeout(cloudSyncTimer);
+            cloudSyncTimer = setTimeout(pushCloud, 1200);
+        }
+        async function pushCloud() {
+            const user = window.hskAuth?.user;
+            if (!user || cloudSyncInflight) return;
+            cloudSyncInflight = true;
+            setSyncBadge("syncing", "Đang đồng bộ...");
+            try {
+                await window.hskAuth.saveCloud(user.uid, {
+                    progress: state.progress,
+                    srs: state.srs
+                });
+                setSyncBadge("ok", "Đã đồng bộ với tài khoản " + (user.email || ""));
+            } catch (e) {
+                console.error("[hskvocab] cloud save lỗi:", e);
+                setSyncBadge("err", "Lỗi đồng bộ: " + (e?.message || e));
+            } finally {
+                cloudSyncInflight = false;
+            }
+        }
+        function mergeRemote(remote) {
+            if (!remote) return false;
+            let changed = false;
+            const rp = remote.progress || {};
+            for (const k in rp) {
+                const a = STATUS_RANK[state.progress[k]] ?? 0;
+                const b = STATUS_RANK[rp[k]] ?? 0;
+                if (b > a) { state.progress[k] = rp[k]; changed = true; }
+            }
+            const rs = remote.srs || {};
+            for (const k in rs) {
+                const cur = state.srs[k];
+                const r = rs[k];
+                if (!cur) { state.srs[k] = r; changed = true; }
+                else {
+                    // chọn bản có lastReview gần nhất
+                    if ((r.last || 0) > (cur.last || 0)) {
+                        state.srs[k] = r; changed = true;
+                    }
+                }
+            }
+            VOCAB.forEach(w => { if (!state.progress[w.key]) state.progress[w.key] = STATUS.NEW; });
+            return changed;
+        }
+        async function onSignedIn(user) {
+            const $signIn = document.getElementById("signInBtn");
+            const $userBox = document.getElementById("authUser");
+            const $avatar = document.getElementById("authAvatar");
+            $signIn.hidden = true;
+            $userBox.hidden = false;
+            $avatar.src = user.photoURL || "";
+            $avatar.alt = user.displayName || user.email || "User";
+            setSyncBadge("syncing", "Đang tải dữ liệu cloud...");
+            try {
+                const remote = await window.hskAuth.loadCloud(user.uid);
+                const changed = mergeRemote(remote);
+                if (changed) {
+                    state.flashOrder = [];
+                    try { refreshAll(); } catch (e) {}
+                }
+                // luôn push lại để cloud có bản đã merge
+                await window.hskAuth.saveCloud(user.uid, {
+                    progress: state.progress,
+                    srs: state.srs
+                });
+                // ghi cả về local
+                await storageWrite(STORAGE_KEY, JSON.stringify(state.progress));
+                await storageWrite(SRS_KEY, JSON.stringify(state.srs));
+                setSyncBadge("ok", "Đã đồng bộ với " + (user.email || ""));
+                toast("✓ Đã đăng nhập: " + (user.displayName || user.email));
+            } catch (e) {
+                console.error("[hskvocab] sign-in sync lỗi:", e);
+                setSyncBadge("err", "Lỗi đồng bộ: " + (e?.message || e));
+            }
+        }
+        function onSignedOut() {
+            const $signIn = document.getElementById("signInBtn");
+            const $userBox = document.getElementById("authUser");
+            $signIn.hidden = false;
+            $userBox.hidden = true;
+            setSyncBadge(null, "Chưa đăng nhập");
+        }
+        function setupAuth() {
+            const $signIn = document.getElementById("signInBtn");
+            const $signOut = document.getElementById("signOutBtn");
+            if (!window.hskAuth?.enabled) {
+                // Firebase chưa cấu hình → ẩn UI auth
+                document.getElementById("authBox")?.setAttribute("hidden", "");
+                return;
+            }
+            $signIn.hidden = false;
+            $signIn.addEventListener("click", async () => {
+                try { await window.hskAuth.signIn(); }
+                catch (e) {
+                    console.error(e);
+                    toast("Đăng nhập thất bại: " + (e?.code || e?.message || "lỗi"));
+                }
+            });
+            $signOut.addEventListener("click", async () => {
+                try { await window.hskAuth.signOut(); toast("Đã đăng xuất"); }
+                catch (e) { console.error(e); }
+            });
+            window.hskAuth.onChange((user) => {
+                if (user) onSignedIn(user);
+                else onSignedOut();
+            });
         }
 
         // ============ SPACED REPETITION (SM-2 đơn giản) ============
@@ -1830,6 +2021,9 @@
             renderHeaderStats();
             renderAlphaRangeBar();
             initFlash();
+            // Firebase module load bất đồng bộ → đợi nếu chưa sẵn sàng
+            if (window.hskAuth) setupAuth();
+            else window.addEventListener("hskAuthReady", setupAuth, { once: true });
         })();
     </script>
 </body>
