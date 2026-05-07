@@ -143,9 +143,10 @@
         <section class="view active" id="view-flash">
             <div class="flash-wrap">
                 <div class="review-banner" id="reviewBanner" hidden>
-                    <span class="rb-icon">🔥</span>
-                    <span class="rb-text"><strong id="reviewDueCount">0</strong> thẻ tới hạn ôn</span>
+                    <span class="rb-icon" id="reviewIcon">🔥</span>
+                    <span class="rb-text" id="reviewText"><strong id="reviewDueCount">0</strong> thẻ tới hạn ôn</span>
                     <button class="rb-btn" id="reviewNowBtn" type="button">Học ôn ngay</button>
+                    <button class="rb-btn rb-exit" id="reviewExitBtn" type="button" hidden>Thoát</button>
                 </div>
                 <div class="flash-progress">
                     <div class="meta">
@@ -481,6 +482,7 @@
             browseAlpha: "all",
             browseQuery: "",
             reverseMode: false,
+            reviewMode: false,
             autoPlay: false,
             writeIdx: 0,
             writeMode: "stroke",
@@ -1111,10 +1113,34 @@
         function renderReviewBanner() {
             const banner = document.getElementById("reviewBanner");
             if (!banner) return;
+            const icon = document.getElementById("reviewIcon");
+            const text = document.getElementById("reviewText");
+            const startBtn = document.getElementById("reviewNowBtn");
+            const exitBtn = document.getElementById("reviewExitBtn");
+            if (state.reviewMode) {
+                banner.hidden = false;
+                icon.textContent = "🔄";
+                const cur = Math.min(state.flashIdx + 1, state.flashOrder.length);
+                text.innerHTML = `Đang ôn <strong>${cur}</strong> / ${state.flashOrder.length} thẻ`;
+                startBtn.hidden = true;
+                exitBtn.hidden = false;
+                return;
+            }
             const n = dueCount();
             if (n === 0) { banner.hidden = true; return; }
             banner.hidden = false;
-            document.getElementById("reviewDueCount").textContent = n;
+            icon.textContent = "🔥";
+            text.innerHTML = `<strong id="reviewDueCount">${n}</strong> thẻ tới hạn ôn`;
+            startBtn.hidden = false;
+            exitBtn.hidden = true;
+        }
+        function exitReviewMode(silent) {
+            state.reviewMode = false;
+            state.flashOrder = [];
+            state.flashIdx = 0;
+            initFlash();
+            renderReviewBanner();
+            if (!silent) toast("Quay lại thư viện thẻ");
         }
 
         function renderReviewForecast() {
@@ -1572,10 +1598,10 @@
         });
 
         $("#prevCard").addEventListener("click", () => {
-            if (state.flashIdx > 0) { state.flashIdx--; renderFlash(); }
+            if (state.flashIdx > 0) { state.flashIdx--; renderFlash(); renderReviewBanner(); }
         });
         $("#nextCard").addEventListener("click", () => {
-            if (state.flashIdx < state.flashOrder.length - 1) { state.flashIdx++; renderFlash(); }
+            if (state.flashIdx < state.flashOrder.length - 1) { state.flashIdx++; renderFlash(); renderReviewBanner(); }
             else toast("Đã đến từ cuối cùng");
         });
         $("#shuffleCards").addEventListener("click", () => {
@@ -1596,13 +1622,16 @@
                 srsApply(w.key, r);
                 await saveProgress();
                 renderHeaderStats();
-                renderReviewBanner();
                 if (state.flashIdx < state.flashOrder.length - 1) {
                     state.flashIdx++;
-                    setTimeout(renderFlash, 200);
+                    setTimeout(() => { renderFlash(); renderReviewBanner(); }, 200);
+                } else if (state.reviewMode) {
+                    toast(`🎉 Hoàn tất ôn ${state.flashOrder.length} thẻ!`);
+                    setTimeout(() => exitReviewMode(true), 600);
                 } else {
                     toast("🎉 Hoàn thành lượt học!");
                     renderFlash();
+                    renderReviewBanner();
                 }
             });
         });
@@ -2482,14 +2511,16 @@
                 return s && s.due <= now && state.progress[w.key] !== STATUS.MASTERED;
             }).sort((a,b) => srsDue(a.key) - srsDue(b.key));
             if (due.length === 0) { toast("Không còn thẻ nào tới hạn 🎉"); return; }
+            state.reviewMode = true;
             state.flashOrder = due;
             state.flashIdx = 0;
-            // chuyển sang tab flash nếu đang ở chỗ khác
             const flashTab = document.querySelector('[data-view="flash"]');
             if (flashTab) flashTab.click();
             renderFlash();
+            renderReviewBanner();
             toast(`Bắt đầu ôn ${due.length} thẻ`);
         });
+        document.getElementById("reviewExitBtn")?.addEventListener("click", () => exitReviewMode(false));
 
         // ===== Phím tắt =====
         function openShortcutsHelp() {
