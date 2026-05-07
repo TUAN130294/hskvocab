@@ -534,6 +534,10 @@ nav.tabs::-webkit-scrollbar { display: none; }
     gap: 18px;
 }
 
+/* Đảm bảo attribute [hidden] luôn ẩn được phần tử dù có
+   display:flex/inline-flex tường minh. */
+[hidden] { display: none !important; }
+
 /* ===== REVIEW BANNER (due cards) ============================== */
 .review-banner {
     width: 100%;
