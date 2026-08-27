@@ -81,7 +81,7 @@
                 </div>
             </div>
             <div class="header-stats" id="headerStats"></div>
-            <div class="streak-badge" id="streakBadge" title="Chuỗi ngày học liên tục"><span class="streak-fire">🔥</span><span class="streak-num" id="streakNum">0</span><span>ngày</span></div>
+
             <div class="auth-box" id="authBox">
                 <button class="auth-btn" id="signInBtn" type="button" hidden>
                     <svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.08-1.79 2.72v2.26h2.9c1.7-1.56 2.69-3.87 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.83.86-3.06.86-2.36 0-4.36-1.59-5.07-3.74H.96v2.34A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.93 10.68A5.4 5.4 0 0 1 3.64 9c0-.58.1-1.15.29-1.68V4.98H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.02l2.97-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.98l2.97 2.34C4.64 5.17 6.64 3.58 9 3.58z"/></svg>
@@ -131,16 +131,39 @@
         </div>
 
         <nav class="tabs" id="tabs">
-            <button class="tab active" data-view="flash"><span class="ch">卡</span> Thẻ học</button>
+            <button class="tab active" data-view="home"><span class="ch">今</span> Hôm nay</button>
+            <button class="tab" data-view="flash"><span class="ch">卡</span> Thẻ học</button>
             <button class="tab" data-view="quiz"><span class="ch">测</span> Trắc nghiệm</button>
             <button class="tab" data-view="match"><span class="ch">配</span> Ghép cặp</button>
             <button class="tab" data-view="browse"><span class="ch">典</span> Từ điển</button>
             <button class="tab" data-view="write"><span class="ch">笔</span> Viết chữ</button>
+            <button class="tab" data-view="radical"><span class="ch">部</span> Bộ thủ</button>
             <button class="tab" data-view="similar"><span class="ch">辨</span> Phân biệt</button>
             <button class="tab" data-view="stats"><span class="ch">计</span> Tiến độ</button>
         </nav>
 
-        <section class="view active" id="view-flash">
+        <section class="view active" id="view-home">
+            <div class="home-wrap">
+                <div class="home-due">
+                    <div class="home-num" id="homeDueNum">0</div>
+                    <div class="home-lbl">thẻ đến hạn</div>
+                    <div class="home-filter" id="homeFilter" hidden></div>
+                    <button class="home-start" id="homeStartBtn">Bắt đầu ôn</button>
+                </div>
+                <div class="home-split">
+                    <div class="hs-row"><span class="hs-name">Nhận mặt</span><span class="hs-val" id="homeRecog">0</span></div>
+                    <div class="hs-row"><span class="hs-name">Viết chữ</span><span class="hs-val" id="homeProd">0</span></div>
+                    <div class="hs-row"><span class="hs-name">Thẻ mới hôm nay</span><span class="hs-val" id="homeNew">0</span></div>
+                </div>
+                <div class="home-leech" id="homeLeech" hidden></div>
+                <div class="home-heat">
+                    <div class="home-heat-title">30 ngày qua</div>
+                    <div class="home-heat-grid" id="homeHeatmap"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="view" id="view-flash">
             <div class="flash-wrap">
                 <div class="review-banner" id="reviewBanner" hidden>
                     <span class="rb-icon" id="reviewIcon">🔥</span>
@@ -174,6 +197,7 @@
                             <div class="hanzi-big" id="cardHanzi">—</div>
                             <div class="tap-hint">Chạm để lật thẻ</div>
                             <div class="lv-tag" id="cardLv">HSK —</div>
+                            <div class="dir-tag" id="cardDir"></div>
                         </div>
                         <div class="face back">
                             <div class="face-status" id="cardStatusBack"><span class="dot"></span><span>Mới</span></div>
@@ -195,10 +219,23 @@
                     </div>
                 </div>
 
-                <div class="card-actions" id="cardActions">
-                    <button class="action-btn hard" data-rate="hard">Khó · Học lại<span class="kbd">1</span></button>
-                    <button class="action-btn ok" data-rate="ok">Bình thường<span class="kbd">2</span></button>
-                    <button class="action-btn easy" data-rate="easy">Dễ · Thuộc rồi<span class="kbd">3</span></button>
+                <div class="card-write" id="cardWrite" hidden>
+                    <button class="cw-start" id="cardWriteStart">✍️ Viết thử trước khi lật</button>
+                    <div class="cw-stage" id="cardWriteStage" hidden>
+                        <div class="cw-target" id="cardWriterTarget"></div>
+                        <div class="cw-bar">
+                            <span class="cw-progress" id="cardWriteProgress"></span>
+                            <button class="cw-skip" id="cardWriteSkip">Bỏ qua</button>
+                        </div>
+                    </div>
+                    <div class="cw-result" id="cardWriteResult"></div>
+                </div>
+
+                <div class="card-actions rate-4" id="cardActions">
+                    <button class="action-btn forgot" data-rate="1">Quên<span class="ivl" data-ivl="1">—</span><span class="kbd">1</span></button>
+                    <button class="action-btn hard" data-rate="2">Khó<span class="ivl" data-ivl="2">—</span><span class="kbd">2</span></button>
+                    <button class="action-btn ok" data-rate="3">Được<span class="ivl" data-ivl="3">—</span><span class="kbd">3</span></button>
+                    <button class="action-btn easy" data-rate="4">Dễ<span class="ivl" data-ivl="4">—</span><span class="kbd">4</span></button>
                 </div>
 
                 <div class="nav-row">
@@ -214,7 +251,7 @@
                 <div class="swipe-hint">
                     <span><span class="sh-icon">👈</span> Khó</span>
                     <span><span class="sh-icon">☝️</span> Lật</span>
-                    <span><span class="sh-icon">👆</span> Bình thường</span>
+                    <span><span class="sh-icon">👆</span> Được</span>
                     <span><span class="sh-icon">👉</span> Dễ</span>
                 </div>
             </div>
@@ -268,6 +305,20 @@
             <div class="word-grid" id="wordGrid"></div>
         </section>
 
+        <section class="view" id="view-radical">
+            <div class="radical-wrap">
+                <div class="rd-intro">
+                    370 chữ HSK 1-2-3 chỉ là tổ hợp của những mảnh dưới đây.
+                    Nhớ mảnh thì chữ không còn là hình vẽ ngẫu nhiên.
+                </div>
+                <div class="rd-toolbar">
+                    <input type="search" id="radicalSearch" placeholder="Tìm bộ thủ, âm Hán-Việt hoặc nghĩa…">
+                    <span class="rd-count" id="radicalCount"></span>
+                </div>
+                <div class="rd-grid" id="radicalGrid"></div>
+            </div>
+        </section>
+
         <section class="view" id="view-stats">
             <div class="stats-grid" id="statsGrid"></div>
             <div class="progress-section">
@@ -288,10 +339,31 @@
                 <div id="streakHeatmap"></div>
             </div>
             <div class="progress-section">
+                <h3>Hay sai nhất</h3>
+                <div id="lapseRanking"></div>
+            </div>
+            <div class="progress-section">
+                <h3>Nhịp độ hằng ngày</h3>
+                <div class="settings-row">
+                    <label for="setNewPerDay">Thẻ mới mỗi ngày</label>
+                    <input type="number" id="setNewPerDay" min="0" max="100" step="1">
+                </div>
+                <div class="settings-row">
+                    <label for="setMaxReviews">Tối đa thẻ ôn mỗi ngày</label>
+                    <input type="number" id="setMaxReviews" min="10" max="500" step="10">
+                </div>
+            </div>
+            <div class="progress-section">
                 <h3>Quản lý dữ liệu</h3>
                 <p style="color:var(--ink-soft);font-size:14px;margin-bottom:16px;line-height:1.5">
-                    Tiến độ học tập của bạn được lưu tự động và sẽ hiện lại khi mở app lần sau.
+                    Tiến độ được lưu tự động trên máy này. Nên tải file sao lưu định kỳ —
+                    xoá dữ liệu trình duyệt sẽ mất toàn bộ lịch ôn.
                 </p>
+                <div class="data-btns">
+                    <button class="nav-btn" id="exportData">⇩ Tải file sao lưu</button>
+                    <button class="nav-btn" id="importData">⇧ Khôi phục từ file</button>
+                    <input type="file" id="importFile" accept="application/json,.json" hidden>
+                </div>
                 <div class="reset-section">
                     <button class="danger-btn" id="resetProgress">↺ Đặt lại tất cả tiến độ</button>
                 </div>
@@ -343,12 +415,13 @@
                 <button class="kb-close" data-close="1" aria-label="Đóng">×</button>
             </div>
             <div class="kb-list">
-                <div><kbd>1</kbd> Khó · Học lại</div>
-                <div><kbd>2</kbd> Bình thường</div>
-                <div><kbd>3</kbd> Dễ · Thuộc rồi</div>
+                <div><kbd>1</kbd> Quên</div>
+                <div><kbd>2</kbd> Khó</div>
+                <div><kbd>3</kbd> Được</div>
+                <div><kbd>4</kbd> Dễ</div>
                 <div><kbd>F</kbd> Lật thẻ</div>
                 <div><kbd>S</kbd> Phát âm</div>
-                <div><kbd>R</kbd> Đảo ngược (Việt → Trung)</div>
+                <div><kbd>R</kbd> Đảo hướng khi duyệt tự do</div>
                 <div><kbd>←</kbd> / <kbd>→</kbd> Thẻ trước / sau</div>
                 <div><kbd>?</kbd> Mở bảng phím tắt này</div>
             </div>
@@ -357,7 +430,11 @@
 
     <!-- Bottom navigation (mobile only) -->
     <nav class="bottom-nav" id="bottomNav">
-        <button class="bn-tab active" data-view="flash">
+        <button class="bn-tab active" data-view="home">
+            <span class="bn-icon">今</span>
+            <span class="bn-lbl">Hôm nay</span>
+        </button>
+        <button class="bn-tab" data-view="flash">
             <span class="bn-icon">卡</span>
             <span class="bn-lbl">Thẻ học</span>
         </button>
@@ -376,6 +453,10 @@
         <button class="bn-tab" data-view="write">
             <span class="bn-icon">笔</span>
             <span class="bn-lbl">Viết</span>
+        </button>
+        <button class="bn-tab" data-view="radical">
+            <span class="bn-icon">部</span>
+            <span class="bn-lbl">Bộ thủ</span>
         </button>
         <button class="bn-tab" data-view="similar">
             <span class="bn-icon">辨</span>
@@ -463,14 +544,29 @@
 
         // ============ STATE ============
         const STORAGE_KEY = "hsk123_progress_v2";
-        const SRS_KEY = "hsk123_srs_v1";
+        const SRS_KEY = "hsk123_srs_v1";      // lịch cũ 1 chiều — chỉ đọc để migrate, không ghi nữa
+        const SRS_KEY_V2 = "hsk123_srs_v2";   // { cards, settings, newToday }
         const STATUS = { NEW: "new", LEARNING: "learning", MASTERED: "mastered" };
         const STATUS_LABEL = { new: "Chưa học", learning: "Đang học", mastered: "Đã thuộc" };
         const DAY_MS = 86400000;
 
+        // Hai hướng thẻ có lịch ôn ĐỘC LẬP. Nhận mặt chữ dễ hơn viết chữ rất nhiều;
+        // gộp chung một lịch sẽ kéo giãn khoảng cách ôn của hướng viết một cách sai lệch.
+        const DIR = { RECOG: "recog", PROD: "prod" };
+        const DIR_LABEL = { recog: "Nhận mặt", prod: "Viết chữ" };
+        const DIR_ORDER = [DIR.RECOG, DIR.PROD];
+        const LEECH_LAPSES = 6;               // quên quá số lần này → gắn cờ thẻ khó
+        const DEFAULT_SETTINGS = { newPerDay: 15, maxReviews: 120 };
+        const RATE = { FORGOT: 1, HARD: 2, GOOD: 3, EASY: 4 };
+
+        function srsKey(wordKey, dir) { return wordKey + ":" + dir; }
+
         let state = {
             progress: {},
             srs: {},
+            settings: Object.assign({}, DEFAULT_SETTINGS),
+            newToday: { date: "", count: 0 },
+            flashSource: "free",
             level: "all",
             alphaFrom: "all",
             alphaTo: "all",
@@ -481,6 +577,7 @@
             browseFilter: "all",
             browseAlpha: "all",
             browseQuery: "",
+            radicalQuery: "",
             reverseMode: false,
             reviewMode: false,
             autoPlay: false,
@@ -913,16 +1010,32 @@
                 if (raw) state.progress = JSON.parse(raw);
             } catch (e) { state.progress = {}; }
             try {
-                const rawSrs = await storageRead(SRS_KEY);
-                if (rawSrs) state.srs = JSON.parse(rawSrs);
+                const rawV2 = await storageRead(SRS_KEY_V2);
+                if (rawV2) {
+                    const v2 = JSON.parse(rawV2);
+                    state.srs = v2.cards || {};
+                    state.settings = Object.assign({}, DEFAULT_SETTINGS, v2.settings || {});
+                    state.newToday = v2.newToday || { date: "", count: 0 };
+                } else {
+                    // Migrate lịch cũ (1 chiều) → hướng nhận mặt. Hướng viết bắt đầu từ đầu,
+                    // vì nhận mặt được không có nghĩa là viết được.
+                    const rawV1 = await storageRead(SRS_KEY);
+                    if (rawV1) state.srs = migrateSrsV1(JSON.parse(rawV1));
+                }
             } catch (e) { state.srs = {}; }
             VOCAB.forEach(w => { if (!state.progress[w.key]) state.progress[w.key] = STATUS.NEW; });
         }
 
+        async function persistLocal() {
+            await storageWrite(STORAGE_KEY, JSON.stringify(state.progress));
+            await storageWrite(SRS_KEY_V2, JSON.stringify({
+                cards: state.srs, settings: state.settings, newToday: state.newToday
+            }));
+        }
+
         async function saveProgress() {
             try {
-                await storageWrite(STORAGE_KEY, JSON.stringify(state.progress));
-                await storageWrite(SRS_KEY, JSON.stringify(state.srs));
+                await persistLocal();
             } catch (e) { }
             try { markStudyDay(); } catch (e) {}
             scheduleCloudSync();
@@ -932,8 +1045,10 @@
             state.progress = {};
             state.srs = {};
             VOCAB.forEach(w => state.progress[w.key] = STATUS.NEW);
+            state.newToday = { date: "", count: 0 };
             await storageRemove(STORAGE_KEY);
             await storageRemove(SRS_KEY);
+            await storageRemove(SRS_KEY_V2);
             state.flashOrder = [];
             refreshAll();
             toast("Đã đặt lại toàn bộ tiến độ");
@@ -987,6 +1102,7 @@
             }
             const rs = remote.srs || {};
             for (const k in rs) {
+                if (k.indexOf(":") === -1) continue;   // key lịch cũ (chưa có hướng) → bỏ
                 const cur = state.srs[k];
                 const r = rs[k];
                 if (!cur) { state.srs[k] = r; changed = true; }
@@ -1022,8 +1138,7 @@
                     srs: state.srs
                 });
                 // ghi cả về local
-                await storageWrite(STORAGE_KEY, JSON.stringify(state.progress));
-                await storageWrite(SRS_KEY, JSON.stringify(state.srs));
+                await persistLocal();
                 setSyncBadge("ok", "Đã đồng bộ với " + (user.email || ""));
                 toast("✓ Đã đăng nhập: " + (user.displayName || user.email));
             } catch (e) {
@@ -1066,48 +1181,128 @@
 
         // ============ SPACED REPETITION (SM-2 đơn giản) ============
         // rating: "hard" (1) | "ok" (2) | "easy" (3)
-        function srsApply(key, rating) {
-            const now = Date.now();
-            const cur = state.srs[key] || { ef: 2.5, interval: 0, reps: 0, due: now, last: 0 };
-            let { ef, interval, reps } = cur;
-            if (rating === "hard") {
-                reps = 0;
-                interval = 0; // ôn lại trong cùng phiên
-                ef = Math.max(1.3, ef - 0.2);
-            } else if (rating === "ok") {
-                reps += 1;
-                if (reps === 1) interval = 1;
-                else if (reps === 2) interval = 3;
-                else interval = Math.round(interval * ef);
-                // ef giữ nguyên với "ok"
-            } else if (rating === "easy") {
-                reps += 1;
-                if (reps === 1) interval = 3;
-                else if (reps === 2) interval = 7;
-                else interval = Math.round(interval * ef * 1.3);
-                ef = Math.min(3.0, ef + 0.15);
+        function startOfDay(ts) {
+            const d = new Date(ts == null ? Date.now() : ts);
+            d.setHours(0, 0, 0, 0);
+            return d.getTime();
+        }
+        function endOfToday() { return startOfDay() + DAY_MS - 1; }
+
+        function newSrsCard() { return { ease: 2.5, interval: 0, reps: 0, lapses: 0, due: 0, last: 0 }; }
+
+        // Lịch cũ dùng {ef, interval, reps} không có hướng → chuyển thành thẻ hướng nhận mặt.
+        function migrateSrsV1(old) {
+            const out = {};
+            for (const k in old) {
+                const o = old[k] || {};
+                out[srsKey(k, DIR.RECOG)] = {
+                    ease: Math.min(2.5, Math.max(1.3, o.ef || 2.5)),
+                    interval: o.interval || 0,
+                    reps: o.reps || 0,
+                    lapses: 0,
+                    due: o.due || Date.now(),
+                    last: o.last || 0
+                };
             }
+            return out;
+        }
+
+        // SM-2. rating: 1 Quên · 2 Khó · 3 Được · 4 Dễ
+        function srsNext(card, rating) {
+            let ease = card.ease, interval = card.interval, reps = card.reps, lapses = card.lapses || 0;
+            if (rating === RATE.FORGOT) {
+                reps = 0;
+                lapses += 1;
+                interval = 0;                       // quay lại cuối hàng đợi trong cùng phiên
+                ease = Math.max(1.3, ease - 0.20);
+            } else {
+                if (reps === 0) interval = 1;
+                else if (reps === 1) interval = 6;
+                else interval = Math.round(interval * ease);
+                if (rating === RATE.HARD) {
+                    interval = Math.max(1, Math.round(interval * 0.6));
+                    ease = Math.max(1.3, ease - 0.15);
+                } else if (rating === RATE.EASY) {
+                    interval = reps === 0 ? 4 : Math.round(interval * 1.3);
+                    ease = Math.min(2.5, ease + 0.15);
+                }
+                reps += 1;
+            }
+            return { ease: ease, interval: interval, reps: reps, lapses: lapses };
+        }
+
+        function srsApply(key, rating) {
+            const cur = state.srs[key] || newSrsCard();
+            const n = srsNext(cur, rating);
             state.srs[key] = {
-                ef, interval, reps,
-                last: now,
-                due: now + interval * DAY_MS
+                ease: n.ease, interval: n.interval, reps: n.reps, lapses: n.lapses,
+                last: Date.now(),
+                due: startOfDay() + n.interval * DAY_MS
             };
+            return state.srs[key];
+        }
+
+        // Nhãn khoảng cách hiện dưới mỗi nút chấm điểm, giúp chấm chính xác hơn
+        function srsPreview(key, rating) {
+            const n = srsNext(state.srs[key] || newSrsCard(), rating);
+            if (n.interval === 0) return "trong phiên";
+            if (n.interval === 1) return "1 ngày";
+            if (n.interval < 30) return n.interval + " ngày";
+            return Math.round(n.interval / 30) + " tháng";
+        }
+
+        function isLeech(key) {
+            const s = state.srs[key];
+            return !!s && (s.lapses || 0) >= LEECH_LAPSES;
         }
 
         function srsDue(key) {
             const s = state.srs[key];
-            if (!s) return -Infinity; // chưa từng học → ưu tiên thấp hơn từ overdue nhưng cao hơn future
-            return s.due;
+            return s ? s.due : -Infinity;
         }
 
-        // Số thẻ tới hạn ôn trong pool hiện tại
-        function dueCount(pool) {
-            const now = Date.now();
+        // Thẻ tới hạn — mảng {w, dir, due} sắp xếp due tăng dần. dir rỗng = cả hai hướng.
+        function dueList(dir, pool) {
             pool = pool || (typeof getPool === 'function' ? getPool() : VOCAB);
-            return pool.filter(w => {
-                const s = state.srs[w.key];
-                return s && s.due <= now && state.progress[w.key] !== STATUS.MASTERED;
-            }).length;
+            const limit = endOfToday();
+            const dirs = dir ? [dir] : DIR_ORDER;
+            const out = [];
+            for (const w of pool) {
+                for (const d of dirs) {
+                    const s = state.srs[srsKey(w.key, d)];
+                    if (s && s.due <= limit) out.push({ w: w, dir: d, due: s.due });
+                }
+            }
+            out.sort((a, b) => a.due - b.due);
+            return out;
+        }
+        function dueCount(dir, pool) { return dueList(dir, pool).length; }
+
+        // Thẻ chưa từng học, giữ thứ tự giáo trình (HSK 1 → 3), nhận mặt trước rồi mới tới viết
+        function newCardList(pool) {
+            pool = pool || (typeof getPool === 'function' ? getPool() : VOCAB);
+            const out = [];
+            for (const w of pool) {
+                for (const d of DIR_ORDER) {
+                    if (!state.srs[srsKey(w.key, d)]) out.push({ w: w, dir: d });
+                }
+            }
+            return out;
+        }
+
+        function newTodayCount() {
+            const t = todayStr();
+            if (state.newToday.date !== t) state.newToday = { date: t, count: 0 };
+            return state.newToday.count;
+        }
+
+        // Phiên học = thẻ tới hạn (tối đa maxReviews) + thẻ mới (phần còn lại của newPerDay)
+        function buildSession(pool) {
+            const st = state.settings;
+            const due = dueList(null, pool).slice(0, st.maxReviews);
+            const remainNew = Math.max(0, st.newPerDay - newTodayCount());
+            const fresh = remainNew > 0 ? newCardList(pool).slice(0, remainNew) : [];
+            return due.concat(fresh).map(e => ({ w: e.w, dir: e.dir }));
         }
 
         function renderReviewBanner() {
@@ -1126,11 +1321,13 @@
                 exitBtn.hidden = false;
                 return;
             }
-            const n = dueCount();
+            const nRecog = dueCount(DIR.RECOG);
+            const nProd = dueCount(DIR.PROD);
+            const n = nRecog + nProd;
             if (n === 0) { banner.hidden = true; return; }
             banner.hidden = false;
             icon.textContent = "🔥";
-            text.innerHTML = `<strong id="reviewDueCount">${n}</strong> thẻ tới hạn ôn`;
+            text.innerHTML = `<strong id="reviewDueCount">${n}</strong> thẻ tới hạn · ${nRecog} nhận mặt · ${nProd} viết chữ`;
             startBtn.hidden = false;
             exitBtn.hidden = true;
         }
@@ -1432,13 +1629,17 @@
             $$(".bn-tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
             $$(".view").forEach(s => s.classList.remove("active"));
             $("#view-" + v).classList.add("active");
+            // Tab Hôm nay cần gọn: ẩn banner mẹo và bộ lọc để số thẻ + nút ôn nằm trên màn hình đầu
+            document.body.classList.toggle("on-home", v === "home");
+            if (v === "home") renderHomeToday();
             if (v === "flash") initFlash();
             if (v === "quiz") initQuiz();
             if (v === "match") initMatch();
             if (v === "browse") renderBrowse();
             if (v === "write") initWrite();
+            if (v === "radical") renderRadicals();
             if (v === "similar") renderSimilar();
-            if (v === "stats") { renderStats(); renderReviewForecast(); renderStreakHeatmap(); }
+            if (v === "stats") { renderStats(); renderReviewForecast(); renderStreakHeatmap(); renderLapseRanking(); }
             if (v === "flash") renderReviewBanner();
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
@@ -1447,14 +1648,15 @@
         $$(".bn-tab").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.view)));
 
         function refreshActiveView() {
-            const active = document.querySelector(".tab.active")?.dataset.view || "flash";
+            const active = document.querySelector(".tab.active")?.dataset.view || "home";
+            if (active === "home") renderHomeToday();
             if (active === "flash") initFlash();
             if (active === "quiz") initQuiz();
             if (active === "match") initMatch();
             if (active === "browse") { renderAlphabet(); renderBrowse(); }
             if (active === "write") initWrite();
             if (active === "similar") renderSimilar();
-            if (active === "stats") { renderStats(); renderReviewForecast(); renderStreakHeatmap(); }
+            if (active === "stats") { renderStats(); renderReviewForecast(); renderStreakHeatmap(); renderLapseRanking(); }
             if (active === "flash") renderReviewBanner();
         }
 
@@ -1493,25 +1695,46 @@
         })();
 
         // ============ FLASHCARD ============
+        // Thẻ đang hiển thị là { w, dir } — hướng do lịch ôn quyết định, không do nút Đảo ngược
+        function curEntry() { return state.flashOrder[state.flashIdx] || null; }
+        function curWord() { const e = curEntry(); return e ? e.w : null; }
+
+        function freeOrder(pool) {
+            const dir = state.reverseMode ? DIR.PROD : DIR.RECOG;
+            return shuffle(pool).map(w => ({ w: w, dir: dir }));
+        }
+
         function initFlash() {
             const pool = getPool();
             if (pool.length === 0) return;
             if (state.flashOrder.length === 0) {
-                const now = Date.now();
-                const due = []; const newW = []; const future = [];
-                pool.forEach(w => {
-                    const s = state.srs[w.key];
-                    if (state.progress[w.key] === STATUS.NEW && !s) newW.push(w);
-                    else if (s && s.due <= now) due.push(w);
-                    else if (state.progress[w.key] === STATUS.LEARNING) due.push(w);
-                    else future.push(w);
-                });
-                // Ưu tiên: từ đã đến hạn ôn (overdue trước) → từ mới → từ chưa tới hạn
-                due.sort((a, b) => srsDue(a.key) - srsDue(b.key));
-                state.flashOrder = [...due, ...shuffle(newW), ...shuffle(future)];
+                const session = buildSession(pool);
+                if (session.length) {
+                    state.flashOrder = session;
+                    state.flashSource = "session";
+                } else {
+                    // Hết thẻ tới hạn → duyệt tự do toàn bộ pool
+                    state.flashOrder = freeOrder(pool);
+                    state.flashSource = "free";
+                }
                 state.flashIdx = 0;
             }
             renderFlash();
+        }
+
+        function finishSession() {
+            if (state.flashSource === "session") {
+                const left = dueCount();
+                toast(left ? "Còn " + left + " thẻ tới hạn" : "🎉 Xong phiên hôm nay!");
+                state.flashOrder = [];
+                state.flashIdx = 0;
+                initFlash();
+            } else {
+                toast("🎉 Hoàn thành lượt học!");
+                renderFlash();
+            }
+            renderReviewBanner();
+            renderHomeToday();
         }
 
         function getRadicalHTML(ch) {
@@ -1532,12 +1755,14 @@
                 $("#flashTotal").textContent = 0;
                 return;
             }
-            const w = state.flashOrder[state.flashIdx];
+            const entry = state.flashOrder[state.flashIdx];
+            const w = entry.w;
+            const dir = entry.dir;
             const s = state.progress[w.key];
             const card = $("#card");
             card.classList.remove("flipped");
 
-            if (state.reverseMode) {
+            if (dir === DIR.PROD) {
                 $("#cardHanzi").textContent = w.v;
                 $("#cardHanzi").classList.add("viet-mode");
                 $("#speakFront").style.display = "none";
@@ -1561,6 +1786,19 @@
                 $("#backMeaning").style.display = "";
             }
             $("#cardLv").textContent = "HSK " + w.lv;
+
+            // Tag hướng + cờ thẻ khó
+            const key = srsKey(w.key, dir);
+            const dirTag = $("#cardDir");
+            if (dirTag) {
+                dirTag.textContent = DIR_LABEL[dir] + (isLeech(key) ? " · 🐢 hay quên" : "");
+                dirTag.className = "dir-tag dir-" + dir + (isLeech(key) ? " leech" : "");
+            }
+            resetCardWrite(dir);
+            // Khoảng cách ôn tiếp theo dưới mỗi nút chấm điểm
+            $$("#cardActions .ivl").forEach(el => {
+                el.textContent = srsPreview(key, parseInt(el.dataset.ivl, 10));
+            });
 
             // Radical breakdown on back
             const existingRad = $("#backContent .radical-box");
@@ -1592,7 +1830,7 @@
         ["#speakFront", "#speakBack"].forEach(sel => {
             $(sel).addEventListener("click", (e) => {
                 e.stopPropagation();
-                const w = state.flashOrder[state.flashIdx];
+                const w = curWord();
                 if (w) speak(w.h, e.currentTarget);
             });
         });
@@ -1613,25 +1851,38 @@
 
         $$(".action-btn").forEach(btn => {
             btn.addEventListener("click", async () => {
-                const w = state.flashOrder[state.flashIdx];
-                if (!w) return;
-                const r = btn.dataset.rate;
-                if (r === "easy") state.progress[w.key] = STATUS.MASTERED;
-                else if (r === "hard") state.progress[w.key] = STATUS.LEARNING;
+                const entry = curEntry();
+                if (!entry) return;
+                const w = entry.w, dir = entry.dir;
+                const rating = parseInt(btn.dataset.rate, 10);
+                const key = srsKey(w.key, dir);
+                const wasNew = !state.srs[key];
+
+                srsApply(key, rating);
+                if (wasNew) { newTodayCount(); state.newToday.count += 1; }
+
+                // Trạng thái hiển thị dùng chung cho quiz / từ điển / thống kê
+                if (rating === RATE.EASY) state.progress[w.key] = STATUS.MASTERED;
+                else if (rating <= RATE.HARD) state.progress[w.key] = STATUS.LEARNING;
                 else if (state.progress[w.key] === STATUS.NEW) state.progress[w.key] = STATUS.LEARNING;
-                srsApply(w.key, r);
+
                 await saveProgress();
                 renderHeaderStats();
+                renderHomeToday();
+
+                // Quên → đẩy thẻ về cuối hàng đợi, ôn lại ngay trong phiên này
+                if (rating === RATE.FORGOT) {
+                    state.flashOrder.splice(state.flashIdx, 1);
+                    state.flashOrder.push(entry);
+                    if (state.flashIdx >= state.flashOrder.length) state.flashIdx = 0;
+                    setTimeout(() => { renderFlash(); renderReviewBanner(); }, 200);
+                    return;
+                }
                 if (state.flashIdx < state.flashOrder.length - 1) {
                     state.flashIdx++;
                     setTimeout(() => { renderFlash(); renderReviewBanner(); }, 200);
-                } else if (state.reviewMode) {
-                    toast(`🎉 Hoàn tất ôn ${state.flashOrder.length} thẻ!`);
-                    setTimeout(() => exitReviewMode(true), 600);
                 } else {
-                    toast("🎉 Hoàn thành lượt học!");
-                    renderFlash();
-                    renderReviewBanner();
+                    finishSession();
                 }
             });
         });
@@ -2120,11 +2371,9 @@
                 if (e.key === " " || e.key === "Enter") { e.preventDefault(); $("#card").classList.toggle("flipped"); }
                 if (e.key === "ArrowLeft") { e.preventDefault(); $("#prevCard").click(); }
                 if (e.key === "ArrowRight") { e.preventDefault(); $("#nextCard").click(); }
-                if (e.key === "1") $("[data-rate=hard]").click();
-                if (e.key === "2") $("[data-rate=ok]").click();
-                if (e.key === "3") $("[data-rate=easy]").click();
+                if (e.key >= "1" && e.key <= "4") $('[data-rate="' + e.key + '"]').click();
                 if (e.key.toLowerCase() === "s") {
-                    const w = state.flashOrder[state.flashIdx];
+                    const w = curWord();
                     if (w) speak(w.h, $("#card").classList.contains("flipped") ? $("#speakBack") : $("#speakFront"));
                 }
             }
@@ -2255,10 +2504,16 @@
 
         // ============ REVERSE MODE & AUTO-PLAY TOGGLES ============
         $("#toggleReverse").addEventListener("click", () => {
+            if (state.flashSource === "session") {
+                toast("Đang trong phiên ôn — hướng thẻ do lịch quyết định");
+                return;
+            }
             state.reverseMode = !state.reverseMode;
             $("#toggleReverse").classList.toggle("active", state.reverseMode);
+            state.flashOrder = freeOrder(getPool());
+            state.flashIdx = 0;
             renderFlash();
-            toast(state.reverseMode ? "Chế độ đảo: xem nghĩa → đoán Hán tự" : "Chế độ bình thường");
+            toast(state.reverseMode ? "Duyệt tự do: nghĩa → đoán Hán tự" : "Duyệt tự do: Hán tự → nghĩa");
         });
         $("#toggleAutoPlay").addEventListener("click", () => {
             state.autoPlay = !state.autoPlay;
@@ -2269,7 +2524,10 @@
         // ============ DAILY STREAK ============
         const STREAK_KEY = "hsk_streak_v2";
         const STREAK_KEY_OLD = "hsk_streak_v1";
-        function todayStr() { return new Date().toISOString().slice(0, 10); }
+        function todayStr() {
+            const d = new Date();
+            return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        }
         function loadStreak() {
             try {
                 const raw = localStorage.getItem(STREAK_KEY);
@@ -2500,27 +2758,380 @@
             renderReviewBanner();
             renderReviewForecast();
             renderStreakHeatmap();
+            renderLapseRanking();
+            renderHomeToday();
         }
 
         // ===== Review Today: filter flashOrder to chỉ thẻ tới hạn =====
-        document.getElementById("reviewNowBtn")?.addEventListener("click", () => {
-            const pool = getPool();
-            const now = Date.now();
-            const due = pool.filter(w => {
-                const s = state.srs[w.key];
-                return s && s.due <= now && state.progress[w.key] !== STATUS.MASTERED;
-            }).sort((a,b) => srsDue(a.key) - srsDue(b.key));
-            if (due.length === 0) { toast("Không còn thẻ nào tới hạn 🎉"); return; }
+        function startSession() {
+            const session = buildSession(getPool());
+            if (session.length === 0) { toast("Không còn thẻ nào tới hạn 🎉"); return; }
             state.reviewMode = true;
-            state.flashOrder = due;
+            state.flashSource = "session";
+            state.flashOrder = session;
             state.flashIdx = 0;
-            const flashTab = document.querySelector('[data-view="flash"]');
+            const flashTab = document.querySelector('.tab[data-view="flash"]');
             if (flashTab) flashTab.click();
             renderFlash();
             renderReviewBanner();
-            toast(`Bắt đầu ôn ${due.length} thẻ`);
-        });
+            toast("Bắt đầu phiên " + session.length + " thẻ");
+        }
+        document.getElementById("reviewNowBtn")?.addEventListener("click", startSession);
         document.getElementById("reviewExitBtn")?.addEventListener("click", () => exitReviewMode(false));
+
+        // ============ MÀN HÌNH "HÔM NAY" ============
+        function renderHomeToday() {
+            if (!document.getElementById("view-home")) return;
+            const pool = getPool();
+            const nRecog = dueCount(DIR.RECOG, pool);
+            const nProd = dueCount(DIR.PROD, pool);
+            const remainNew = Math.max(0, state.settings.newPerDay - newTodayCount());
+            const fresh = remainNew > 0 ? Math.min(remainNew, newCardList(pool).length) : 0;
+            const total = Math.min(nRecog + nProd, state.settings.maxReviews) + fresh;
+
+            document.getElementById("homeDueNum").textContent = total;
+            document.getElementById("homeRecog").textContent = nRecog;
+            document.getElementById("homeProd").textContent = nProd;
+            document.getElementById("homeNew").textContent = fresh;
+            const startBtn = document.getElementById("homeStartBtn");
+            startBtn.disabled = total === 0;
+            startBtn.textContent = total === 0 ? "Hôm nay xong rồi 🎉" : "Bắt đầu ôn";
+
+            // Phiên học chỉ lấy trong pool đang lọc — nói rõ nếu đang lọc
+            const fl = document.getElementById("homeFilter");
+            if (fl) {
+                const lv = state.level === "all" ? "" : "HSK " + state.level;
+                const alpha = (state.alphaFrom === "all" && state.alphaTo === "all") ? ""
+                    : "pinyin " + (state.alphaFrom === "all" ? "?" : state.alphaFrom).toUpperCase()
+                      + "–" + (state.alphaTo === "all" ? "?" : state.alphaTo).toUpperCase();
+                const parts = [lv, alpha].filter(Boolean);
+                fl.hidden = parts.length === 0;
+                fl.textContent = parts.length ? "đang lọc: " + parts.join(" · ") : "";
+            }
+
+            renderLeechBox();
+            renderHomeHeatmap();
+        }
+
+        // Thẻ quên quá nhiều lần → nên học lại bằng bộ thủ thay vì cày lặp
+        function renderLeechBox() {
+            const box = document.getElementById("homeLeech");
+            if (!box) return;
+            const items = [];
+            for (const w of VOCAB) {
+                for (const d of DIR_ORDER) {
+                    const k = srsKey(w.key, d);
+                    if (isLeech(k)) items.push({ w: w, dir: d, lapses: state.srs[k].lapses });
+                }
+            }
+            if (items.length === 0) { box.hidden = true; return; }
+            items.sort((a, b) => b.lapses - a.lapses);
+            const rows = items.slice(0, 8).map(it =>
+                `<span class="leech-chip" title="${DIR_LABEL[it.dir]} · quên ${it.lapses} lần">${it.w.h}<em>${it.lapses}</em></span>`
+            ).join("");
+            box.hidden = false;
+            box.innerHTML = `<div class="leech-title">🐢 Hay quên (${items.length}) — thử tách bộ thủ để nhớ</div>
+                <div class="leech-list">${rows}</div>`;
+        }
+
+        function renderHomeHeatmap() {
+            const root = document.getElementById("homeHeatmap");
+            if (!root) return;
+            const days = (loadStreak().days) || {};
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            let max = 0;
+            for (const k in days) if (days[k] > max) max = days[k];
+            const cells = [];
+            for (let i = 29; i >= 0; i--) {
+                const dt = new Date(today);
+                dt.setDate(today.getDate() - i);
+                const k = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+                const c = days[k] || 0;
+                let lvl = 0;
+                if (c > 0) lvl = max <= 3 ? 2 : Math.min(4, Math.ceil((c / max) * 4));
+                cells.push(`<div class="hm-cell lvl-${lvl}${i === 0 ? " today" : ""}" title="${k}: ${c}"></div>`);
+            }
+            root.innerHTML = cells.join("");
+        }
+
+        document.getElementById("homeStartBtn")?.addEventListener("click", () => startSession());
+
+        // ============ SAO LƯU / KHÔI PHỤC ============
+        function exportData() {
+            const payload = {
+                app: "hskvocab",
+                version: 2,
+                exportedAt: new Date().toISOString(),
+                progress: state.progress,
+                srs: state.srs,
+                settings: state.settings,
+                newToday: state.newToday,
+                days: (loadStreak().days) || {}
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "hskvocab-" + todayStr() + ".json";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            toast("Đã tải file sao lưu");
+        }
+
+        async function importData(file) {
+            let data;
+            try {
+                data = JSON.parse(await file.text());
+            } catch (e) { toast("File không đọc được"); return; }
+            if (!data || data.app !== "hskvocab" || !data.srs) { toast("Không phải file sao lưu hskvocab"); return; }
+            const n = Object.keys(data.srs).length;
+            if (!confirm(`Khôi phục ${n} thẻ từ file? Toàn bộ tiến độ hiện tại sẽ bị ghi đè.`)) return;
+
+            state.progress = data.progress || {};
+            state.srs = data.srs;
+            state.settings = Object.assign({}, DEFAULT_SETTINGS, data.settings || {});
+            state.newToday = data.newToday || { date: "", count: 0 };
+            VOCAB.forEach(w => { if (!state.progress[w.key]) state.progress[w.key] = STATUS.NEW; });
+            if (data.days) {
+                const st = loadStreak();
+                st.days = Object.assign({}, st.days || {}, data.days);
+                saveStreak(st);
+            }
+            state.flashOrder = [];
+            state.flashIdx = 0;
+            await saveProgress();
+            syncSettingsInputs();
+            refreshAll();
+            toast("Đã khôi phục " + n + " thẻ");
+        }
+
+        document.getElementById("exportData")?.addEventListener("click", exportData);
+        document.getElementById("importData")?.addEventListener("click", () => {
+            document.getElementById("importFile").click();
+        });
+        document.getElementById("importFile")?.addEventListener("change", (e) => {
+            const f = e.target.files && e.target.files[0];
+            if (f) importData(f);
+            e.target.value = "";
+        });
+
+        // ============ CÀI ĐẶT NHỊP ĐỘ ============
+        function syncSettingsInputs() {
+            const a = document.getElementById("setNewPerDay");
+            const b = document.getElementById("setMaxReviews");
+            if (a) a.value = state.settings.newPerDay;
+            if (b) b.value = state.settings.maxReviews;
+        }
+        function bindSetting(id, field, min, max) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener("change", async () => {
+                const v = parseInt(el.value, 10);
+                if (isNaN(v)) { el.value = state.settings[field]; return; }
+                state.settings[field] = Math.min(max, Math.max(min, v));
+                el.value = state.settings[field];
+                state.flashOrder = [];
+                await saveProgress();
+                renderHomeToday();
+                toast("Đã cập nhật nhịp độ");
+            });
+        }
+        bindSetting("setNewPerDay", "newPerDay", 0, 100);
+        bindSetting("setMaxReviews", "maxReviews", 10, 500);
+
+
+        // ============ THỐNG KÊ: CHỮ HAY SAI ============
+        function renderLapseRanking() {
+            const root = document.getElementById("lapseRanking");
+            if (!root) return;
+            const rows = [];
+            for (const w of VOCAB) {
+                for (const d of DIR_ORDER) {
+                    const c = state.srs[srsKey(w.key, d)];
+                    if (c && c.lapses > 0) rows.push({ w: w, dir: d, lapses: c.lapses, ease: c.ease });
+                }
+            }
+            if (rows.length === 0) {
+                root.innerHTML = `<div class="lr-empty">Chưa có chữ nào bị quên. Ôn thêm vài ngày rồi quay lại.</div>`;
+                return;
+            }
+            rows.sort((a, b) => b.lapses - a.lapses || a.ease - b.ease);
+            root.innerHTML = rows.slice(0, 15).map(r => `
+                <div class="lr-row${r.lapses >= LEECH_LAPSES ? " leech" : ""}">
+                    <span class="lr-han">${r.w.h}</span>
+                    <span class="lr-info">
+                        <span class="lr-hv">${r.w.hv}</span>
+                        <span class="lr-mean">${r.w.v}</span>
+                    </span>
+                    <span class="lr-dir">${DIR_LABEL[r.dir]}</span>
+                    <span class="lr-count">${r.lapses}×</span>
+                </div>`).join("");
+        }
+
+        // ============ VIẾT THỬ TRÊN THẺ ============
+        // Hướng "viết chữ" cần tay chạm giấy trước khi thấy đáp án, không chỉ nhìn rồi tự chấm.
+        let cardWrite = null;
+
+        function resetCardWrite(dir) {
+            const box = document.getElementById("cardWrite");
+            if (!box) return;
+            cardWrite = null;
+            box.hidden = dir !== DIR.PROD;
+            document.getElementById("cardWriteStage").hidden = true;
+            document.getElementById("cardWriterTarget").innerHTML = "";
+            const res = document.getElementById("cardWriteResult");
+            res.textContent = "";
+            res.className = "cw-result";
+            document.getElementById("cardWriteStart").hidden = false;
+        }
+
+        function startCardWrite() {
+            const entry = curEntry();
+            if (!entry || entry.dir !== DIR.PROD) return;
+            if (typeof HanziWriter === "undefined") { toast("Chưa tải được bộ vẽ nét (cần mạng lần đầu)"); return; }
+            cardWrite = { chars: entry.w.h.split(""), idx: 0, mistakes: 0 };
+            document.getElementById("cardWriteStart").hidden = true;
+            document.getElementById("cardWriteStage").hidden = false;
+            drawNextCardChar();
+        }
+
+        function drawNextCardChar() {
+            const st = cardWrite;
+            if (!st) return;
+            const target = document.getElementById("cardWriterTarget");
+            target.innerHTML = "";
+
+            if (st.idx >= st.chars.length) {
+                const el = document.getElementById("cardWriteResult");
+                el.textContent = st.mistakes === 0 ? "✓ Viết đúng, không sai nét nào" : "Xong · sai " + st.mistakes + " nét";
+                el.className = "cw-result " + (st.mistakes === 0 ? "ok" : "warn");
+                document.getElementById("cardWriteStage").hidden = true;
+                document.getElementById("card").classList.add("flipped");   // lật để tự đối chiếu
+                cardWrite = null;
+                return;
+            }
+
+            document.getElementById("cardWriteProgress").textContent =
+                st.chars.length > 1 ? "chữ " + (st.idx + 1) + " / " + st.chars.length : "";
+            const size = target.offsetWidth || 240;
+            try {
+                const writer = HanziWriter.create(target, st.chars[st.idx], {
+                    width: size, height: size, padding: 10,
+                    showOutline: true, showHintAfterMisses: 3, showCharacter: false,
+                    strokeColor: "#1f1c18", outlineColor: "#e0d3bb",
+                    highlightColor: "#c8412c", drawingColor: "#5a7d3a"
+                });
+                writer.quiz({
+                    onComplete: (res) => {
+                        st.mistakes += res.totalMistakes;
+                        st.idx += 1;
+                        setTimeout(drawNextCardChar, 350);
+                    }
+                });
+            } catch (e) {
+                st.idx += 1;                       // chữ không có dữ liệu nét → bỏ qua
+                drawNextCardChar();
+            }
+        }
+
+        document.getElementById("cardWriteStart")?.addEventListener("click", startCardWrite);
+        document.getElementById("cardWriteSkip")?.addEventListener("click", () => {
+            cardWrite = null;
+            document.getElementById("cardWriteStage").hidden = true;
+            document.getElementById("cardWriterTarget").innerHTML = "";
+            document.getElementById("card").classList.add("flipped");
+        });
+
+        // ============ BỘ THỦ ============
+        // Deck dựng từ chính dữ liệu RADICALS: 370 chữ HSK 1-2-3 chỉ là tổ hợp của ~100 mảnh này.
+        // Âm Hán-Việt của bộ thủ (dữ liệu RADICALS chỉ có nghĩa, không có âm).
+        const RADICAL_HV = {
+            "口":"KHẨU","一":"NHẤT","讠":"NGÔN","日":"NHẬT","月":"NGUYỆT","木":"MỘC","女":"NỮ",
+            "亻":"NHÂN","人":"NHÂN","土":"THỔ","艹":"THẢO","辶":"SƯỚC","扌":"THỦ","夕":"TỊCH",
+            "宀":"MIÊN","目":"MỤC","十":"THẬP","纟":"MỊCH","匕":"CHỦY","冂":"QUYNH","又":"HỰU",
+            "子":"TỬ","手":"THỦ","矢":"THỈ","丿":"PHIỆT","牛":"NGƯU","心":"TÂM","八":"BÁT",
+            "丨":"CỔN","山":"SƠN","冖":"MỊCH","巴":"BA","饣":"THỰC","囗":"VI","马":"MÃ",
+            "青":"THANH","斤":"CÂN","忄":"TÂM","田":"ĐIỀN","合":"HỢP","灬":"HOẢ","丷":"BÁT",
+            "门":"MÔN","彐":"KÝ","大":"ĐẠI","厶":"TƯ","足":"TÚC","竹":"TRÚC","阝":"PHỤ",
+            "父":"PHỤ","禾":"HOÀ","氵":"THUỶ","西":"TÂY","刂":"ĐAO","牙":"NHA","夬":"QUYẾT",
+            "工":"CÔNG","里":"LÝ","寸":"THỐN","方":"PHƯƠNG","攵":"PHỘC","昔":"TÍCH","亠":"ĐẦU",
+            "七":"THẤT","雨":"VŨ","干":"CAN","戈":"QUA","也":"DÃ","隹":"CHUY","可":"KHẢ",
+            "占":"CHIÊM","首":"THỦ","夂":"TRI","火":"HOẢ","冫":"BĂNG","上":"THƯỢNG","羊":"DƯƠNG",
+            "井":"TỈNH","见":"KIẾN","是":"THỊ","交":"GIAO","广":"NGHIỄM","各":"CÁC","圭":"KHUÊ",
+            "钅":"KIM","鸟":"ĐIỂU","小":"TIỂU","长":"TRƯỜNG","舌":"THIỆT","己":"KỶ","欠":"KHIẾM",
+            "耂":"LÃO","力":"LỰC","刀":"ĐAO","水":"THUỶ","石":"THẠCH","米":"MỄ","虫":"TRÙNG",
+            "车":"XA","页":"HIỆT","鱼":"NGƯ","贝":"BỐI","金":"KIM","衣":"Y","礻":"THỊ","示":"THỊ",
+            "走":"TẨU","身":"THÂN","耳":"NHĨ","自":"TỰ","白":"BẠCH","立":"LẬP","王":"VƯƠNG",
+            "玉":"NGỌC","犭":"KHUYỂN","疒":"NẠCH","尸":"THI","弓":"CUNG","彳":"XÍCH","儿":"NHI",
+            "几":"KỶ","厂":"HÁN","止":"CHỈ","生":"SINH","用":"DỤNG","皿":"MÃNH","穴":"HUYỆT",
+            "血":"HUYẾT","行":"HÀNH","酉":"DẬU","豆":"ĐẬU","非":"PHI","面":"DIỆN","风":"PHONG",
+            "飞":"PHI","高":"CAO","二":"NHỊ","士":"SĨ","巾":"CÂN","幺":"YÊU","戶":"HỘ","文":"VĂN",
+            "不":"BẤT","友":"HỮU","乞":"KHẤT","丁":"ĐINH","兑":"ĐOÀI","卖":"MẠI","乚":"ẤT",
+            "丂":"KHẢO","亼":"TẬP"
+        };
+
+        let radicalDeckCache = null;
+        function buildRadicalDeck() {
+            if (radicalDeckCache) return radicalDeckCache;
+            const freq = {}, mean = {}, examples = {};
+            for (const ch in RADICALS) {
+                const r = RADICALS[ch];
+                (r.p || []).forEach((p, i) => {
+                    freq[p] = (freq[p] || 0) + 1;
+                    if (!mean[p] && r.m && r.m[i]) mean[p] = r.m[i];
+                    (examples[p] = examples[p] || []).push(ch);
+                });
+            }
+            // Chỉ giữ mảnh xuất hiện từ 2 chữ trở lên — mảnh chỉ dùng 1 lần không đáng học riêng
+            radicalDeckCache = Object.keys(freq)
+                .filter(p => freq[p] >= 2)
+                .map(p => ({ r: p, hv: RADICAL_HV[p] || "", m: mean[p] || "", n: freq[p], ex: examples[p].slice(0, 4) }))
+                .sort((a, b) => b.n - a.n);
+            return radicalDeckCache;
+        }
+
+        // Nghĩa tiếng Việt của chữ ví dụ, nếu nó có trong bộ từ vựng
+        function charGloss(ch) {
+            const w = VOCAB.find(x => x.h === ch) || VOCAB.find(x => x.h.charAt(0) === ch);
+            return w ? w.p + " · " + w.v : "";
+        }
+
+        function renderRadicals() {
+            const grid = document.getElementById("radicalGrid");
+            if (!grid) return;
+            const deck = buildRadicalDeck();
+            const q = (state.radicalQuery || "").trim().toLowerCase();
+            const list = q ? deck.filter(d =>
+                d.r.indexOf(q) >= 0 ||
+                d.hv.toLowerCase().indexOf(q) >= 0 ||
+                d.m.toLowerCase().indexOf(q) >= 0 ||
+                d.ex.some(e => e.indexOf(q) >= 0)
+            ) : deck;
+
+            document.getElementById("radicalCount").textContent = list.length + " bộ thủ";
+            grid.innerHTML = list.map(d => {
+                const ex = d.ex.map(c => {
+                    const g = charGloss(c);
+                    return `<span class="rd-ex" title="${g}">${c}</span>`;
+                }).join("");
+                return `<div class="rd-card">
+                    <div class="rd-head">
+                        <span class="rd-char">${d.r}</span>
+                        <span class="rd-freq">${d.n} chữ</span>
+                    </div>
+                    ${d.hv ? `<div class="rd-hv">${d.hv}</div>` : ""}
+                    <div class="rd-mean">${d.m}</div>
+                    <div class="rd-exs">${ex}</div>
+                </div>`;
+            }).join("");
+        }
+
+        document.getElementById("radicalSearch")?.addEventListener("input", (e) => {
+            state.radicalQuery = e.target.value;
+            renderRadicals();
+        });
 
         // ===== Phím tắt =====
         function openShortcutsHelp() {
@@ -2552,10 +3163,13 @@
         (async function init() {
             await loadProgress();
             updateStreak();
+            syncSettingsInputs();
             renderHeaderStats();
             renderAlphaRangeBar();
             initFlash();
             renderReviewBanner();
+            document.body.classList.add("on-home");   // tab mặc định là Hôm nay
+            renderHomeToday();
             // Firebase module load bất đồng bộ → đợi nếu chưa sẵn sàng
             if (window.hskAuth) setupAuth();
             else window.addEventListener("hskAuthReady", setupAuth, { once: true });
