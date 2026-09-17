@@ -141,19 +141,21 @@
             <button class="tab" data-view="similar"><span class="ch">辨</span> Phân biệt</button>
             <button class="tab" data-view="stats"><span class="ch">计</span> Tiến độ</button>
         </nav>
+        <!-- Hàng chọn phụ cho nhóm Luyện / Tra trên điện thoại — desktop đã có đủ 9 tab ở trên -->
+        <div class="sub-nav" id="subNav" hidden></div>
 
         <section class="view active" id="view-home">
             <div class="home-wrap">
                 <div class="home-due">
                     <div class="home-num" id="homeDueNum">0</div>
-                    <div class="home-lbl">thẻ đến hạn</div>
+                    <div class="home-lbl">thẻ hôm nay</div>
                     <div class="home-filter" id="homeFilter" hidden></div>
                     <button class="home-start" id="homeStartBtn">Bắt đầu ôn</button>
                 </div>
                 <div class="home-split">
                     <div class="hs-row"><span class="hs-name">Nhận mặt</span><span class="hs-val" id="homeRecog">0</span></div>
                     <div class="hs-row"><span class="hs-name">Viết chữ</span><span class="hs-val" id="homeProd">0</span></div>
-                    <div class="hs-row"><span class="hs-name">Thẻ mới hôm nay</span><span class="hs-val" id="homeNew">0</span></div>
+                    <div class="hs-row"><span class="hs-name">trong đó thẻ mới</span><span class="hs-val" id="homeNew">0</span></div>
                 </div>
                 <div class="home-leech" id="homeLeech" hidden></div>
                 <div class="home-heat">
@@ -214,6 +216,11 @@
                                 <div class="pinyin" id="backPinyin">—</div>
                                 <div class="han-viet" id="backHV">—</div>
                                 <div class="meaning" id="backMeaning">—</div>
+                                <div class="example-box" id="backExample" hidden>
+                                    <div class="ex-zh" id="exZh"></div>
+                                    <div class="ex-py" id="exPy"></div>
+                                    <div class="ex-vi" id="exVi"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -332,6 +339,7 @@
             </div>
             <div class="progress-section">
                 <h3>Lịch ôn 7 ngày tới</h3>
+                <div class="section-note">Chỉ tính thẻ đã có lịch, chưa gồm thẻ mới</div>
                 <div id="reviewForecast"></div>
             </div>
             <div class="progress-section">
@@ -429,6 +437,7 @@
     </div>
 
     <!-- Bottom navigation (mobile only) -->
+    <!-- 5 mục: hai mục "Luyện" và "Tra" là nhóm — chọn xong sẽ hiện hàng chọn phụ phía trên nội dung -->
     <nav class="bottom-nav" id="bottomNav">
         <button class="bn-tab active" data-view="home">
             <span class="bn-icon">今</span>
@@ -438,29 +447,13 @@
             <span class="bn-icon">卡</span>
             <span class="bn-lbl">Thẻ học</span>
         </button>
-        <button class="bn-tab" data-view="quiz">
-            <span class="bn-icon">测</span>
-            <span class="bn-lbl">Quiz</span>
+        <button class="bn-tab" data-group="practice">
+            <span class="bn-icon">练</span>
+            <span class="bn-lbl">Luyện</span>
         </button>
-        <button class="bn-tab" data-view="match">
-            <span class="bn-icon">配</span>
-            <span class="bn-lbl">Ghép cặp</span>
-        </button>
-        <button class="bn-tab" data-view="browse">
+        <button class="bn-tab" data-group="lookup">
             <span class="bn-icon">典</span>
-            <span class="bn-lbl">Từ điển</span>
-        </button>
-        <button class="bn-tab" data-view="write">
-            <span class="bn-icon">笔</span>
-            <span class="bn-lbl">Viết</span>
-        </button>
-        <button class="bn-tab" data-view="radical">
-            <span class="bn-icon">部</span>
-            <span class="bn-lbl">Bộ thủ</span>
-        </button>
-        <button class="bn-tab" data-view="similar">
-            <span class="bn-icon">辨</span>
-            <span class="bn-lbl">Phân biệt</span>
+            <span class="bn-lbl">Tra</span>
         </button>
         <button class="bn-tab" data-view="stats">
             <span class="bn-icon">计</span>
@@ -542,6 +535,611 @@
         // Tag each word with a unique key (h + lv to avoid collisions for same hanzi different levels)
         VOCAB.forEach(w => { w.key = w.h + "_" + w.lv; });
 
+        // ============ CÂU VÍ DỤ ============
+        // Khoá theo w.key ("<từ>_<cấp>"). Mỗi câu chỉ dùng từ trong phạm vi HSK 1–3:
+        // [tiếng Trung, pinyin, tiếng Việt]. Từ đơn lẻ không dạy cách dùng — câu mới dạy.
+        const EXAMPLES = {
+            "爱_1": ["我爱我的家人。", "Wǒ ài wǒ de jiārén.", "Tôi yêu gia đình tôi."],
+            "八_1": ["我有八本书。", "Wǒ yǒu bā běn shū.", "Tôi có tám cuốn sách."],
+            "爸爸_1": ["我爸爸是医生。", "Wǒ bàba shì yīshēng.", "Bố tôi là bác sĩ."],
+            "杯子_1": ["这个杯子很漂亮。", "Zhège bēizi hěn piàoliang.", "Cái cốc này rất đẹp."],
+            "北京_1": ["我住在北京。", "Wǒ zhù zài Běijīng.", "Tôi sống ở Bắc Kinh."],
+            "本_1": ["这本书很好。", "Zhè běn shū hěn hǎo.", "Cuốn sách này rất hay."],
+            "不_1": ["我不喝咖啡。", "Wǒ bù hē kāfēi.", "Tôi không uống cà phê."],
+            "不客气_1": ["谢谢你！——不客气。", "Xièxie nǐ! — Bú kèqi.", "Cảm ơn bạn! — Không có chi."],
+            "菜_1": ["这个菜很好吃。", "Zhège cài hěn hǎochī.", "Món này rất ngon."],
+            "茶_1": ["你喝茶吗？", "Nǐ hē chá ma?", "Bạn uống trà không?"],
+            "吃_1": ["我们去吃饭吧。", "Wǒmen qù chīfàn ba.", "Chúng ta đi ăn cơm đi."],
+            "出租车_1": ["我坐出租车去机场。", "Wǒ zuò chūzūchē qù jīchǎng.", "Tôi đi taxi ra sân bay."],
+            "打电话_1": ["我明天给你打电话。", "Wǒ míngtiān gěi nǐ dǎ diànhuà.", "Ngày mai tôi gọi điện cho bạn."],
+            "大_1": ["他的家很大。", "Tā de jiā hěn dà.", "Nhà anh ấy rất to."],
+            "的_1": ["这是我的书。", "Zhè shì wǒ de shū.", "Đây là sách của tôi."],
+            "点_1": ["现在八点了。", "Xiànzài bā diǎn le.", "Bây giờ là tám giờ rồi."],
+            "电脑_1": ["我用电脑工作。", "Wǒ yòng diànnǎo gōngzuò.", "Tôi dùng máy tính để làm việc."],
+            "电视_1": ["晚上我们看电视。", "Wǎnshang wǒmen kàn diànshì.", "Buổi tối chúng tôi xem tivi."],
+            "电影_1": ["这个电影很好看。", "Zhège diànyǐng hěn hǎokàn.", "Bộ phim này rất hay."],
+            "东西_1": ["我去商店买东西。", "Wǒ qù shāngdiàn mǎi dōngxi.", "Tôi đến cửa hàng mua đồ."],
+            "都_1": ["我们都是学生。", "Wǒmen dōu shì xuésheng.", "Chúng tôi đều là học sinh."],
+            "读_1": ["请读这个句子。", "Qǐng dú zhège jùzi.", "Mời đọc câu này."],
+            "对不起_1": ["对不起，我来晚了。", "Duìbuqǐ, wǒ lái wǎn le.", "Xin lỗi, tôi đến muộn."],
+            "多_1": ["他有很多朋友。", "Tā yǒu hěn duō péngyou.", "Anh ấy có rất nhiều bạn."],
+            "多少_1": ["这个多少钱？", "Zhège duōshao qián?", "Cái này bao nhiêu tiền?"],
+            "儿子_1": ["他的儿子五岁了。", "Tā de érzi wǔ suì le.", "Con trai anh ấy năm tuổi rồi."],
+            "二_1": ["二月很冷。", "Èr yuè hěn lěng.", "Tháng hai rất lạnh."],
+            "饭店_1": ["这个饭店的菜很好吃。", "Zhège fàndiàn de cài hěn hǎochī.", "Đồ ăn ở nhà hàng này rất ngon."],
+            "飞机_1": ["飞机十点起飞。", "Fēijī shí diǎn qǐfēi.", "Máy bay cất cánh lúc mười giờ."],
+            "分钟_1": ["请等五分钟。", "Qǐng děng wǔ fēnzhōng.", "Xin đợi năm phút."],
+            "高兴_1": ["认识你很高兴。", "Rènshi nǐ hěn gāoxìng.", "Rất vui được quen bạn."],
+            "个_1": ["我有三个苹果。", "Wǒ yǒu sān gè píngguǒ.", "Tôi có ba quả táo."],
+            "工作_1": ["你在哪儿工作？", "Nǐ zài nǎr gōngzuò?", "Bạn làm việc ở đâu?"],
+            "狗_1": ["我家有一只狗。", "Wǒ jiā yǒu yì zhī gǒu.", "Nhà tôi có một con chó."],
+            "汉语_1": ["我在学习汉语。", "Wǒ zài xuéxí Hànyǔ.", "Tôi đang học tiếng Trung."],
+            "好_1": ["你好！你身体好吗？", "Nǐ hǎo! Nǐ shēntǐ hǎo ma?", "Chào bạn! Bạn khỏe không?"],
+            "号_1": ["今天是五号。", "Jīntiān shì wǔ hào.", "Hôm nay là mùng năm."],
+            "喝_1": ["我想喝水。", "Wǒ xiǎng hē shuǐ.", "Tôi muốn uống nước."],
+            "和_1": ["我和他是朋友。", "Wǒ hé tā shì péngyou.", "Tôi và anh ấy là bạn."],
+            "很_1": ["今天天气很好。", "Jīntiān tiānqì hěn hǎo.", "Hôm nay thời tiết rất đẹp."],
+            "后面_1": ["学校后面有一个公园。", "Xuéxiào hòumiàn yǒu yí gè gōngyuán.", "Phía sau trường có một công viên."],
+            "回_1": ["我六点回家。", "Wǒ liù diǎn huí jiā.", "Tôi về nhà lúc sáu giờ."],
+            "会_1": ["我会说汉语。", "Wǒ huì shuō Hànyǔ.", "Tôi biết nói tiếng Trung."],
+            "几_1": ["你有几个孩子？", "Nǐ yǒu jǐ gè háizi?", "Bạn có mấy đứa con?"],
+            "家_1": ["我家有四口人。", "Wǒ jiā yǒu sì kǒu rén.", "Nhà tôi có bốn người."],
+            "叫_1": ["你叫什么名字？", "Nǐ jiào shénme míngzi?", "Bạn tên là gì?"],
+            "今天_1": ["今天星期几？", "Jīntiān xīngqī jǐ?", "Hôm nay thứ mấy?"],
+            "九_1": ["我九点睡觉。", "Wǒ jiǔ diǎn shuìjiào.", "Tôi đi ngủ lúc chín giờ."],
+            "开_1": ["请开门。", "Qǐng kāi mén.", "Xin mở cửa."],
+            "看_1": ["我喜欢看书。", "Wǒ xǐhuan kàn shū.", "Tôi thích đọc sách."],
+            "看见_1": ["我看见他了。", "Wǒ kànjiàn tā le.", "Tôi nhìn thấy anh ấy rồi."],
+            "块_1": ["这本书十块钱。", "Zhè běn shū shí kuài qián.", "Cuốn sách này mười đồng."],
+            "来_1": ["他明天来北京。", "Tā míngtiān lái Běijīng.", "Ngày mai anh ấy đến Bắc Kinh."],
+            "老师_1": ["王老师很好。", "Wáng lǎoshī hěn hǎo.", "Thầy Vương rất tốt."],
+            "了_1": ["我吃饭了。", "Wǒ chīfàn le.", "Tôi ăn cơm rồi."],
+            "冷_1": ["今天很冷。", "Jīntiān hěn lěng.", "Hôm nay rất lạnh."],
+            "里_1": ["书在桌子里。", "Shū zài zhuōzi lǐ.", "Sách ở trong bàn."],
+            "六_1": ["我有六本书。", "Wǒ yǒu liù běn shū.", "Tôi có sáu cuốn sách."],
+            "妈妈_1": ["我妈妈是老师。", "Wǒ māma shì lǎoshī.", "Mẹ tôi là giáo viên."],
+            "吗_1": ["你是学生吗？", "Nǐ shì xuésheng ma?", "Bạn là học sinh phải không?"],
+            "买_1": ["我想买一本书。", "Wǒ xiǎng mǎi yì běn shū.", "Tôi muốn mua một cuốn sách."],
+            "猫_1": ["那只猫很可爱。", "Nà zhī māo hěn kě'ài.", "Con mèo kia rất đáng yêu."],
+            "没关系_1": ["对不起！——没关系。", "Duìbuqǐ! — Méi guānxi.", "Xin lỗi! — Không sao."],
+            "没有_1": ["我没有钱。", "Wǒ méiyǒu qián.", "Tôi không có tiền."],
+            "米饭_1": ["我想吃米饭。", "Wǒ xiǎng chī mǐfàn.", "Tôi muốn ăn cơm."],
+            "明天_1": ["明天见！", "Míngtiān jiàn!", "Mai gặp nhé!"],
+            "名字_1": ["你的名字很好听。", "Nǐ de míngzi hěn hǎotīng.", "Tên bạn rất hay."],
+            "哪_1": ["你是哪国人？", "Nǐ shì nǎ guó rén?", "Bạn là người nước nào?"],
+            "哪儿_1": ["你去哪儿？", "Nǐ qù nǎr?", "Bạn đi đâu?"],
+            "那_1": ["那是我的老师。", "Nà shì wǒ de lǎoshī.", "Đó là thầy giáo của tôi."],
+            "呢_1": ["我很好，你呢？", "Wǒ hěn hǎo, nǐ ne?", "Tôi khỏe, còn bạn?"],
+            "能_1": ["你能帮我吗？", "Nǐ néng bāng wǒ ma?", "Bạn có thể giúp tôi không?"],
+            "你_1": ["你是哪国人？", "Nǐ shì nǎ guó rén?", "Bạn là người nước nào?"],
+            "年_1": ["我学了两年汉语。", "Wǒ xué le liǎng nián Hànyǔ.", "Tôi đã học tiếng Trung hai năm."],
+            "女儿_1": ["她的女儿很漂亮。", "Tā de nǚ'ér hěn piàoliang.", "Con gái cô ấy rất xinh."],
+            "朋友_1": ["他是我的好朋友。", "Tā shì wǒ de hǎo péngyou.", "Anh ấy là bạn tốt của tôi."],
+            "漂亮_1": ["这件衣服很漂亮。", "Zhè jiàn yīfu hěn piàoliang.", "Bộ quần áo này rất đẹp."],
+            "苹果_1": ["我喜欢吃苹果。", "Wǒ xǐhuan chī píngguǒ.", "Tôi thích ăn táo."],
+            "七_1": ["一个星期有七天。", "Yí gè xīngqī yǒu qī tiān.", "Một tuần có bảy ngày."],
+            "钱_1": ["我没有钱了。", "Wǒ méiyǒu qián le.", "Tôi hết tiền rồi."],
+            "前面_1": ["商店在前面。", "Shāngdiàn zài qiánmiàn.", "Cửa hàng ở phía trước."],
+            "请_1": ["请坐。", "Qǐng zuò.", "Mời ngồi."],
+            "去_1": ["我去学校。", "Wǒ qù xuéxiào.", "Tôi đến trường."],
+            "热_1": ["今天太热了。", "Jīntiān tài rè le.", "Hôm nay nóng quá."],
+            "人_1": ["他是中国人。", "Tā shì Zhōngguó rén.", "Anh ấy là người Trung Quốc."],
+            "认识_1": ["我认识他。", "Wǒ rènshi tā.", "Tôi quen anh ấy."],
+            "三_1": ["我家有三口人。", "Wǒ jiā yǒu sān kǒu rén.", "Nhà tôi có ba người."],
+            "商店_1": ["商店九点开门。", "Shāngdiàn jiǔ diǎn kāi mén.", "Cửa hàng mở cửa lúc chín giờ."],
+            "上_1": ["书在桌子上。", "Shū zài zhuōzi shàng.", "Sách ở trên bàn."],
+            "上午_1": ["我上午有课。", "Wǒ shàngwǔ yǒu kè.", "Buổi sáng tôi có tiết học."],
+            "少_1": ["这里人很少。", "Zhèlǐ rén hěn shǎo.", "Ở đây ít người."],
+            "谁_1": ["他是谁？", "Tā shì shéi?", "Anh ấy là ai?"],
+            "什么_1": ["你喜欢吃什么？", "Nǐ xǐhuan chī shénme?", "Bạn thích ăn gì?"],
+            "十_1": ["现在十点。", "Xiànzài shí diǎn.", "Bây giờ mười giờ."],
+            "时候_1": ["你什么时候来？", "Nǐ shénme shíhou lái?", "Khi nào bạn đến?"],
+            "是_1": ["我是学生。", "Wǒ shì xuésheng.", "Tôi là học sinh."],
+            "书_1": ["我买了一本书。", "Wǒ mǎi le yì běn shū.", "Tôi mua một cuốn sách."],
+            "水_1": ["请给我一杯水。", "Qǐng gěi wǒ yì bēi shuǐ.", "Cho tôi một cốc nước."],
+            "水果_1": ["你喜欢吃什么水果？", "Nǐ xǐhuan chī shénme shuǐguǒ?", "Bạn thích ăn hoa quả gì?"],
+            "睡觉_1": ["我十一点睡觉。", "Wǒ shíyī diǎn shuìjiào.", "Tôi đi ngủ lúc mười một giờ."],
+            "说_1": ["他说得很好。", "Tā shuō de hěn hǎo.", "Anh ấy nói rất hay."],
+            "四_1": ["现在四点了。", "Xiànzài sì diǎn le.", "Bây giờ bốn giờ rồi."],
+            "岁_1": ["你今年多大？我二十岁。", "Nǐ jīnnián duō dà? Wǒ èrshí suì.", "Bạn bao nhiêu tuổi? Tôi hai mươi tuổi."],
+            "他_1": ["他是我哥哥。", "Tā shì wǒ gēge.", "Anh ấy là anh trai tôi."],
+            "她_1": ["她是我姐姐。", "Tā shì wǒ jiějie.", "Cô ấy là chị gái tôi."],
+            "太_1": ["这个太贵了。", "Zhège tài guì le.", "Cái này đắt quá."],
+            "天气_1": ["今天天气怎么样？", "Jīntiān tiānqì zěnmeyàng?", "Hôm nay thời tiết thế nào?"],
+            "听_1": ["我喜欢听音乐。", "Wǒ xǐhuan tīng yīnyuè.", "Tôi thích nghe nhạc."],
+            "同学_1": ["他是我的同学。", "Tā shì wǒ de tóngxué.", "Anh ấy là bạn học của tôi."],
+            "喂_1": ["喂，你好，请问是王老师吗？", "Wèi, nǐ hǎo, qǐngwèn shì Wáng lǎoshī ma?", "Alo, xin hỏi có phải thầy Vương không?"],
+            "我_1": ["我是越南人。", "Wǒ shì Yuènán rén.", "Tôi là người Việt Nam."],
+            "我们_1": ["我们是朋友。", "Wǒmen shì péngyou.", "Chúng tôi là bạn."],
+            "五_1": ["我有五个苹果。", "Wǒ yǒu wǔ gè píngguǒ.", "Tôi có năm quả táo."],
+            "喜欢_1": ["我喜欢你。", "Wǒ xǐhuan nǐ.", "Tôi thích bạn."],
+            "下_1": ["猫在椅子下。", "Māo zài yǐzi xià.", "Con mèo ở dưới ghế."],
+            "下午_1": ["下午我们去公园。", "Xiàwǔ wǒmen qù gōngyuán.", "Buổi chiều chúng ta đi công viên."],
+            "下雨_1": ["明天会下雨。", "Míngtiān huì xiàyǔ.", "Ngày mai trời sẽ mưa."],
+            "先生_1": ["王先生，您好！", "Wáng xiānsheng, nín hǎo!", "Ông Vương, xin chào!"],
+            "现在_1": ["现在几点了？", "Xiànzài jǐ diǎn le?", "Bây giờ mấy giờ rồi?"],
+            "想_1": ["我想去中国。", "Wǒ xiǎng qù Zhōngguó.", "Tôi muốn đi Trung Quốc."],
+            "小_1": ["这个房间很小。", "Zhège fángjiān hěn xiǎo.", "Căn phòng này rất nhỏ."],
+            "小姐_1": ["王小姐是老师。", "Wáng xiǎojiě shì lǎoshī.", "Cô Vương là giáo viên."],
+            "些_1": ["我买了一些水果。", "Wǒ mǎi le yìxiē shuǐguǒ.", "Tôi mua một ít hoa quả."],
+            "写_1": ["请写你的名字。", "Qǐng xiě nǐ de míngzi.", "Hãy viết tên của bạn."],
+            "谢谢_1": ["谢谢你的帮助。", "Xièxie nǐ de bāngzhù.", "Cảm ơn sự giúp đỡ của bạn."],
+            "星期_1": ["今天星期三。", "Jīntiān xīngqī sān.", "Hôm nay thứ tư."],
+            "学生_1": ["我是大学生。", "Wǒ shì dàxuéshēng.", "Tôi là sinh viên."],
+            "学习_1": ["我每天学习汉语。", "Wǒ měi tiān xuéxí Hànyǔ.", "Tôi học tiếng Trung mỗi ngày."],
+            "学校_1": ["我们学校很大。", "Wǒmen xuéxiào hěn dà.", "Trường chúng tôi rất lớn."],
+            "一_1": ["我有一个妹妹。", "Wǒ yǒu yí gè mèimei.", "Tôi có một em gái."],
+            "一点儿_1": ["我会说一点儿汉语。", "Wǒ huì shuō yìdiǎnr Hànyǔ.", "Tôi biết nói một chút tiếng Trung."],
+            "衣服_1": ["我买了新衣服。", "Wǒ mǎi le xīn yīfu.", "Tôi mua quần áo mới."],
+            "医生_1": ["她是医生。", "Tā shì yīshēng.", "Cô ấy là bác sĩ."],
+            "医院_1": ["医院在学校旁边。", "Yīyuàn zài xuéxiào pángbiān.", "Bệnh viện ở cạnh trường học."],
+            "椅子_1": ["这把椅子很舒服。", "Zhè bǎ yǐzi hěn shūfu.", "Cái ghế này rất êm."],
+            "有_1": ["我有两个哥哥。", "Wǒ yǒu liǎng gè gēge.", "Tôi có hai anh trai."],
+            "月_1": ["我三月去北京。", "Wǒ sān yuè qù Běijīng.", "Tháng ba tôi đi Bắc Kinh."],
+            "在_1": ["我在家。", "Wǒ zài jiā.", "Tôi ở nhà."],
+            "再见_1": ["再见，明天见！", "Zàijiàn, míngtiān jiàn!", "Tạm biệt, mai gặp!"],
+            "怎么_1": ["这个字怎么读？", "Zhège zì zěnme dú?", "Chữ này đọc thế nào?"],
+            "怎么样_1": ["你身体怎么样？", "Nǐ shēntǐ zěnmeyàng?", "Sức khỏe bạn thế nào?"],
+            "这_1": ["这是什么？", "Zhè shì shénme?", "Đây là cái gì?"],
+            "中国_1": ["我喜欢中国。", "Wǒ xǐhuan Zhōngguó.", "Tôi thích Trung Quốc."],
+            "中午_1": ["中午我们吃面条。", "Zhōngwǔ wǒmen chī miàntiáo.", "Buổi trưa chúng tôi ăn mì."],
+            "住_1": ["你住在哪儿？", "Nǐ zhù zài nǎr?", "Bạn sống ở đâu?"],
+            "桌子_1": ["桌子上有一本书。", "Zhuōzi shàng yǒu yì běn shū.", "Trên bàn có một cuốn sách."],
+            "字_1": ["这个字怎么写？", "Zhège zì zěnme xiě?", "Chữ này viết thế nào?"],
+            "昨天_1": ["昨天我很忙。", "Zuótiān wǒ hěn máng.", "Hôm qua tôi rất bận."],
+            "做_1": ["你在做什么？", "Nǐ zài zuò shénme?", "Bạn đang làm gì?"],
+            "坐_1": ["请坐这儿。", "Qǐng zuò zhèr.", "Mời ngồi đây."],
+            "吧_2": ["我们走吧。", "Wǒmen zǒu ba.", "Chúng ta đi thôi."],
+            "白_2": ["她穿了一件白衬衫。", "Tā chuān le yí jiàn bái chènshān.", "Cô ấy mặc một chiếc áo sơ mi trắng."],
+            "百_2": ["这本书一百块。", "Zhè běn shū yìbǎi kuài.", "Cuốn sách này một trăm đồng."],
+            "帮助_2": ["谢谢你的帮助。", "Xièxie nǐ de bāngzhù.", "Cảm ơn sự giúp đỡ của bạn."],
+            "报纸_2": ["爸爸每天看报纸。", "Bàba měi tiān kàn bàozhǐ.", "Bố đọc báo mỗi ngày."],
+            "比_2": ["今天比昨天冷。", "Jīntiān bǐ zuótiān lěng.", "Hôm nay lạnh hơn hôm qua."],
+            "别_2": ["别说话！", "Bié shuōhuà!", "Đừng nói chuyện!"],
+            "宾馆_2": ["我们住在这个宾馆。", "Wǒmen zhù zài zhège bīnguǎn.", "Chúng tôi ở khách sạn này."],
+            "长_2": ["这条路很长。", "Zhè tiáo lù hěn cháng.", "Con đường này rất dài."],
+            "唱歌_2": ["她唱歌唱得很好。", "Tā chànggē chàng de hěn hǎo.", "Cô ấy hát rất hay."],
+            "出_2": ["他出去了。", "Tā chūqù le.", "Anh ấy ra ngoài rồi."],
+            "穿_2": ["今天很冷，多穿衣服。", "Jīntiān hěn lěng, duō chuān yīfu.", "Hôm nay lạnh, mặc thêm áo vào."],
+            "次_2": ["我去过北京两次。", "Wǒ qù guo Běijīng liǎng cì.", "Tôi đã đến Bắc Kinh hai lần."],
+            "从_2": ["我从越南来。", "Wǒ cóng Yuènán lái.", "Tôi đến từ Việt Nam."],
+            "错_2": ["你说错了。", "Nǐ shuō cuò le.", "Bạn nói sai rồi."],
+            "打篮球_2": ["我们去打篮球吧。", "Wǒmen qù dǎ lánqiú ba.", "Chúng ta đi chơi bóng rổ đi."],
+            "大家_2": ["大家好！", "Dàjiā hǎo!", "Chào mọi người!"],
+            "但是_2": ["我想去，但是没有时间。", "Wǒ xiǎng qù, dànshì méiyǒu shíjiān.", "Tôi muốn đi nhưng không có thời gian."],
+            "到_2": ["我们到学校了。", "Wǒmen dào xuéxiào le.", "Chúng tôi đến trường rồi."],
+            "得_2": ["他跑得很快。", "Tā pǎo de hěn kuài.", "Anh ấy chạy rất nhanh."],
+            "等_2": ["请等一下。", "Qǐng děng yíxià.", "Xin đợi một chút."],
+            "弟弟_2": ["我弟弟今年十岁。", "Wǒ dìdi jīnnián shí suì.", "Em trai tôi năm nay mười tuổi."],
+            "第一_2": ["这是我第一次来中国。", "Zhè shì wǒ dì-yī cì lái Zhōngguó.", "Đây là lần đầu tôi đến Trung Quốc."],
+            "懂_2": ["我不懂这个问题。", "Wǒ bù dǒng zhège wèntí.", "Tôi không hiểu câu hỏi này."],
+            "对_2": ["你说得对。", "Nǐ shuō de duì.", "Bạn nói đúng."],
+            "房间_2": ["我的房间很干净。", "Wǒ de fángjiān hěn gānjìng.", "Phòng tôi rất sạch."],
+            "非常_2": ["这个菜非常好吃。", "Zhège cài fēicháng hǎochī.", "Món này cực kỳ ngon."],
+            "服务员_2": ["服务员，请给我菜单。", "Fúwùyuán, qǐng gěi wǒ càidān.", "Phục vụ ơi, cho tôi thực đơn."],
+            "高_2": ["他比我高。", "Tā bǐ wǒ gāo.", "Anh ấy cao hơn tôi."],
+            "告诉_2": ["请告诉我你的名字。", "Qǐng gàosu wǒ nǐ de míngzi.", "Hãy cho tôi biết tên bạn."],
+            "哥哥_2": ["我哥哥在北京工作。", "Wǒ gēge zài Běijīng gōngzuò.", "Anh trai tôi làm việc ở Bắc Kinh."],
+            "给_2": ["请给我一杯茶。", "Qǐng gěi wǒ yì bēi chá.", "Cho tôi một cốc trà."],
+            "公共汽车_2": ["我坐公共汽车上班。", "Wǒ zuò gōnggòng qìchē shàngbān.", "Tôi đi làm bằng xe buýt."],
+            "公司_2": ["我们公司很大。", "Wǒmen gōngsī hěn dà.", "Công ty chúng tôi rất lớn."],
+            "贵_2": ["这个手机太贵了。", "Zhège shǒujī tài guì le.", "Chiếc điện thoại này đắt quá."],
+            "还_2": ["他还在睡觉。", "Tā hái zài shuìjiào.", "Anh ấy vẫn đang ngủ."],
+            "孩子_2": ["她有两个孩子。", "Tā yǒu liǎng gè háizi.", "Cô ấy có hai đứa con."],
+            "好吃_2": ["妈妈做的菜很好吃。", "Māma zuò de cài hěn hǎochī.", "Món mẹ nấu rất ngon."],
+            "黑_2": ["他的头发很黑。", "Tā de tóufa hěn hēi.", "Tóc anh ấy rất đen."],
+            "红_2": ["我喜欢红色。", "Wǒ xǐhuan hóngsè.", "Tôi thích màu đỏ."],
+            "火车站_2": ["火车站离这儿很近。", "Huǒchēzhàn lí zhèr hěn jìn.", "Ga tàu cách đây rất gần."],
+            "机场_2": ["我去机场接朋友。", "Wǒ qù jīchǎng jiē péngyou.", "Tôi ra sân bay đón bạn."],
+            "鸡蛋_2": ["我早上吃两个鸡蛋。", "Wǒ zǎoshang chī liǎng gè jīdàn.", "Buổi sáng tôi ăn hai quả trứng."],
+            "件_2": ["我买了一件衣服。", "Wǒ mǎi le yí jiàn yīfu.", "Tôi mua một chiếc áo."],
+            "觉得_2": ["我觉得汉语很有意思。", "Wǒ juéde Hànyǔ hěn yǒu yìsi.", "Tôi thấy tiếng Trung rất thú vị."],
+            "教室_2": ["教室里有很多学生。", "Jiàoshì lǐ yǒu hěn duō xuésheng.", "Trong lớp có rất nhiều học sinh."],
+            "姐姐_2": ["我姐姐是医生。", "Wǒ jiějie shì yīshēng.", "Chị gái tôi là bác sĩ."],
+            "介绍_2": ["我来介绍一下。", "Wǒ lái jièshào yíxià.", "Để tôi giới thiệu một chút."],
+            "进_2": ["请进！", "Qǐng jìn!", "Mời vào!"],
+            "近_2": ["我家离学校很近。", "Wǒ jiā lí xuéxiào hěn jìn.", "Nhà tôi rất gần trường."],
+            "就_2": ["我马上就来。", "Wǒ mǎshàng jiù lái.", "Tôi đến ngay đây."],
+            "咖啡_2": ["我每天早上喝咖啡。", "Wǒ měi tiān zǎoshang hē kāfēi.", "Sáng nào tôi cũng uống cà phê."],
+            "开始_2": ["我们开始上课吧。", "Wǒmen kāishǐ shàngkè ba.", "Chúng ta bắt đầu học thôi."],
+            "考试_2": ["明天有考试。", "Míngtiān yǒu kǎoshì.", "Ngày mai có bài thi."],
+            "可能_2": ["他可能不来了。", "Tā kěnéng bù lái le.", "Có lẽ anh ấy không đến nữa."],
+            "可以_2": ["我可以进来吗？", "Wǒ kěyǐ jìnlái ma?", "Tôi vào được không?"],
+            "课_2": ["我们今天有三节课。", "Wǒmen jīntiān yǒu sān jié kè.", "Hôm nay chúng tôi có ba tiết học."],
+            "快_2": ["快走，要迟到了！", "Kuài zǒu, yào chídào le!", "Đi nhanh, sắp muộn rồi!"],
+            "快乐_2": ["祝你生日快乐！", "Zhù nǐ shēngrì kuàilè!", "Chúc bạn sinh nhật vui vẻ!"],
+            "累_2": ["我今天很累。", "Wǒ jīntiān hěn lèi.", "Hôm nay tôi rất mệt."],
+            "离_2": ["学校离我家不远。", "Xuéxiào lí wǒ jiā bù yuǎn.", "Trường không xa nhà tôi."],
+            "两_2": ["我有两个妹妹。", "Wǒ yǒu liǎng gè mèimei.", "Tôi có hai em gái."],
+            "零_2": ["我的电话是一三零……", "Wǒ de diànhuà shì yāo sān líng...", "Số điện thoại của tôi là 130…"],
+            "路_2": ["这条路很长。", "Zhè tiáo lù hěn cháng.", "Con đường này rất dài."],
+            "旅游_2": ["我想去中国旅游。", "Wǒ xiǎng qù Zhōngguó lǚyóu.", "Tôi muốn đi du lịch Trung Quốc."],
+            "卖_2": ["这家商店卖水果。", "Zhè jiā shāngdiàn mài shuǐguǒ.", "Cửa hàng này bán hoa quả."],
+            "慢_2": ["请说慢一点儿。", "Qǐng shuō màn yìdiǎnr.", "Xin nói chậm một chút."],
+            "忙_2": ["你最近忙吗？", "Nǐ zuìjìn máng ma?", "Dạo này bạn bận không?"],
+            "每_2": ["我每天六点起床。", "Wǒ měi tiān liù diǎn qǐchuáng.", "Mỗi ngày tôi dậy lúc sáu giờ."],
+            "妹妹_2": ["我妹妹很可爱。", "Wǒ mèimei hěn kě'ài.", "Em gái tôi rất đáng yêu."],
+            "门_2": ["请关门。", "Qǐng guān mén.", "Xin đóng cửa."],
+            "面条_2": ["我中午吃面条。", "Wǒ zhōngwǔ chī miàntiáo.", "Buổi trưa tôi ăn mì."],
+            "男_2": ["他是男的。", "Tā shì nán de.", "Anh ấy là nam."],
+            "您_2": ["您好，您是王老师吗？", "Nín hǎo, nín shì Wáng lǎoshī ma?", "Chào ngài, ngài là thầy Vương phải không?"],
+            "牛奶_2": ["我早上喝牛奶。", "Wǒ zǎoshang hē niúnǎi.", "Buổi sáng tôi uống sữa."],
+            "女_2": ["她是女学生。", "Tā shì nǚ xuésheng.", "Cô ấy là nữ sinh."],
+            "旁边_2": ["医院在学校旁边。", "Yīyuàn zài xuéxiào pángbiān.", "Bệnh viện ở cạnh trường học."],
+            "跑步_2": ["我每天早上跑步。", "Wǒ měi tiān zǎoshang pǎobù.", "Sáng nào tôi cũng chạy bộ."],
+            "便宜_2": ["这个很便宜。", "Zhège hěn piányi.", "Cái này rất rẻ."],
+            "票_2": ["我买了两张票。", "Wǒ mǎi le liǎng zhāng piào.", "Tôi mua hai tấm vé."],
+            "妻子_2": ["他的妻子是老师。", "Tā de qīzi shì lǎoshī.", "Vợ anh ấy là giáo viên."],
+            "起床_2": ["我七点起床。", "Wǒ qī diǎn qǐchuáng.", "Tôi dậy lúc bảy giờ."],
+            "千_2": ["这个手机三千块。", "Zhège shǒujī sānqiān kuài.", "Chiếc điện thoại này ba nghìn đồng."],
+            "铅笔_2": ["请给我一支铅笔。", "Qǐng gěi wǒ yì zhī qiānbǐ.", "Cho tôi một cây bút chì."],
+            "晴_2": ["今天是晴天。", "Jīntiān shì qíngtiān.", "Hôm nay trời nắng."],
+            "去年_2": ["我去年来的中国。", "Wǒ qùnián lái de Zhōngguó.", "Tôi đến Trung Quốc năm ngoái."],
+            "让_2": ["妈妈让我早点儿睡觉。", "Māma ràng wǒ zǎo diǎnr shuìjiào.", "Mẹ bảo tôi đi ngủ sớm."],
+            "日_2": ["今天是五月一日。", "Jīntiān shì wǔ yuè yī rì.", "Hôm nay là ngày mùng một tháng năm."],
+            "上班_2": ["我八点上班。", "Wǒ bā diǎn shàngbān.", "Tôi đi làm lúc tám giờ."],
+            "身体_2": ["你身体好吗？", "Nǐ shēntǐ hǎo ma?", "Bạn khỏe không?"],
+            "生病_2": ["他生病了，今天不来。", "Tā shēngbìng le, jīntiān bù lái.", "Anh ấy bị ốm, hôm nay không đến."],
+            "生日_2": ["今天是我的生日。", "Jīntiān shì wǒ de shēngrì.", "Hôm nay là sinh nhật tôi."],
+            "时间_2": ["你有时间吗？", "Nǐ yǒu shíjiān ma?", "Bạn có thời gian không?"],
+            "事情_2": ["我今天有很多事情。", "Wǒ jīntiān yǒu hěn duō shìqing.", "Hôm nay tôi có nhiều việc."],
+            "手表_2": ["这块手表很贵。", "Zhè kuài shǒubiǎo hěn guì.", "Chiếc đồng hồ này rất đắt."],
+            "手机_2": ["我的手机没电了。", "Wǒ de shǒujī méi diàn le.", "Điện thoại tôi hết pin rồi."],
+            "说话_2": ["上课不要说话。", "Shàngkè bú yào shuōhuà.", "Trong giờ học đừng nói chuyện."],
+            "送_2": ["我送你一本书。", "Wǒ sòng nǐ yì běn shū.", "Tôi tặng bạn một cuốn sách."],
+            "虽然_2": ["虽然很累，但是很高兴。", "Suīrán hěn lèi, dànshì hěn gāoxìng.", "Tuy mệt nhưng rất vui."],
+            "所以_2": ["我生病了，所以没来。", "Wǒ shēngbìng le, suǒyǐ méi lái.", "Tôi bị ốm nên không đến."],
+            "它_2": ["它是我的猫。", "Tā shì wǒ de māo.", "Nó là con mèo của tôi."],
+            "踢足球_2": ["我喜欢踢足球。", "Wǒ xǐhuan tī zúqiú.", "Tôi thích đá bóng."],
+            "题_2": ["这道题很难。", "Zhè dào tí hěn nán.", "Câu hỏi này rất khó."],
+            "跳舞_2": ["她跳舞跳得很好。", "Tā tiàowǔ tiào de hěn hǎo.", "Cô ấy nhảy rất đẹp."],
+            "外_2": ["他在教室外面。", "Tā zài jiàoshì wàimiàn.", "Anh ấy ở ngoài lớp học."],
+            "完_2": ["我做完作业了。", "Wǒ zuò wán zuòyè le.", "Tôi làm xong bài tập rồi."],
+            "玩儿_2": ["孩子们在公园玩儿。", "Háizimen zài gōngyuán wánr.", "Bọn trẻ đang chơi ở công viên."],
+            "晚上_2": ["晚上我们看电影。", "Wǎnshang wǒmen kàn diànyǐng.", "Buổi tối chúng tôi xem phim."],
+            "往_2": ["往前走就是学校。", "Wǎng qián zǒu jiù shì xuéxiào.", "Đi thẳng về phía trước là trường học."],
+            "为什么_2": ["你为什么不来？", "Nǐ wèishénme bù lái?", "Tại sao bạn không đến?"],
+            "问_2": ["我想问一个问题。", "Wǒ xiǎng wèn yí gè wèntí.", "Tôi muốn hỏi một câu."],
+            "问题_2": ["这个问题很简单。", "Zhège wèntí hěn jiǎndān.", "Câu hỏi này rất đơn giản."],
+            "西瓜_2": ["夏天我喜欢吃西瓜。", "Xiàtiān wǒ xǐhuan chī xīguā.", "Mùa hè tôi thích ăn dưa hấu."],
+            "希望_2": ["我希望明天是晴天。", "Wǒ xīwàng míngtiān shì qíngtiān.", "Tôi mong ngày mai trời nắng."],
+            "洗_2": ["我在洗衣服。", "Wǒ zài xǐ yīfu.", "Tôi đang giặt quần áo."],
+            "小时_2": ["我学了两个小时。", "Wǒ xué le liǎng gè xiǎoshí.", "Tôi đã học hai tiếng."],
+            "笑_2": ["她笑了。", "Tā xiào le.", "Cô ấy cười rồi."],
+            "新_2": ["这是我的新手机。", "Zhè shì wǒ de xīn shǒujī.", "Đây là điện thoại mới của tôi."],
+            "姓_2": ["您贵姓？我姓王。", "Nín guì xìng? Wǒ xìng Wáng.", "Ngài họ gì? Tôi họ Vương."],
+            "休息_2": ["我们休息一下吧。", "Wǒmen xiūxi yíxià ba.", "Chúng ta nghỉ một chút đi."],
+            "雪_2": ["昨天下雪了。", "Zuótiān xià xuě le.", "Hôm qua tuyết rơi."],
+            "颜色_2": ["你喜欢什么颜色？", "Nǐ xǐhuan shénme yánsè?", "Bạn thích màu gì?"],
+            "眼睛_2": ["她的眼睛很大。", "Tā de yǎnjing hěn dà.", "Mắt cô ấy rất to."],
+            "羊肉_2": ["我不吃羊肉。", "Wǒ bù chī yángròu.", "Tôi không ăn thịt cừu."],
+            "药_2": ["你吃药了吗？", "Nǐ chī yào le ma?", "Bạn uống thuốc chưa?"],
+            "要_2": ["我要一杯咖啡。", "Wǒ yào yì bēi kāfēi.", "Tôi muốn một cốc cà phê."],
+            "也_2": ["我也是学生。", "Wǒ yě shì xuésheng.", "Tôi cũng là học sinh."],
+            "一下_2": ["请等一下。", "Qǐng děng yíxià.", "Xin đợi một chút."],
+            "已经_2": ["他已经走了。", "Tā yǐjīng zǒu le.", "Anh ấy đã đi rồi."],
+            "一起_2": ["我们一起去吧。", "Wǒmen yìqǐ qù ba.", "Chúng ta cùng đi nhé."],
+            "意思_2": ["这个词是什么意思？", "Zhège cí shì shénme yìsi?", "Từ này nghĩa là gì?"],
+            "因为_2": ["因为下雨，我没去。", "Yīnwèi xiàyǔ, wǒ méi qù.", "Vì trời mưa nên tôi không đi."],
+            "阴_2": ["今天是阴天。", "Jīntiān shì yīntiān.", "Hôm nay trời âm u."],
+            "游泳_2": ["我夏天去游泳。", "Wǒ xiàtiān qù yóuyǒng.", "Mùa hè tôi đi bơi."],
+            "右边_2": ["商店在右边。", "Shāngdiàn zài yòubian.", "Cửa hàng ở bên phải."],
+            "鱼_2": ["我喜欢吃鱼。", "Wǒ xǐhuan chī yú.", "Tôi thích ăn cá."],
+            "远_2": ["机场离这儿很远。", "Jīchǎng lí zhèr hěn yuǎn.", "Sân bay cách đây rất xa."],
+            "运动_2": ["我每天运动一个小时。", "Wǒ měi tiān yùndòng yí gè xiǎoshí.", "Mỗi ngày tôi vận động một tiếng."],
+            "再_2": ["请再说一次。", "Qǐng zài shuō yí cì.", "Xin nói lại một lần nữa."],
+            "早上_2": ["早上好！", "Zǎoshang hǎo!", "Chào buổi sáng!"],
+            "丈夫_2": ["她丈夫是医生。", "Tā zhàngfu shì yīshēng.", "Chồng cô ấy là bác sĩ."],
+            "找_2": ["我在找我的手机。", "Wǒ zài zhǎo wǒ de shǒujī.", "Tôi đang tìm điện thoại."],
+            "着_2": ["他笑着说。", "Tā xiào zhe shuō.", "Anh ấy vừa cười vừa nói."],
+            "真_2": ["这个菜真好吃！", "Zhège cài zhēn hǎochī!", "Món này ngon thật!"],
+            "正在_2": ["我正在吃饭。", "Wǒ zhèngzài chīfàn.", "Tôi đang ăn cơm."],
+            "知道_2": ["我不知道。", "Wǒ bù zhīdào.", "Tôi không biết."],
+            "准备_2": ["我在准备考试。", "Wǒ zài zhǔnbèi kǎoshì.", "Tôi đang chuẩn bị thi."],
+            "走_2": ["我们走吧。", "Wǒmen zǒu ba.", "Chúng ta đi thôi."],
+            "最_2": ["我最喜欢春天。", "Wǒ zuì xǐhuan chūntiān.", "Tôi thích nhất mùa xuân."],
+            "左边_2": ["学校在左边。", "Xuéxiào zài zuǒbian.", "Trường học ở bên trái."],
+            "啊_3": ["你来了啊！", "Nǐ lái le a!", "Bạn đến rồi à!"],
+            "阿姨_3": ["阿姨，您好！", "Āyí, nín hǎo!", "Cháu chào dì!"],
+            "矮_3": ["他比我矮。", "Tā bǐ wǒ ǎi.", "Anh ấy thấp hơn tôi."],
+            "爱好_3": ["我的爱好是看书。", "Wǒ de àihào shì kàn shū.", "Sở thích của tôi là đọc sách."],
+            "安静_3": ["请安静一点儿。", "Qǐng ānjìng yìdiǎnr.", "Xin yên lặng một chút."],
+            "把_3": ["请把门关上。", "Qǐng bǎ mén guān shàng.", "Hãy đóng cửa lại."],
+            "班_3": ["我们班有二十个学生。", "Wǒmen bān yǒu èrshí gè xuésheng.", "Lớp chúng tôi có hai mươi học sinh."],
+            "搬_3": ["我们下个月搬家。", "Wǒmen xià gè yuè bānjiā.", "Tháng sau chúng tôi chuyển nhà."],
+            "办法_3": ["我有一个好办法。", "Wǒ yǒu yí gè hǎo bànfǎ.", "Tôi có một cách hay."],
+            "办公室_3": ["经理在办公室。", "Jīnglǐ zài bàngōngshì.", "Giám đốc đang ở văn phòng."],
+            "半_3": ["现在三点半。", "Xiànzài sān diǎn bàn.", "Bây giờ ba giờ rưỡi."],
+            "帮忙_3": ["你能帮忙吗？", "Nǐ néng bāngmáng ma?", "Bạn giúp một tay được không?"],
+            "包_3": ["这个包很好看。", "Zhège bāo hěn hǎokàn.", "Cái túi này rất đẹp."],
+            "饱_3": ["我吃饱了。", "Wǒ chī bǎo le.", "Tôi ăn no rồi."],
+            "北方_3": ["北方的冬天很冷。", "Běifāng de dōngtiān hěn lěng.", "Mùa đông miền Bắc rất lạnh."],
+            "被_3": ["我的手机被弟弟拿走了。", "Wǒ de shǒujī bèi dìdi ná zǒu le.", "Điện thoại của tôi bị em trai lấy mất rồi."],
+            "鼻子_3": ["他的鼻子很高。", "Tā de bízi hěn gāo.", "Mũi anh ấy rất cao."],
+            "比较_3": ["今天比较冷。", "Jīntiān bǐjiào lěng.", "Hôm nay khá lạnh."],
+            "比赛_3": ["明天有足球比赛。", "Míngtiān yǒu zúqiú bǐsài.", "Ngày mai có trận bóng đá."],
+            "笔记本_3": ["我的笔记本电脑坏了。", "Wǒ de bǐjìběn diànnǎo huài le.", "Laptop của tôi hỏng rồi."],
+            "必须_3": ["你必须努力学习。", "Nǐ bìxū nǔlì xuéxí.", "Bạn phải chăm chỉ học."],
+            "变化_3": ["这个城市变化很大。", "Zhège chéngshì biànhuà hěn dà.", "Thành phố này thay đổi rất nhiều."],
+            "别人_3": ["别人的东西不要拿。", "Biérén de dōngxi bú yào ná.", "Đừng lấy đồ của người khác."],
+            "冰箱_3": ["水果在冰箱里。", "Shuǐguǒ zài bīngxiāng lǐ.", "Hoa quả ở trong tủ lạnh."],
+            "不但_3": ["她不但漂亮，而且聪明。", "Tā búdàn piàoliang, érqiě cōngmíng.", "Cô ấy không những xinh mà còn thông minh."],
+            "才_3": ["他十点才来。", "Tā shí diǎn cái lái.", "Mười giờ anh ấy mới đến."],
+            "菜单_3": ["请给我看看菜单。", "Qǐng gěi wǒ kànkan càidān.", "Cho tôi xem thực đơn."],
+            "参加_3": ["我想参加比赛。", "Wǒ xiǎng cānjiā bǐsài.", "Tôi muốn tham gia thi đấu."],
+            "草_3": ["公园里有很多草。", "Gōngyuán lǐ yǒu hěn duō cǎo.", "Trong công viên có nhiều cỏ."],
+            "层_3": ["我住在五层。", "Wǒ zhù zài wǔ céng.", "Tôi ở tầng năm."],
+            "差_3": ["现在差五分八点。", "Xiànzài chà wǔ fēn bā diǎn.", "Bây giờ là tám giờ kém năm."],
+            "超市_3": ["我去超市买菜。", "Wǒ qù chāoshì mǎi cài.", "Tôi đi siêu thị mua thức ăn."],
+            "衬衫_3": ["这件衬衫很漂亮。", "Zhè jiàn chènshān hěn piàoliang.", "Chiếc sơ mi này rất đẹp."],
+            "成绩_3": ["他的成绩很好。", "Tā de chéngjì hěn hǎo.", "Thành tích của anh ấy rất tốt."],
+            "城市_3": ["北京是一个大城市。", "Běijīng shì yí gè dà chéngshì.", "Bắc Kinh là một thành phố lớn."],
+            "迟到_3": ["对不起，我迟到了。", "Duìbuqǐ, wǒ chídào le.", "Xin lỗi, tôi đến muộn."],
+            "除了_3": ["除了他，大家都来了。", "Chúle tā, dàjiā dōu lái le.", "Ngoài anh ấy, mọi người đều đến."],
+            "船_3": ["我们坐船去。", "Wǒmen zuò chuán qù.", "Chúng tôi đi bằng thuyền."],
+            "春天_3": ["春天来了，花开了。", "Chūntiān lái le, huā kāi le.", "Mùa xuân đến, hoa nở."],
+            "词典_3": ["请借我一本词典。", "Qǐng jiè wǒ yì běn cídiǎn.", "Cho tôi mượn một cuốn từ điển."],
+            "聪明_3": ["这个孩子很聪明。", "Zhège háizi hěn cōngmíng.", "Đứa trẻ này rất thông minh."],
+            "打扫_3": ["我在打扫房间。", "Wǒ zài dǎsǎo fángjiān.", "Tôi đang dọn phòng."],
+            "打算_3": ["你周末打算做什么？", "Nǐ zhōumò dǎsuàn zuò shénme?", "Cuối tuần bạn định làm gì?"],
+            "带_3": ["别忘了带护照。", "Bié wàng le dài hùzhào.", "Đừng quên mang hộ chiếu."],
+            "担心_3": ["别担心，没问题。", "Bié dānxīn, méi wèntí.", "Đừng lo, không sao đâu."],
+            "蛋糕_3": ["生日蛋糕很好吃。", "Shēngrì dàngāo hěn hǎochī.", "Bánh sinh nhật rất ngon."],
+            "当然_3": ["当然可以！", "Dāngrán kěyǐ!", "Đương nhiên được!"],
+            "灯_3": ["请把灯关了。", "Qǐng bǎ dēng guān le.", "Hãy tắt đèn đi."],
+            "地_3": ["他慢慢地走。", "Tā mànmàn de zǒu.", "Anh ấy đi chầm chậm."],
+            "地方_3": ["这个地方很漂亮。", "Zhège dìfang hěn piàoliang.", "Nơi này rất đẹp."],
+            "地铁_3": ["我坐地铁上班。", "Wǒ zuò dìtiě shàngbān.", "Tôi đi làm bằng tàu điện ngầm."],
+            "地图_3": ["我看地图找路。", "Wǒ kàn dìtú zhǎo lù.", "Tôi xem bản đồ tìm đường."],
+            "电梯_3": ["电梯坏了。", "Diàntī huài le.", "Thang máy hỏng rồi."],
+            "邮件_3": ["我给你发了一个邮件。", "Wǒ gěi nǐ fā le yí gè yóujiàn.", "Tôi đã gửi cho bạn một email."],
+            "东_3": ["太阳从东边出来。", "Tàiyáng cóng dōngbian chūlái.", "Mặt trời mọc ở phía đông."],
+            "冬天_3": ["冬天很冷。", "Dōngtiān hěn lěng.", "Mùa đông rất lạnh."],
+            "动物_3": ["我喜欢动物。", "Wǒ xǐhuan dòngwù.", "Tôi thích động vật."],
+            "短_3": ["她的头发很短。", "Tā de tóufa hěn duǎn.", "Tóc cô ấy rất ngắn."],
+            "段_3": ["这段话很有意思。", "Zhè duàn huà hěn yǒu yìsi.", "Đoạn này rất thú vị."],
+            "锻炼_3": ["我每天锻炼身体。", "Wǒ měi tiān duànliàn shēntǐ.", "Mỗi ngày tôi rèn luyện sức khỏe."],
+            "多么_3": ["多么漂亮的花！", "Duōme piàoliang de huā!", "Hoa đẹp biết bao!"],
+            "饿_3": ["我饿了，我们吃饭吧。", "Wǒ è le, wǒmen chīfàn ba.", "Tôi đói rồi, chúng ta ăn cơm đi."],
+            "耳朵_3": ["我的耳朵疼。", "Wǒ de ěrduo téng.", "Tai tôi đau."],
+            "而且_3": ["他会说汉语，而且说得很好。", "Tā huì shuō Hànyǔ, érqiě shuō de hěn hǎo.", "Anh ấy biết tiếng Trung, hơn nữa nói rất giỏi."],
+            "发_3": ["我发了一个短信。", "Wǒ fā le yí gè duǎnxìn.", "Tôi đã gửi một tin nhắn."],
+            "发烧_3": ["他发烧了，要去医院。", "Tā fāshāo le, yào qù yīyuàn.", "Anh ấy bị sốt, phải đi bệnh viện."],
+            "发现_3": ["我发现了一个问题。", "Wǒ fāxiàn le yí gè wèntí.", "Tôi phát hiện ra một vấn đề."],
+            "方便_3": ["坐地铁很方便。", "Zuò dìtiě hěn fāngbiàn.", "Đi tàu điện ngầm rất tiện."],
+            "放_3": ["请把书放在桌子上。", "Qǐng bǎ shū fàng zài zhuōzi shàng.", "Hãy đặt sách lên bàn."],
+            "放心_3": ["你放心，我会帮你。", "Nǐ fàngxīn, wǒ huì bāng nǐ.", "Bạn yên tâm, tôi sẽ giúp bạn."],
+            "分_3": ["现在八点十分。", "Xiànzài bā diǎn shí fēn.", "Bây giờ là tám giờ mười."],
+            "附近_3": ["附近有超市吗？", "Fùjìn yǒu chāoshì ma?", "Gần đây có siêu thị không?"],
+            "复习_3": ["我在复习课文。", "Wǒ zài fùxí kèwén.", "Tôi đang ôn bài."],
+            "干净_3": ["房间很干净。", "Fángjiān hěn gānjìng.", "Phòng rất sạch."],
+            "感冒_3": ["我感冒了，头疼。", "Wǒ gǎnmào le, tóu téng.", "Tôi bị cảm, đau đầu."],
+            "感兴趣_3": ["我对历史很感兴趣。", "Wǒ duì lìshǐ hěn gǎn xìngqù.", "Tôi rất hứng thú với lịch sử."],
+            "刚才_3": ["刚才他给你打电话了。", "Gāngcái tā gěi nǐ dǎ diànhuà le.", "Vừa rồi anh ấy gọi cho bạn."],
+            "个子_3": ["他个子很高。", "Tā gèzi hěn gāo.", "Anh ấy dáng cao."],
+            "根据_3": ["根据天气预报，明天下雨。", "Gēnjù tiānqì yùbào, míngtiān xiàyǔ.", "Theo dự báo thời tiết, mai trời mưa."],
+            "跟_3": ["我跟他一起去。", "Wǒ gēn tā yìqǐ qù.", "Tôi đi cùng anh ấy."],
+            "更_3": ["今天比昨天更冷。", "Jīntiān bǐ zuótiān gèng lěng.", "Hôm nay còn lạnh hơn hôm qua."],
+            "公斤_3": ["我买了两公斤苹果。", "Wǒ mǎi le liǎng gōngjīn píngguǒ.", "Tôi mua hai ký táo."],
+            "公园_3": ["我们去公园散步吧。", "Wǒmen qù gōngyuán sànbù ba.", "Chúng ta đi dạo công viên đi."],
+            "故事_3": ["奶奶给我讲故事。", "Nǎinai gěi wǒ jiǎng gùshi.", "Bà kể chuyện cho tôi."],
+            "刮风_3": ["今天刮风了。", "Jīntiān guāfēng le.", "Hôm nay có gió."],
+            "关_3": ["请关门。", "Qǐng guān mén.", "Xin đóng cửa."],
+            "关系_3": ["这跟你没关系。", "Zhè gēn nǐ méi guānxi.", "Việc này không liên quan đến bạn."],
+            "关心_3": ["妈妈很关心我。", "Māma hěn guānxīn wǒ.", "Mẹ rất quan tâm tôi."],
+            "关于_3": ["这是一本关于历史的书。", "Zhè shì yì běn guānyú lìshǐ de shū.", "Đây là cuốn sách về lịch sử."],
+            "国家_3": ["你来自哪个国家？", "Nǐ láizì nǎge guójiā?", "Bạn đến từ nước nào?"],
+            "过_3": ["我去过中国。", "Wǒ qù guo Zhōngguó.", "Tôi đã từng đến Trung Quốc."],
+            "过去_3": ["过去我住在北京。", "Guòqù wǒ zhù zài Běijīng.", "Trước đây tôi sống ở Bắc Kinh."],
+            "还是_3": ["你喝茶还是喝咖啡？", "Nǐ hē chá háishi hē kāfēi?", "Bạn uống trà hay cà phê?"],
+            "害怕_3": ["我害怕狗。", "Wǒ hàipà gǒu.", "Tôi sợ chó."],
+            "黑板_3": ["老师在黑板上写字。", "Lǎoshī zài hēibǎn shàng xiě zì.", "Cô giáo viết chữ trên bảng."],
+            "后来_3": ["后来他去了北京。", "Hòulái tā qù le Běijīng.", "Sau đó anh ấy đi Bắc Kinh."],
+            "护照_3": ["请给我看看您的护照。", "Qǐng gěi wǒ kànkan nín de hùzhào.", "Cho tôi xem hộ chiếu của ngài."],
+            "花_3": ["这些花很漂亮。", "Zhèxiē huā hěn piàoliang.", "Những bông hoa này rất đẹp."],
+            "画_3": ["她画画儿画得很好。", "Tā huà huàr huà de hěn hǎo.", "Cô ấy vẽ rất đẹp."],
+            "坏_3": ["我的手机坏了。", "Wǒ de shǒujī huài le.", "Điện thoại của tôi hỏng rồi."],
+            "欢迎_3": ["欢迎你来中国！", "Huānyíng nǐ lái Zhōngguó!", "Hoan nghênh bạn đến Trung Quốc!"],
+            "环境_3": ["这里的环境很好。", "Zhèlǐ de huánjìng hěn hǎo.", "Môi trường ở đây rất tốt."],
+            "换_3": ["我想换一件衣服。", "Wǒ xiǎng huàn yí jiàn yīfu.", "Tôi muốn đổi một chiếc áo."],
+            "黄河_3": ["黄河很长。", "Huánghé hěn cháng.", "Sông Hoàng Hà rất dài."],
+            "回答_3": ["请回答我的问题。", "Qǐng huídá wǒ de wèntí.", "Hãy trả lời câu hỏi của tôi."],
+            "会议_3": ["下午有一个会议。", "Xiàwǔ yǒu yí gè huìyì.", "Chiều nay có một cuộc họp."],
+            "或者_3": ["你喝茶或者咖啡都可以。", "Nǐ hē chá huòzhě kāfēi dōu kěyǐ.", "Bạn uống trà hoặc cà phê đều được."],
+            "几乎_3": ["我几乎每天都运动。", "Wǒ jīhū měi tiān dōu yùndòng.", "Hầu như ngày nào tôi cũng vận động."],
+            "机会_3": ["这是一个好机会。", "Zhè shì yí gè hǎo jīhuì.", "Đây là một cơ hội tốt."],
+            "极_3": ["这个菜好吃极了。", "Zhège cài hǎochī jí le.", "Món này ngon cực kỳ."],
+            "记得_3": ["我记得他的名字。", "Wǒ jìde tā de míngzi.", "Tôi nhớ tên anh ấy."],
+            "季节_3": ["你最喜欢哪个季节？", "Nǐ zuì xǐhuan nǎge jìjié?", "Bạn thích mùa nào nhất?"],
+            "检查_3": ["医生给我检查身体。", "Yīshēng gěi wǒ jiǎnchá shēntǐ.", "Bác sĩ khám sức khỏe cho tôi."],
+            "简单_3": ["这个问题很简单。", "Zhège wèntí hěn jiǎndān.", "Câu hỏi này rất đơn giản."],
+            "见面_3": ["我们明天见面吧。", "Wǒmen míngtiān jiànmiàn ba.", "Ngày mai chúng ta gặp nhau nhé."],
+            "健康_3": ["身体健康最重要。", "Shēntǐ jiànkāng zuì zhòngyào.", "Sức khỏe là quan trọng nhất."],
+            "讲_3": ["老师讲得很清楚。", "Lǎoshī jiǎng de hěn qīngchu.", "Thầy giảng rất rõ."],
+            "教_3": ["王老师教我们汉语。", "Wáng lǎoshī jiāo wǒmen Hànyǔ.", "Thầy Vương dạy chúng tôi tiếng Trung."],
+            "角_3": ["这个苹果三块五角。", "Zhège píngguǒ sān kuài wǔ jiǎo.", "Quả táo này ba đồng rưỡi."],
+            "脚_3": ["我的脚疼。", "Wǒ de jiǎo téng.", "Chân tôi đau."],
+            "接_3": ["我去机场接你。", "Wǒ qù jīchǎng jiē nǐ.", "Tôi ra sân bay đón bạn."],
+            "街道_3": ["这条街道很干净。", "Zhè tiáo jiēdào hěn gānjìng.", "Con phố này rất sạch."],
+            "节目_3": ["这个节目很有意思。", "Zhège jiémù hěn yǒu yìsi.", "Chương trình này rất thú vị."],
+            "节日_3": ["春节是中国最重要的节日。", "Chūnjié shì Zhōngguó zuì zhòngyào de jiérì.", "Tết là ngày lễ quan trọng nhất ở Trung Quốc."],
+            "结婚_3": ["他们去年结婚了。", "Tāmen qùnián jiéhūn le.", "Họ kết hôn năm ngoái."],
+            "结束_3": ["会议结束了。", "Huìyì jiéshù le.", "Cuộc họp kết thúc rồi."],
+            "解决_3": ["这个问题解决了。", "Zhège wèntí jiějué le.", "Vấn đề này đã được giải quyết."],
+            "借_3": ["我想借一本书。", "Wǒ xiǎng jiè yì běn shū.", "Tôi muốn mượn một cuốn sách."],
+            "经常_3": ["我经常去图书馆。", "Wǒ jīngcháng qù túshūguǎn.", "Tôi thường đến thư viện."],
+            "经过_3": ["我每天经过这个公园。", "Wǒ měi tiān jīngguò zhège gōngyuán.", "Mỗi ngày tôi đi qua công viên này."],
+            "经理_3": ["他是我们公司的经理。", "Tā shì wǒmen gōngsī de jīnglǐ.", "Anh ấy là giám đốc công ty chúng tôi."],
+            "久_3": ["好久不见！", "Hǎo jiǔ bú jiàn!", "Lâu rồi không gặp!"],
+            "旧_3": ["这本书太旧了。", "Zhè běn shū tài jiù le.", "Cuốn sách này cũ quá."],
+            "句子_3": ["请读这个句子。", "Qǐng dú zhège jùzi.", "Mời đọc câu này."],
+            "决定_3": ["我决定去中国留学。", "Wǒ juédìng qù Zhōngguó liúxué.", "Tôi quyết định đi du học Trung Quốc."],
+            "可爱_3": ["这只猫真可爱。", "Zhè zhī māo zhēn kě'ài.", "Con mèo này đáng yêu thật."],
+            "渴_3": ["我渴了，想喝水。", "Wǒ kě le, xiǎng hē shuǐ.", "Tôi khát, muốn uống nước."],
+            "刻_3": ["现在三点一刻。", "Xiànzài sān diǎn yí kè.", "Bây giờ ba giờ mười lăm."],
+            "客人_3": ["今天家里有客人。", "Jīntiān jiā lǐ yǒu kèrén.", "Hôm nay nhà có khách."],
+            "空调_3": ["请打开空调。", "Qǐng dǎkāi kōngtiáo.", "Xin bật điều hòa."],
+            "口_3": ["我家有五口人。", "Wǒ jiā yǒu wǔ kǒu rén.", "Nhà tôi có năm người."],
+            "哭_3": ["孩子哭了。", "Háizi kū le.", "Đứa trẻ khóc rồi."],
+            "裤子_3": ["这条裤子太长了。", "Zhè tiáo kùzi tài cháng le.", "Chiếc quần này dài quá."],
+            "筷子_3": ["我会用筷子。", "Wǒ huì yòng kuàizi.", "Tôi biết dùng đũa."],
+            "蓝_3": ["天很蓝。", "Tiān hěn lán.", "Trời rất xanh."],
+            "老_3": ["他老了。", "Tā lǎo le.", "Ông ấy già rồi."],
+            "离开_3": ["他昨天离开了北京。", "Tā zuótiān líkāi le Běijīng.", "Hôm qua anh ấy rời Bắc Kinh."],
+            "礼物_3": ["这是给你的礼物。", "Zhè shì gěi nǐ de lǐwù.", "Đây là quà cho bạn."],
+            "历史_3": ["我喜欢中国历史。", "Wǒ xǐhuan Zhōngguó lìshǐ.", "Tôi thích lịch sử Trung Quốc."],
+            "脸_3": ["她的脸红了。", "Tā de liǎn hóng le.", "Mặt cô ấy đỏ lên."],
+            "练习_3": ["我每天练习写汉字。", "Wǒ měi tiān liànxí xiě Hànzì.", "Mỗi ngày tôi luyện viết chữ Hán."],
+            "辆_3": ["我买了一辆自行车。", "Wǒ mǎi le yí liàng zìxíngchē.", "Tôi mua một chiếc xe đạp."],
+            "聊天儿_3": ["我们在聊天儿。", "Wǒmen zài liáotiānr.", "Chúng tôi đang tán gẫu."],
+            "了解_3": ["我很了解他。", "Wǒ hěn liǎojiě tā.", "Tôi hiểu rõ anh ấy."],
+            "邻居_3": ["我的邻居很热情。", "Wǒ de línjū hěn rèqíng.", "Hàng xóm của tôi rất nhiệt tình."],
+            "留学_3": ["我想去中国留学。", "Wǒ xiǎng qù Zhōngguó liúxué.", "Tôi muốn đi du học Trung Quốc."],
+            "楼_3": ["我住在三楼。", "Wǒ zhù zài sān lóu.", "Tôi ở tầng ba."],
+            "绿_3": ["春天树都绿了。", "Chūntiān shù dōu lǜ le.", "Mùa xuân cây đều xanh."],
+            "马_3": ["他会骑马。", "Tā huì qí mǎ.", "Anh ấy biết cưỡi ngựa."],
+            "马上_3": ["我马上就到。", "Wǒ mǎshàng jiù dào.", "Tôi đến ngay đây."],
+            "满意_3": ["我对这个结果很满意。", "Wǒ duì zhège jiéguǒ hěn mǎnyì.", "Tôi rất hài lòng với kết quả này."],
+            "帽子_3": ["他戴了一个红帽子。", "Tā dài le yí gè hóng màozi.", "Anh ấy đội một chiếc mũ đỏ."],
+            "米_3": ["他有一米八。", "Tā yǒu yì mǐ bā.", "Anh ấy cao một mét tám."],
+            "面包_3": ["我早上吃面包。", "Wǒ zǎoshang chī miànbāo.", "Buổi sáng tôi ăn bánh mì."],
+            "明白_3": ["我明白了。", "Wǒ míngbai le.", "Tôi hiểu rồi."],
+            "拿_3": ["请拿一杯水给我。", "Qǐng ná yì bēi shuǐ gěi wǒ.", "Lấy giúp tôi một cốc nước."],
+            "奶奶_3": ["奶奶今年七十岁。", "Nǎinai jīnnián qīshí suì.", "Bà năm nay bảy mươi tuổi."],
+            "南_3": ["他家在南边。", "Tā jiā zài nánbian.", "Nhà anh ấy ở phía nam."],
+            "难_3": ["汉字很难写。", "Hànzì hěn nán xiě.", "Chữ Hán rất khó viết."],
+            "难过_3": ["听到这个消息我很难过。", "Tīng dào zhège xiāoxi wǒ hěn nánguò.", "Nghe tin này tôi rất buồn."],
+            "年级_3": ["我弟弟上三年级。", "Wǒ dìdi shàng sān niánjí.", "Em trai tôi học lớp ba."],
+            "年轻_3": ["他还很年轻。", "Tā hái hěn niánqīng.", "Anh ấy vẫn còn rất trẻ."],
+            "鸟_3": ["树上有一只鸟。", "Shù shàng yǒu yì zhī niǎo.", "Trên cây có một con chim."],
+            "努力_3": ["他学习很努力。", "Tā xuéxí hěn nǔlì.", "Anh ấy học rất chăm."],
+            "爬山_3": ["周末我们去爬山。", "Zhōumò wǒmen qù páshān.", "Cuối tuần chúng tôi đi leo núi."],
+            "盘子_3": ["请把盘子洗一下。", "Qǐng bǎ pánzi xǐ yíxià.", "Rửa giúp cái đĩa."],
+            "胖_3": ["他比以前胖了。", "Tā bǐ yǐqián pàng le.", "Anh ấy béo hơn trước."],
+            "皮鞋_3": ["这双皮鞋很贵。", "Zhè shuāng píxié hěn guì.", "Đôi giày da này rất đắt."],
+            "啤酒_3": ["他喜欢喝啤酒。", "Tā xǐhuan hē píjiǔ.", "Anh ấy thích uống bia."],
+            "瓶子_3": ["瓶子里有水。", "Píngzi lǐ yǒu shuǐ.", "Trong chai có nước."],
+            "其实_3": ["其实我不喜欢咖啡。", "Qíshí wǒ bù xǐhuan kāfēi.", "Thực ra tôi không thích cà phê."],
+            "其他_3": ["其他人都走了。", "Qítā rén dōu zǒu le.", "Những người khác đều đi rồi."],
+            "奇怪_3": ["这件事很奇怪。", "Zhè jiàn shì hěn qíguài.", "Chuyện này rất lạ."],
+            "骑_3": ["我骑自行车上学。", "Wǒ qí zìxíngchē shàngxué.", "Tôi đi học bằng xe đạp."],
+            "起飞_3": ["飞机九点起飞。", "Fēijī jiǔ diǎn qǐfēi.", "Máy bay cất cánh lúc chín giờ."],
+            "起来_3": ["快起来，要迟到了！", "Kuài qǐlái, yào chídào le!", "Dậy mau, sắp muộn rồi!"],
+            "清楚_3": ["我听得很清楚。", "Wǒ tīng de hěn qīngchu.", "Tôi nghe rất rõ."],
+            "请假_3": ["我明天想请假。", "Wǒ míngtiān xiǎng qǐngjià.", "Ngày mai tôi muốn xin nghỉ."],
+            "秋_3": ["秋天天气很好。", "Qiūtiān tiānqì hěn hǎo.", "Mùa thu thời tiết rất đẹp."],
+            "裙子_3": ["她穿了一条红裙子。", "Tā chuān le yì tiáo hóng qúnzi.", "Cô ấy mặc một chiếc váy đỏ."],
+            "然后_3": ["先吃饭，然后看电影。", "Xiān chīfàn, ránhòu kàn diànyǐng.", "Ăn cơm trước, sau đó xem phim."],
+            "热情_3": ["中国人很热情。", "Zhōngguó rén hěn rèqíng.", "Người Trung Quốc rất nhiệt tình."],
+            "认为_3": ["我认为他是对的。", "Wǒ rènwéi tā shì duì de.", "Tôi cho rằng anh ấy đúng."],
+            "认真_3": ["他工作很认真。", "Tā gōngzuò hěn rènzhēn.", "Anh ấy làm việc rất nghiêm túc."],
+            "容易_3": ["这个问题很容易。", "Zhège wèntí hěn róngyì.", "Câu hỏi này rất dễ."],
+            "如果_3": ["如果下雨，我就不去。", "Rúguǒ xiàyǔ, wǒ jiù bú qù.", "Nếu trời mưa thì tôi không đi."],
+            "伞_3": ["别忘了带伞。", "Bié wàng le dài sǎn.", "Đừng quên mang ô."],
+            "上网_3": ["我晚上上网看新闻。", "Wǒ wǎnshang shàngwǎng kàn xīnwén.", "Buổi tối tôi lên mạng đọc tin."],
+            "生气_3": ["妈妈生气了。", "Māma shēngqì le.", "Mẹ giận rồi."],
+            "声音_3": ["他的声音很好听。", "Tā de shēngyīn hěn hǎotīng.", "Giọng anh ấy rất hay."],
+            "世界_3": ["世界很大。", "Shìjiè hěn dà.", "Thế giới rất rộng lớn."],
+            "试_3": ["我试试这件衣服。", "Wǒ shìshi zhè jiàn yīfu.", "Tôi thử chiếc áo này."],
+            "瘦_3": ["她太瘦了。", "Tā tài shòu le.", "Cô ấy gầy quá."],
+            "叔叔_3": ["叔叔在北京工作。", "Shūshu zài Běijīng gōngzuò.", "Chú làm việc ở Bắc Kinh."],
+            "舒服_3": ["我今天不太舒服。", "Wǒ jīntiān bú tài shūfu.", "Hôm nay tôi hơi khó chịu trong người."],
+            "树_3": ["公园里有很多树。", "Gōngyuán lǐ yǒu hěn duō shù.", "Trong công viên có nhiều cây."],
+            "数学_3": ["我喜欢数学。", "Wǒ xǐhuan shùxué.", "Tôi thích toán."],
+            "刷牙_3": ["我每天早上刷牙。", "Wǒ měi tiān zǎoshang shuāyá.", "Sáng nào tôi cũng đánh răng."],
+            "双_3": ["我买了一双鞋。", "Wǒ mǎi le yì shuāng xié.", "Tôi mua một đôi giày."],
+            "水平_3": ["他的汉语水平很高。", "Tā de Hànyǔ shuǐpíng hěn gāo.", "Trình độ tiếng Trung của anh ấy rất cao."],
+            "司机_3": ["司机开车很快。", "Sījī kāichē hěn kuài.", "Tài xế lái xe rất nhanh."],
+            "太阳_3": ["今天太阳很大。", "Jīntiān tàiyáng hěn dà.", "Hôm nay nắng to."],
+            "特别_3": ["今天特别热。", "Jīntiān tèbié rè.", "Hôm nay đặc biệt nóng."],
+            "疼_3": ["我头疼。", "Wǒ tóu téng.", "Tôi đau đầu."],
+            "提高_3": ["我想提高汉语水平。", "Wǒ xiǎng tígāo Hànyǔ shuǐpíng.", "Tôi muốn nâng cao trình độ tiếng Trung."],
+            "体育_3": ["我喜欢体育课。", "Wǒ xǐhuan tǐyù kè.", "Tôi thích giờ thể dục."],
+            "甜_3": ["这个西瓜很甜。", "Zhège xīguā hěn tián.", "Quả dưa hấu này rất ngọt."],
+            "条_3": ["这条裙子很漂亮。", "Zhè tiáo qúnzi hěn piàoliang.", "Chiếc váy này rất đẹp."],
+            "同事_3": ["他是我的同事。", "Tā shì wǒ de tóngshì.", "Anh ấy là đồng nghiệp của tôi."],
+            "同意_3": ["我同意你的看法。", "Wǒ tóngyì nǐ de kànfǎ.", "Tôi đồng ý với ý kiến của bạn."],
+            "头发_3": ["她的头发很长。", "Tā de tóufa hěn cháng.", "Tóc cô ấy rất dài."],
+            "突然_3": ["突然下雨了。", "Tūrán xiàyǔ le.", "Đột nhiên trời mưa."],
+            "图书馆_3": ["我在图书馆看书。", "Wǒ zài túshūguǎn kàn shū.", "Tôi đọc sách ở thư viện."],
+            "腿_3": ["我的腿很疼。", "Wǒ de tuǐ hěn téng.", "Chân tôi rất đau."],
+            "完成_3": ["我完成作业了。", "Wǒ wánchéng zuòyè le.", "Tôi hoàn thành bài tập rồi."],
+            "碗_3": ["我吃了两碗米饭。", "Wǒ chī le liǎng wǎn mǐfàn.", "Tôi ăn hai bát cơm."],
+            "万_3": ["这辆车十万块。", "Zhè liàng chē shí wàn kuài.", "Chiếc xe này mười vạn đồng."],
+            "忘记_3": ["我忘记带钱了。", "Wǒ wàngjì dài qián le.", "Tôi quên mang tiền rồi."],
+            "为_3": ["我为你高兴。", "Wǒ wèi nǐ gāoxìng.", "Tôi mừng cho bạn."],
+            "为了_3": ["为了健康，我每天运动。", "Wèile jiànkāng, wǒ měi tiān yùndòng.", "Vì sức khỏe, tôi vận động mỗi ngày."],
+            "位_3": ["这位是王老师。", "Zhè wèi shì Wáng lǎoshī.", "Vị này là thầy Vương."],
+            "文化_3": ["我对中国文化很感兴趣。", "Wǒ duì Zhōngguó wénhuà hěn gǎn xìngqù.", "Tôi rất hứng thú với văn hóa Trung Quốc."],
+            "西_3": ["太阳从西边下去。", "Tàiyáng cóng xībian xiàqù.", "Mặt trời lặn ở phía tây."],
+            "习惯_3": ["我习惯早起。", "Wǒ xíguàn zǎo qǐ.", "Tôi quen dậy sớm."],
+            "洗手间_3": ["洗手间在哪儿？", "Xǐshǒujiān zài nǎr?", "Nhà vệ sinh ở đâu?"],
+            "洗澡_3": ["我每天晚上洗澡。", "Wǒ měi tiān wǎnshang xǐzǎo.", "Tối nào tôi cũng tắm."],
+            "夏_3": ["夏天很热。", "Xiàtiān hěn rè.", "Mùa hè rất nóng."],
+            "先_3": ["你先走吧。", "Nǐ xiān zǒu ba.", "Bạn đi trước đi."],
+            "相信_3": ["我相信你。", "Wǒ xiāngxìn nǐ.", "Tôi tin bạn."],
+            "香蕉_3": ["猴子喜欢吃香蕉。", "Hóuzi xǐhuan chī xiāngjiāo.", "Khỉ thích ăn chuối."],
+            "向_3": ["向前走一百米。", "Xiàng qián zǒu yìbǎi mǐ.", "Đi thẳng về phía trước một trăm mét."],
+            "像_3": ["她长得像妈妈。", "Tā zhǎng de xiàng māma.", "Cô ấy trông giống mẹ."],
+            "小心_3": ["路上小心！", "Lù shàng xiǎoxīn!", "Đi đường cẩn thận!"],
+            "校长_3": ["校长在办公室。", "Xiàozhǎng zài bàngōngshì.", "Hiệu trưởng đang ở văn phòng."],
+            "新闻_3": ["我每天看新闻。", "Wǒ měi tiān kàn xīnwén.", "Ngày nào tôi cũng xem tin tức."],
+            "新鲜_3": ["这些水果很新鲜。", "Zhèxiē shuǐguǒ hěn xīnxiān.", "Hoa quả này rất tươi."],
+            "信用卡_3": ["可以用信用卡吗？", "Kěyǐ yòng xìnyòngkǎ ma?", "Dùng thẻ tín dụng được không?"],
+            "行李箱_3": ["我的行李箱很重。", "Wǒ de xínglǐxiāng hěn zhòng.", "Vali của tôi rất nặng."],
+            "熊猫_3": ["熊猫很可爱。", "Xióngmāo hěn kě'ài.", "Gấu trúc rất đáng yêu."],
+            "需要_3": ["我需要你的帮助。", "Wǒ xūyào nǐ de bāngzhù.", "Tôi cần sự giúp đỡ của bạn."],
+            "选择_3": ["你可以选择一个。", "Nǐ kěyǐ xuǎnzé yí gè.", "Bạn có thể chọn một cái."],
+            "要求_3": ["老师要求我们每天练习。", "Lǎoshī yāoqiú wǒmen měi tiān liànxí.", "Thầy yêu cầu chúng tôi luyện tập mỗi ngày."],
+            "爷爷_3": ["爷爷喜欢喝茶。", "Yéye xǐhuan hē chá.", "Ông thích uống trà."],
+            "一定_3": ["我一定来。", "Wǒ yídìng lái.", "Tôi nhất định sẽ đến."],
+            "一共_3": ["一共多少钱？", "Yígòng duōshao qián?", "Tổng cộng bao nhiêu tiền?"],
+            "一会儿_3": ["请等一会儿。", "Qǐng děng yíhuìr.", "Xin đợi một lát."],
+            "一样_3": ["我们的手机一样。", "Wǒmen de shǒujī yíyàng.", "Điện thoại của chúng ta giống nhau."],
+            "以前_3": ["以前我不会说汉语。", "Yǐqián wǒ bú huì shuō Hànyǔ.", "Trước đây tôi không biết nói tiếng Trung."],
+            "一般_3": ["我一般七点起床。", "Wǒ yìbān qī diǎn qǐchuáng.", "Tôi thường dậy lúc bảy giờ."],
+            "一边_3": ["他一边吃饭一边看电视。", "Tā yìbiān chīfàn yìbiān kàn diànshì.", "Anh ấy vừa ăn vừa xem tivi."],
+            "一直_3": ["我一直在等你。", "Wǒ yìzhí zài děng nǐ.", "Tôi vẫn luôn đợi bạn."],
+            "音乐_3": ["我喜欢听音乐。", "Wǒ xǐhuan tīng yīnyuè.", "Tôi thích nghe nhạc."],
+            "银行_3": ["银行几点开门？", "Yínháng jǐ diǎn kāi mén?", "Ngân hàng mấy giờ mở cửa?"],
+            "饮料_3": ["你想喝什么饮料？", "Nǐ xiǎng hē shénme yǐnliào?", "Bạn muốn uống gì?"],
+            "应该_3": ["你应该早点儿睡觉。", "Nǐ yīnggāi zǎo diǎnr shuìjiào.", "Bạn nên đi ngủ sớm hơn."],
+            "影响_3": ["天气影响了我的心情。", "Tiānqì yǐngxiǎng le wǒ de xīnqíng.", "Thời tiết ảnh hưởng đến tâm trạng tôi."],
+            "用_3": ["我用手机看新闻。", "Wǒ yòng shǒujī kàn xīnwén.", "Tôi dùng điện thoại đọc tin."],
+            "游戏_3": ["孩子们在玩游戏。", "Háizimen zài wán yóuxì.", "Bọn trẻ đang chơi trò chơi."],
+            "有名_3": ["这个饭店很有名。", "Zhège fàndiàn hěn yǒumíng.", "Nhà hàng này rất nổi tiếng."],
+            "又_3": ["他又迟到了。", "Tā yòu chídào le.", "Anh ấy lại đến muộn."],
+            "遇到_3": ["我在路上遇到了老师。", "Wǒ zài lù shàng yùdào le lǎoshī.", "Tôi tình cờ gặp thầy trên đường."],
+            "元_3": ["这本书二十元。", "Zhè běn shū èrshí yuán.", "Cuốn sách này hai mươi tệ."],
+            "愿意_3": ["我愿意帮你。", "Wǒ yuànyì bāng nǐ.", "Tôi sẵn lòng giúp bạn."],
+            "月亮_3": ["今晚的月亮很圆。", "Jīn wǎn de yuèliang hěn yuán.", "Trăng tối nay rất tròn."],
+            "越_3": ["雨越下越大。", "Yǔ yuè xià yuè dà.", "Mưa càng lúc càng to."],
+            "站_3": ["请站起来。", "Qǐng zhàn qǐlái.", "Mời đứng dậy."],
+            "张_3": ["请给我一张纸。", "Qǐng gěi wǒ yì zhāng zhǐ.", "Cho tôi một tờ giấy."],
+            "长_3": ["孩子长大了。", "Háizi zhǎng dà le.", "Đứa trẻ lớn rồi."],
+            "着急_3": ["别着急，慢慢来。", "Bié zháojí, mànmàn lái.", "Đừng sốt ruột, từ từ thôi."],
+            "照顾_3": ["妈妈照顾孩子。", "Māma zhàogu háizi.", "Mẹ chăm sóc con."],
+            "照片_3": ["这是我家的照片。", "Zhè shì wǒ jiā de zhàopiàn.", "Đây là ảnh gia đình tôi."],
+            "照相机_3": ["我买了一个新照相机。", "Wǒ mǎi le yí gè xīn zhàoxiàngjī.", "Tôi mua một chiếc máy ảnh mới."],
+            "只_3": ["我只有一个弟弟。", "Wǒ zhǐ yǒu yí gè dìdi.", "Tôi chỉ có một em trai."],
+            "只有_3": ["只有努力，才能成功。", "Zhǐyǒu nǔlì, cái néng chénggōng.", "Chỉ có cố gắng mới thành công."],
+            "中间_3": ["他坐在中间。", "Tā zuò zài zhōngjiān.", "Anh ấy ngồi ở giữa."],
+            "终于_3": ["我终于明白了。", "Wǒ zhōngyú míngbai le.", "Cuối cùng tôi cũng hiểu rồi."],
+            "种_3": ["这种水果很甜。", "Zhè zhǒng shuǐguǒ hěn tián.", "Loại hoa quả này rất ngọt."],
+            "重要_3": ["这件事很重要。", "Zhè jiàn shì hěn zhòngyào.", "Việc này rất quan trọng."],
+            "周末_3": ["周末你做什么？", "Zhōumò nǐ zuò shénme?", "Cuối tuần bạn làm gì?"],
+            "主要_3": ["我主要学习汉语。", "Wǒ zhǔyào xuéxí Hànyǔ.", "Tôi chủ yếu học tiếng Trung."],
+            "注意_3": ["请注意身体。", "Qǐng zhùyì shēntǐ.", "Hãy chú ý sức khỏe."],
+            "自己_3": ["我自己做饭。", "Wǒ zìjǐ zuòfàn.", "Tôi tự nấu ăn."],
+            "自行车_3": ["我骑自行车去学校。", "Wǒ qí zìxíngchē qù xuéxiào.", "Tôi đạp xe đến trường."],
+            "总是_3": ["他总是很忙。", "Tā zǒngshì hěn máng.", "Anh ấy lúc nào cũng bận."],
+            "嘴_3": ["请张开嘴。", "Qǐng zhāng kāi zuǐ.", "Xin há miệng ra."],
+            "最后_3": ["最后他来了。", "Zuìhòu tā lái le.", "Cuối cùng anh ấy đã đến."],
+            "最近_3": ["最近我很忙。", "Zuìjìn wǒ hěn máng.", "Dạo này tôi rất bận."],
+            "作业_3": ["我在做作业。", "Wǒ zài zuò zuòyè.", "Tôi đang làm bài tập."],
+            "中文_3": ["我会说中文。", "Wǒ huì shuō Zhōngwén.", "Tôi biết nói tiếng Trung."]
+        };
+
         // ============ STATE ============
         const STORAGE_KEY = "hsk123_progress_v2";
         const SRS_KEY = "hsk123_srs_v1";      // lịch cũ 1 chiều — chỉ đọc để migrate, không ghi nữa
@@ -555,6 +1153,7 @@
         const DIR = { RECOG: "recog", PROD: "prod" };
         const DIR_LABEL = { recog: "Nhận mặt", prod: "Viết chữ" };
         const DIR_ORDER = [DIR.RECOG, DIR.PROD];
+        const DIR_SIBLING = { recog: "prod", prod: "recog" };   // hai thẻ của cùng một từ
         const LEECH_LAPSES = 6;               // quên quá số lần này → gắn cờ thẻ khó
         const DEFAULT_SETTINGS = { newPerDay: 15, maxReviews: 120 };
         const RATE = { FORGOT: 1, HARD: 2, GOOD: 3, EASY: 4 };
@@ -906,7 +1505,227 @@
             "饺":  {p:["饣","交"], m:["ăn","giao"], s:"Đồ ăn (饣) gói giao (交) → bánh há cảo"},
             "蛋":  {p:["疋","虫"], m:["cuộn","trùng"], s:"Bào thai (疋) của côn trùng (虫) → trứng"},
             "船":  {p:["舟","㕣"], m:["thuyền","khe"], s:"Thuyền (舟) lượn theo khe nước → tàu"},
-            "车":  {p:["车"], m:["xe"], s:"Hình bánh xe và trục → xe"}
+            "车":  {p:["车"], m:["xe"], s:"Hình bánh xe và trục → xe"},
+            // ---- bổ sung: phủ đủ chữ đầu của toàn bộ 599 từ HSK 1–3 ----
+            "丈":  {p:["十", "乂"], m:["mười", "gạch chéo"], s:"Đo mười (十) thước rồi đánh dấu (乂) → trượng, người đàn ông trưởng thành"},
+            "不":  {p:["一", "小"], m:["ngang", "nhỏ"], s:"Một vạch (一) chặn trên mầm nhỏ (小) không cho mọc → không"},
+            "世":  {p:["廿", "乚"], m:["hai mươi", "móc"], s:"Ba mươi năm là một đời người → thế hệ, thế giới"},
+            "为":  {p:["丶", "力"], m:["chấm", "sức"], s:"Dồn sức (力) vào một điểm (丶) → làm, vì"},
+            "主":  {p:["丶", "王"], m:["chấm", "vua"], s:"Ngọn lửa (丶) trên đèn của vua (王) → chủ, chính"},
+            "久":  {p:["人", "乀"], m:["người", "phẩy dài"], s:"Người (人) bị kéo lại (乀) mãi không đi → lâu"},
+            "也":  {p:["乜", "丨"], m:["rắn", "sổ"], s:"Con rắn ngoằn ngoèo, nét thẳng đứng bên → cũng"},
+            "些":  {p:["此", "二"], m:["này", "hai"], s:"Này (此) thêm hai (二) → vài, một số"},
+            "人":  {p:["丿", "乀"], m:["phẩy", "mác"], s:"Hai chân đứng dang ra → người"},
+            "介":  {p:["人", "丨", "丨"], m:["người", "sổ", "sổ"], s:"Người (人) đứng giữa hai vạch → ở giữa, giới thiệu"},
+            "从":  {p:["人", "人"], m:["người", "người"], s:"Người (人) đi theo người (人) → theo, từ"},
+            "以":  {p:["丨", "丶", "人"], m:["sổ", "chấm", "người"], s:"Người (人) cầm dụng cụ → dùng, lấy"},
+            "伞":  {p:["人", "⺌", "十"], m:["người", "mái", "chữ thập"], s:"Mái che (人) trên cán (十) → cái ô"},
+            "但":  {p:["亻", "旦"], m:["người", "bình minh"], s:"Người (亻) đứng lúc bình minh (旦) → nhưng, chỉ"},
+            "住":  {p:["亻", "主"], m:["người", "chủ"], s:"Người (亻) làm chủ (主) một nơi → ở, sống"},
+            "体":  {p:["亻", "本"], m:["người", "gốc"], s:"Gốc (本) của con người (亻) → cơ thể"},
+            "作":  {p:["亻", "乍"], m:["người", "chợt"], s:"Người (亻) chợt (乍) bắt tay vào → làm"},
+            "便":  {p:["亻", "更"], m:["người", "đổi"], s:"Người (亻) đổi (更) cho dễ hơn → tiện; rẻ"},
+            "信":  {p:["亻", "言"], m:["người", "lời"], s:"Lời (言) của người (亻) giữ được → tin, thư"},
+            "健":  {p:["亻", "建"], m:["người", "xây"], s:"Người (亻) được xây (建) vững chắc → khỏe"},
+            "像":  {p:["亻", "象"], m:["người", "voi"], s:"Người (亻) vẽ hình con voi (象) → giống, hình ảnh"},
+            "儿":  {p:["丿", "乚"], m:["phẩy", "móc"], s:"Đứa trẻ hai chân còn yếu → con, trẻ"},
+            "元":  {p:["二", "儿"], m:["hai", "chân"], s:"Hai (二) vạch trên đôi chân (儿) → đầu, nguyên; tệ"},
+            "先":  {p:["⺧", "儿"], m:["bò", "chân"], s:"Chân (儿) đi trước con bò (⺧) → trước"},
+            "公":  {p:["八", "厶"], m:["tám/chia", "riêng"], s:"Chia (八) cái riêng (厶) ra → công, chung"},
+            "其":  {p:["甘", "八"], m:["ngọt", "tám"], s:"Cái rổ đặt trên chân → nó, cái đó"},
+            "再":  {p:["一", "冉"], m:["ngang", "dần"], s:"Thêm một (一) lần nữa → lại"},
+            "冰":  {p:["冫", "水"], m:["băng", "nước"], s:"Nước (水) đóng thành băng (冫) → băng, đá"},
+            "决":  {p:["冫", "夬"], m:["băng", "quyết"], s:"Chặt băng (冫) dứt khoát (夬) → quyết định"},
+            "冷":  {p:["冫", "令"], m:["băng", "lệnh"], s:"Băng (冫) tuân lệnh (令) tràn xuống → lạnh"},
+            "准":  {p:["冫", "隹"], m:["băng", "chim"], s:"Chim (隹) đậu trên băng (冫) phẳng → chuẩn, chính xác"},
+            "几":  {p:["丿", "乙"], m:["phẩy", "ất"], s:"Cái bàn nhỏ có chân → mấy; bàn"},
+            "刚":  {p:["冈", "刂"], m:["đồi", "dao"], s:"Dao (刂) chặt đá đồi (冈) → cứng; vừa mới"},
+            "刮":  {p:["舌", "刂"], m:["lưỡi", "dao"], s:"Dao (刂) cạo như lưỡi (舌) liếm → cạo; gió thổi"},
+            "到":  {p:["至", "刂"], m:["đến", "dao"], s:"Đến (至) nơi rồi cắm dao (刂) → tới, đến"},
+            "刷":  {p:["刷", "刂"], m:["xoa", "dao"], s:"Dao (刂) xoa lên bề mặt → chải, đánh (răng)"},
+            "刻":  {p:["亥", "刂"], m:["hợi", "dao"], s:"Dao (刂) khắc dấu giờ Hợi (亥) → khắc; 15 phút"},
+            "办":  {p:["力", "八"], m:["sức", "chia"], s:"Dồn sức (力) chia (八) việc ra → làm, xử lý"},
+            "动":  {p:["云", "力"], m:["mây", "sức"], s:"Sức (力) đẩy mây (云) trôi → động, chuyển động"},
+            "努":  {p:["奴", "力"], m:["nô", "sức"], s:"Nô lệ (奴) dốc sức (力) → nỗ lực"},
+            "包":  {p:["勹", "巳"], m:["bọc", "thai nhi"], s:"Bọc (勹) thai nhi (巳) trong bụng → bao, gói"},
+            "历":  {p:["厂", "力"], m:["vách", "sức"], s:"Dốc sức (力) leo qua vách (厂) → trải qua, lịch sử"},
+            "参":  {p:["厶", "大", "彡"], m:["riêng", "lớn", "lông"], s:"Người lớn (大) đội mũ lông (彡) → tham gia"},
+            "又":  {p:["フ", "乀"], m:["nét", "mác"], s:"Bàn tay phải giơ ra → lại, nữa"},
+            "双":  {p:["又", "又"], m:["tay", "tay"], s:"Hai bàn tay (又又) → đôi"},
+            "发":  {p:["𠂇", "友"], m:["tay", "bạn"], s:"Tay (𠂇) đưa cho bạn (友) → phát, gửi"},
+            "叔":  {p:["尗", "又"], m:["đậu", "tay"], s:"Tay (又) nhặt đậu (尗) → chú"},
+            "变":  {p:["亦", "又"], m:["cũng", "tay"], s:"Tay (又) đổi cái cũng (亦) khác → biến đổi"},
+            "句":  {p:["勹", "口"], m:["bọc", "miệng"], s:"Lời từ miệng (口) được bọc (勹) lại → câu"},
+            "只":  {p:["口", "八"], m:["miệng", "chia"], s:"Miệng (口) chia (八) đôi → chỉ; con (lượng từ)"},
+            "可":  {p:["丁", "口"], m:["đinh", "miệng"], s:"Miệng (口) nói ra chắc như đinh (丁) → có thể"},
+            "右":  {p:["𠂇", "口"], m:["tay", "miệng"], s:"Tay (𠂇) đưa thức ăn vào miệng (口) — tay phải → bên phải"},
+            "司":  {p:["𠃌", "口"], m:["móc", "miệng"], s:"Người ra lệnh bằng miệng (口) → quản, trông coi"},
+            "同":  {p:["冂", "一", "口"], m:["vây", "ngang", "miệng"], s:"Nhiều miệng (口) trong cùng một khung (冂) → cùng, giống"},
+            "向":  {p:["丿", "冂", "口"], m:["phẩy", "cửa", "miệng"], s:"Cửa sổ (口) mở trên tường nhà (冂) → hướng về"},
+            "咖":  {p:["口", "加"], m:["miệng", "thêm"], s:"Chữ mượn âm: miệng (口) + gia (加) → cà (phê)"},
+            "哭":  {p:["吅", "犬"], m:["hai miệng", "chó"], s:"Hai miệng (吅) gào như chó (犬) sủa → khóc"},
+            "商":  {p:["亠", "冏", "口"], m:["nắp", "sáng", "miệng"], s:"Người đứng trên bục rao hàng bằng miệng (口) → thương, buôn bán"},
+            "啊":  {p:["口", "阿"], m:["miệng", "a"], s:"Miệng (口) phát âm \"a\" (阿) → à, ơi"},
+            "啤":  {p:["口", "卑"], m:["miệng", "thấp"], s:"Chữ mượn âm: miệng (口) + ti (卑) → bia"},
+            "喂":  {p:["口", "畏"], m:["miệng", "sợ"], s:"Miệng (口) gọi to → alo, ê"},
+            "因":  {p:["囗", "大"], m:["vây", "lớn"], s:"Người lớn (大) nằm trong khung (囗) làm nền → nguyên nhân"},
+            "图":  {p:["囗", "冬"], m:["vây", "đông"], s:"Khung (囗) vẽ hình bên trong → bức tranh, bản đồ"},
+            "地":  {p:["土", "也"], m:["đất", "cũng"], s:"Đất (土) cũng (也) trải khắp nơi → đất, mặt đất"},
+            "坏":  {p:["土", "不"], m:["đất", "không"], s:"Đất (土) không (不) còn tốt → hỏng, xấu"},
+            "城":  {p:["土", "成"], m:["đất", "thành"], s:"Đất (土) đắp thành (成) tường → thành phố"},
+            "声":  {p:["士", "𠃌"], m:["sĩ", "móc"], s:"Kẻ sĩ (士) gõ khánh vang lên → âm thanh"},
+            "复":  {p:["𠂉", "日", "夂"], m:["người", "mặt trời", "đi"], s:"Người đi (夂) rồi quay lại lúc mặt trời (日) lên → lặp lại, ôn"},
+            "太":  {p:["大", "丶"], m:["lớn", "chấm"], s:"Lớn (大) thêm một chấm (丶) → quá, rất"},
+            "奇":  {p:["大", "可"], m:["lớn", "có thể"], s:"Người lớn (大) làm điều tưởng không thể (可) → kỳ lạ"},
+            "女":  {p:["くノ一"], m:["nét cong"], s:"Người phụ nữ quỳ gối, hai tay khoanh → nữ"},
+            "如":  {p:["女", "口"], m:["nữ", "miệng"], s:"Con gái (女) nghe lời miệng (口) mẹ → như, nếu"},
+            "姓":  {p:["女", "生"], m:["nữ", "sinh"], s:"Mẹ (女) sinh (生) ra dòng họ → họ"},
+            "季":  {p:["禾", "子"], m:["lúa", "con"], s:"Lúa (禾) non như đứa con (子) → mùa"},
+            "安":  {p:["宀", "女"], m:["mái nhà", "nữ"], s:"Người phụ nữ (女) trong nhà (宀) → yên ổn"},
+            "完":  {p:["宀", "元"], m:["mái nhà", "đầu"], s:"Nhà (宀) đã xây phần đầu (元) tiên xong → hoàn thành"},
+            "害":  {p:["宀", "丰", "口"], m:["mái nhà", "cỏ", "miệng"], s:"Miệng (口) nói rối rắm (丰) trong nhà (宀) → hại"},
+            "容":  {p:["宀", "谷"], m:["mái nhà", "thung lũng"], s:"Nhà (宀) rộng như thung lũng (谷) → chứa, dung nạp"},
+            "宾":  {p:["宀", "兵"], m:["mái nhà", "lính"], s:"Khách (兵) được mời vào nhà (宀) → khách"},
+            "就":  {p:["京", "尤"], m:["kinh đô", "đặc biệt"], s:"Đến kinh đô (京) làm việc đặc biệt (尤) → tới gần; liền"},
+            "层":  {p:["尸", "云"], m:["thân người", "mây"], s:"Mây (云) xếp lớp dưới mái (尸) → tầng, lớp"},
+            "工":  {p:["一", "丨", "一"], m:["ngang", "sổ", "ngang"], s:"Cái thước thợ hình chữ I → công việc"},
+            "差":  {p:["羊", "工"], m:["dê", "công"], s:"Dê (羊) làm việc (工) không giống nhau → khác, kém"},
+            "已":  {p:["コ", "乚"], m:["nét", "móc"], s:"Thai nhi đã thành hình → đã, rồi"},
+            "希":  {p:["乂", "巾"], m:["đan", "khăn"], s:"Khăn (巾) đan (乂) thưa, nhìn xuyên qua → hiếm; hy vọng"},
+            "带":  {p:["卅", "冖", "巾"], m:["ba mươi", "che", "khăn"], s:"Dải khăn (巾) buộc quanh người → dây lưng; mang theo"},
+            "帮":  {p:["邦", "巾"], m:["nước", "khăn"], s:"Khăn (巾) của cả nước (邦) chung tay → giúp"},
+            "帽":  {p:["巾", "冒"], m:["khăn", "trùm"], s:"Khăn (巾) trùm (冒) lên đầu → mũ"},
+            "干":  {p:["一", "十"], m:["ngang", "mười"], s:"Cái chĩa hai đầu → khô; làm"},
+            "应":  {p:["广", "⺍"], m:["mái nhà", "tay"], s:"Dưới mái (广) đưa tay hưởng ứng → nên; đáp lại"},
+            "当":  {p:["⺌", "彐"], m:["tay", "tay"], s:"Hai tay giữ cân → đúng lúc; đảm đương"},
+            "往":  {p:["彳", "主"], m:["bước", "chủ"], s:"Bước (彳) về nơi chủ (主) → đi về phía"},
+            "很":  {p:["彳", "艮"], m:["bước", "gân"], s:"Bước (彳) mạnh (艮) → rất"},
+            "得":  {p:["彳", "日", "寸"], m:["bước", "mặt trời", "tấc"], s:"Đi (彳) từng tấc (寸) rồi có được → được"},
+            "必":  {p:["心", "丿"], m:["tim", "phẩy"], s:"Mũi tên (丿) xuyên tim (心) không lay chuyển → phải, nhất định"},
+            "忙":  {p:["忄", "亡"], m:["tim", "mất"], s:"Tim (忄) như mất (亡) hồn → bận"},
+            "怎":  {p:["乍", "心"], m:["chợt", "tim"], s:"Tim (心) chợt (乍) thắc mắc → sao, thế nào"},
+            "总":  {p:["⺌", "口", "心"], m:["tia", "miệng", "tim"], s:"Gom nhiều tia về một miệng và tim → tổng, luôn"},
+            "意":  {p:["音", "心"], m:["âm", "tim"], s:"Âm thanh (音) trong tim (心) → ý nghĩa"},
+            "感":  {p:["咸", "心"], m:["đều", "tim"], s:"Cả tim (心) đều (咸) rung → cảm nhận"},
+            "愿":  {p:["原", "心"], m:["nguồn", "tim"], s:"Từ nguồn (原) của trái tim (心) → mong muốn"},
+            "成":  {p:["戊", "丁"], m:["mậu", "đinh"], s:"Dùng rìu (戊) đóng đinh (丁) xong → hoàn thành"},
+            "或":  {p:["戈", "口", "一"], m:["giáo", "miệng", "ngang"], s:"Cầm giáo (戈) canh vùng đất (口一) → hoặc"},
+            "所":  {p:["户", "斤"], m:["cửa", "rìu"], s:"Tiếng rìu (斤) đốn gỗ nơi cửa (户) → nơi chốn"},
+            "才":  {p:["一", "丿", "亅"], m:["ngang", "phẩy", "móc"], s:"Mầm cây vừa nhú lên → mới; tài"},
+            "护":  {p:["扌", "户"], m:["tay", "cửa"], s:"Tay (扌) giữ cửa (户) → bảo vệ"},
+            "报":  {p:["扌", "卩", "又"], m:["tay", "quỳ", "tay"], s:"Tay (扌) bắt kẻ quỳ (卩) trình lên → báo cáo"},
+            "担":  {p:["扌", "旦"], m:["tay", "bình minh"], s:"Tay (扌) gánh từ lúc bình minh (旦) → gánh; lo"},
+            "接":  {p:["扌", "妾"], m:["tay", "thiếp"], s:"Tay (扌) đón người hầu (妾) → tiếp đón, nhận"},
+            "搬":  {p:["扌", "般"], m:["tay", "thuyền"], s:"Tay (扌) chở lên thuyền (般) → chuyển dời"},
+            "故":  {p:["古", "攵"], m:["xưa", "đánh"], s:"Chuyện xưa (古) gõ (攵) nhắc lại → cũ; câu chuyện"},
+            "数":  {p:["娄", "攵"], m:["lâu", "đánh"], s:"Gõ (攵) từng cái mà đếm → số, đếm"},
+            "文":  {p:["亠", "乂"], m:["nắp", "chéo"], s:"Hình xăm chéo trên ngực người → văn, chữ"},
+            "方":  {p:["亠", "万"], m:["nắp", "vạn"], s:"Cái cày hai lưỡi → phương hướng, vuông"},
+            "旁":  {p:["亠", "方"], m:["nắp", "phương"], s:"Bên cạnh một phương (方) → bên cạnh"},
+            "旅":  {p:["方", "𠂉", "⺂"], m:["phương", "người", "theo"], s:"Người đi theo lá cờ (方) → du lịch"},
+            "更":  {p:["一", "曰", "乂"], m:["ngang", "nói", "chéo"], s:"Đánh lại từ đầu → thay đổi; hơn"},
+            "最":  {p:["曰", "取"], m:["nói", "lấy"], s:"Lấy (取) cái nói (曰) ra trước nhất → nhất"},
+            "机":  {p:["木", "几"], m:["gỗ", "bàn"], s:"Cái bàn (几) bằng gỗ (木) → máy, cơ hội"},
+            "条":  {p:["夂", "木"], m:["đi", "gỗ"], s:"Cành cây (木) vươn dài → dải, cái (lượng từ)"},
+            "极":  {p:["木", "及"], m:["gỗ", "tới"], s:"Gỗ (木) tới (及) tận nóc → cực, rất"},
+            "根":  {p:["木", "艮"], m:["gỗ", "gân"], s:"Phần gân (艮) cứng của cây (木) → gốc, rễ"},
+            "检":  {p:["木", "佥"], m:["gỗ", "tất cả"], s:"Xem xét tất cả (佥) thanh gỗ (木) → kiểm tra"},
+            "楼":  {p:["木", "娄"], m:["gỗ", "lầu"], s:"Gỗ (木) chồng lên cao → tầng, lầu"},
+            "正":  {p:["一", "止"], m:["ngang", "dừng"], s:"Dừng (止) đúng vạch (一) → đúng, chính"},
+            "段":  {p:["𠂆", "殳"], m:["vách", "đánh"], s:"Cầm gậy (殳) đập đá thành khúc → đoạn"},
+            "每":  {p:["𠂉", "母"], m:["người", "mẹ"], s:"Mẹ (母) chăm từng đứa → mỗi"},
+            "汉":  {p:["氵", "又"], m:["nước", "tay"], s:"Dòng sông (氵) Hán → Hán, Trung Hoa"},
+            "注":  {p:["氵", "主"], m:["nước", "chủ"], s:"Nước (氵) chảy về một chỗ chính (主) → đổ vào; chú ý"},
+            "洗":  {p:["氵", "先"], m:["nước", "trước"], s:"Nước (氵) dội trước (先) tiên → rửa"},
+            "清":  {p:["氵", "青"], m:["nước", "xanh"], s:"Nước (氵) trong xanh (青) → trong, rõ"},
+            "渴":  {p:["氵", "曷"], m:["nước", "sao"], s:"Hỏi (曷) nước (氵) ở đâu → khát"},
+            "游":  {p:["氵", "斿"], m:["nước", "cờ bay"], s:"Cờ (斿) bay trên nước (氵) → bơi; du ngoạn"},
+            "满":  {p:["氵", "㒼"], m:["nước", "đầy"], s:"Nước (氵) đầy tràn → đầy; hài lòng"},
+            "漂":  {p:["氵", "票"], m:["nước", "phiếu"], s:"Vé (票) trôi trên nước (氵) → trôi nổi; đẹp"},
+            "灯":  {p:["火", "丁"], m:["lửa", "đinh"], s:"Lửa (火) trên cây đinh (丁) → đèn"},
+            "然":  {p:["肉", "犬", "灬"], m:["thịt", "chó", "lửa"], s:"Nướng thịt (肉) chó (犬) trên lửa (灬) → đúng vậy; như thế"},
+            "照":  {p:["昭", "灬"], m:["sáng", "lửa"], s:"Lửa (灬) làm sáng (昭) → chiếu; chụp ảnh"},
+            "熊":  {p:["能", "灬"], m:["có thể", "lửa"], s:"Con thú khỏe (能) trên lửa (灬) → gấu"},
+            "爬":  {p:["爪", "巴"], m:["vuốt", "bám"], s:"Móng vuốt (爪) bám (巴) vào → bò, leo"},
+            "特":  {p:["牛", "寺"], m:["bò", "chùa"], s:"Con bò (牛) tế ở chùa (寺) là con đặc biệt → đặc biệt"},
+            "狗":  {p:["犭", "句"], m:["thú", "câu"], s:"Con thú (犭) sủa từng câu (句) → chó"},
+            "玩":  {p:["王", "元"], m:["ngọc", "đầu"], s:"Ngọc (王) chơi trong tay → chơi"},
+            "环":  {p:["王", "不"], m:["ngọc", "không"], s:"Ngọc (王) xâu thành vòng → vòng; hoàn cảnh"},
+            "现":  {p:["王", "见"], m:["ngọc", "thấy"], s:"Ngọc (王) lộ ra cho thấy (见) → hiện, bây giờ"},
+            "班":  {p:["王", "刀", "王"], m:["ngọc", "dao", "ngọc"], s:"Dao (刀) chia ngọc (王) thành hai phần → lớp, ca"},
+            "瓶":  {p:["并", "瓦"], m:["gộp", "ngói"], s:"Gốm (瓦) gộp (并) lại thành bình → chai, lọ"},
+            "生":  {p:["⺧", "土"], m:["mầm", "đất"], s:"Mầm (⺧) mọc từ đất (土) → sinh ra, sống"},
+            "男":  {p:["田", "力"], m:["ruộng", "sức"], s:"Dốc sức (力) ngoài ruộng (田) → đàn ông"},
+            "画":  {p:["一", "田", "凵"], m:["ngang", "ruộng", "khung"], s:"Vẽ ruộng (田) trong khung (凵) → vẽ, bức tranh"},
+            "留":  {p:["卯", "田"], m:["mão", "ruộng"], s:"Ở lại ruộng (田) → ở lại, giữ lại"},
+            "疼":  {p:["疒", "冬"], m:["bệnh", "đông"], s:"Bệnh (疒) lạnh như mùa đông (冬) → đau"},
+            "的":  {p:["白", "勺"], m:["trắng", "muỗng"], s:"Muỗng (勺) trắng (白) rõ ràng → của (trợ từ)"},
+            "盘":  {p:["舟", "皿"], m:["thuyền", "đĩa"], s:"Đĩa (皿) hình thuyền (舟) → đĩa, mâm"},
+            "相":  {p:["木", "目"], m:["gỗ", "mắt"], s:"Mắt (目) nhìn cây (木) → nhau; hình dáng"},
+            "真":  {p:["十", "目", "一", "八"], m:["mười", "mắt", "ngang", "chia"], s:"Mắt (目) nhìn thẳng không lệch → thật"},
+            "着":  {p:["羊", "目"], m:["dê", "mắt"], s:"Mắt (目) dán vào con dê (羊) → đang (tiếp diễn)"},
+            "碗":  {p:["石", "宛"], m:["đá", "cong"], s:"Đá (石) đẽo cong (宛) → bát"},
+            "礼":  {p:["礻", "乚"], m:["thần", "móc"], s:"Lễ dâng lên thần (礻) → lễ, quà"},
+            "离":  {p:["亠", "凶", "禸"], m:["nắp", "hung", "thú"], s:"Con chim bay khỏi lồng → rời, cách"},
+            "种":  {p:["禾", "中"], m:["lúa", "giữa"], s:"Cắm lúa (禾) vào giữa (中) ruộng → gieo trồng; loại"},
+            "空":  {p:["穴", "工"], m:["hang", "công"], s:"Đào (工) thành hang (穴) → trống, rỗng; không gian"},
+            "突":  {p:["穴", "犬"], m:["hang", "chó"], s:"Chó (犬) chui từ hang (穴) ra bất ngờ → đột nhiên"},
+            "站":  {p:["立", "占"], m:["đứng", "chiếm"], s:"Đứng (立) chiếm (占) chỗ → đứng; trạm"},
+            "笑":  {p:["竹", "夭"], m:["tre", "non"], s:"Tre (竹) non (夭) nghiêng như người cười → cười"},
+            "第":  {p:["竹", "弔"], m:["tre", "treo"], s:"Thẻ tre (竹) xếp thứ tự → thứ (số)"},
+            "筷":  {p:["竹", "快"], m:["tre", "nhanh"], s:"Tre (竹) gắp nhanh (快) → đũa"},
+            "简":  {p:["竹", "间"], m:["tre", "khoảng"], s:"Thẻ tre (竹) có khoảng cách (间) rõ → đơn giản; thư"},
+            "米":  {p:["丷", "木"], m:["hạt", "gỗ"], s:"Hạt gạo rơi bốn phía → gạo; mét"},
+            "终":  {p:["纟", "冬"], m:["sợi", "đông"], s:"Sợi (纟) dệt xong cuối mùa đông (冬) → cuối cùng"},
+            "经":  {p:["纟", "圣"], m:["sợi", "thánh"], s:"Sợi dọc (纟) của khung dệt → trải qua; kinh"},
+            "结":  {p:["纟", "吉"], m:["sợi", "tốt"], s:"Sợi (纟) buộc điềm tốt (吉) → kết, thắt"},
+            "而":  {p:["一", "冂", "丨丨"], m:["ngang", "khung", "râu"], s:"Hình bộ râu dài → mà, và"},
+            "聊":  {p:["耳", "卯"], m:["tai", "mão"], s:"Tai (耳) nghe chuyện phiếm → tán gẫu"},
+            "聪":  {p:["耳", "总"], m:["tai", "tổng"], s:"Tai (耳) tổng hợp (总) tất cả → thông minh"},
+            "自":  {p:["丿", "目"], m:["phẩy", "mắt"], s:"Hình cái mũi, người chỉ vào mũi mình → tự, bản thân"},
+            "舒":  {p:["舍", "予"], m:["nhà", "cho"], s:"Trong nhà (舍) được cho (予) thoải mái → dễ chịu"},
+            "节":  {p:["艹", "卩"], m:["cỏ", "đốt"], s:"Đốt tre (艹) chia khúc → tiết, ngày lễ"},
+            "药":  {p:["艹", "约"], m:["cỏ", "ước"], s:"Cỏ (艹) bốc theo đơn (约) → thuốc"},
+            "虽":  {p:["口", "虫"], m:["miệng", "sâu"], s:"Con sâu (虫) có miệng (口) — dù nhỏ vẫn cắn → tuy"},
+            "行":  {p:["彳", "亍"], m:["bước trái", "bước phải"], s:"Ngã tư đường, hai bên đều là bước chân → đi; được"},
+            "衬":  {p:["衤", "寸"], m:["áo", "tấc"], s:"Áo (衤) mặc sát từng tấc (寸) → áo lót; sơ mi"},
+            "被":  {p:["衤", "皮"], m:["áo", "da"], s:"Áo (衤) như lớp da (皮) phủ lên → chăn; bị"},
+            "裙":  {p:["衤", "君"], m:["áo", "vua"], s:"Áo (衤) của người quyền quý (君) → váy"},
+            "裤":  {p:["衤", "库"], m:["áo", "kho"], s:"Áo (衤) che chân như kho (库) → quần"},
+            "见":  {p:["目", "儿"], m:["mắt", "chân"], s:"Mắt (目) trên đôi chân (儿) → nhìn thấy"},
+            "角":  {p:["⺈", "用"], m:["sừng", "dùng"], s:"Hình cái sừng → góc; hào"},
+            "解":  {p:["角", "刀", "牛"], m:["sừng", "dao", "bò"], s:"Dao (刀) tách sừng (角) bò (牛) → giải, tháo"},
+            "超":  {p:["走", "召"], m:["đi", "gọi"], s:"Chạy (走) nhanh theo tiếng gọi (召) → vượt"},
+            "越":  {p:["走", "戉"], m:["đi", "rìu"], s:"Đi (走) vượt qua rìu (戉) chắn → vượt, càng"},
+            "跟":  {p:["足", "艮"], m:["chân", "gân"], s:"Gót chân (足) đi theo → theo, với"},
+            "踢":  {p:["足", "易"], m:["chân", "dễ"], s:"Chân (足) đá dễ dàng (易) → đá"},
+            "辆":  {p:["车", "两"], m:["xe", "hai"], s:"Xe (车) có hai (两) bánh → chiếc (lượng từ xe)"},
+            "过":  {p:["辶", "寸"], m:["đi", "tấc"], s:"Đi (辶) qua từng tấc (寸) → qua, trải qua"},
+            "运":  {p:["辶", "云"], m:["đi", "mây"], s:"Mây (云) trôi đi (辶) → vận chuyển, vận động"},
+            "还":  {p:["辶", "不"], m:["đi", "không"], s:"Đi (辶) rồi không (不) mất, quay lại → vẫn; trả"},
+            "这":  {p:["辶", "文"], m:["đi", "văn"], s:"Đi (辶) tới chữ (文) này → này, đây"},
+            "迟":  {p:["辶", "尺"], m:["đi", "thước"], s:"Đi (辶) từng thước (尺) → chậm, muộn"},
+            "选":  {p:["辶", "先"], m:["đi", "trước"], s:"Đi (辶) chọn cái đứng trước (先) → chọn"},
+            "遇":  {p:["辶", "禺"], m:["đi", "khỉ"], s:"Đi (辶) đường gặp con khỉ (禺) → gặp"},
+            "那":  {p:["⺈", "阝"], m:["hình", "ấp"], s:"Vùng đất (阝) xa kia → đó, kia"},
+            "邮":  {p:["由", "阝"], m:["do", "ấp"], s:"Từ (由) làng này (阝) sang làng khác → bưu, gửi"},
+            "邻":  {p:["令", "阝"], m:["lệnh", "ấp"], s:"Cùng một lệnh (令) trong ấp (阝) → láng giềng"},
+            "都":  {p:["者", "阝"], m:["người", "ấp"], s:"Nơi (阝) nhiều người (者) tụ → kinh đô; đều"},
+            "铅":  {p:["钅", "㕣"], m:["kim loại", "đầm"], s:"Kim loại (钅) mềm → chì"},
+            "银":  {p:["钅", "艮"], m:["kim loại", "gân"], s:"Kim loại (钅) cứng sáng → bạc"},
+            "锻":  {p:["钅", "段"], m:["kim loại", "đoạn"], s:"Đập kim loại (钅) từng đoạn (段) → rèn"},
+            "阿":  {p:["阝", "可"], m:["đồi", "có thể"], s:"Sườn đồi (阝) → tiếng gọi thân mật (a)"},
+            "附":  {p:["阝", "付"], m:["đồi", "giao"], s:"Giao (付) thêm bên đồi (阝) → phụ, gần"},
+            "除":  {p:["阝", "余"], m:["đồi", "dư"], s:"Bỏ phần dư (余) khỏi đồi (阝) → trừ, loại bỏ"},
+            "需":  {p:["雨", "而"], m:["mưa", "râu"], s:"Râu (而) ướt mưa (雨) chờ tạnh → cần"},
+            "非":  {p:["三", "三"], m:["ba", "ba"], s:"Hai cánh chim xòe ngược nhau → không, sai"},
+            "音":  {p:["立", "曰"], m:["đứng", "nói"], s:"Đứng (立) mà phát ra tiếng (曰) → âm thanh"},
+            "颜":  {p:["彦", "页"], m:["tài", "đầu"], s:"Vẻ đẹp (彦) trên khuôn mặt (页) → sắc mặt, màu"},
+            "饮":  {p:["饣", "欠"], m:["ăn", "há miệng"], s:"Há miệng (欠) đưa thức ăn (饣) vào → uống"},
+            "饱":  {p:["饣", "包"], m:["ăn", "bọc"], s:"Bụng bọc (包) đầy thức ăn (饣) → no"},
+            "饿":  {p:["饣", "我"], m:["ăn", "tôi"], s:"Tôi (我) cần thức ăn (饣) → đói"},
+            "香":  {p:["禾", "日"], m:["lúa", "mặt trời"], s:"Lúa (禾) chín dưới nắng (日) tỏa mùi → thơm"},
+            "骑":  {p:["马", "奇"], m:["ngựa", "kỳ"], s:"Ngồi lên ngựa (马) — tư thế lạ (奇) → cưỡi"}
         };
 
         // ============ SIMILAR CHARACTERS DATA ============
@@ -1261,6 +2080,15 @@
             return s ? s.due : -Infinity;
         }
 
+        // Hai hướng của cùng một từ là "thẻ anh em". Học cả hai trong cùng một ngày khiến từ đó
+        // hiện hai lần — một lần mặt Hán tự, một lần mặt tiếng Việt — và lần thứ hai chỉ còn là
+        // nhớ ngắn hạn chứ không đo được gì. Anki gọi cách hoãn này là "bury sibling": lịch hai
+        // hướng vẫn độc lập, chỉ đẩy hướng thứ hai sang ngày sau.
+        function siblingStudiedToday(wordKey, dir) {
+            const sib = state.srs[srsKey(wordKey, DIR_SIBLING[dir])];
+            return !!sib && sib.last >= startOfDay();
+        }
+
         // Thẻ tới hạn — mảng {w, dir, due} sắp xếp due tăng dần. dir rỗng = cả hai hướng.
         function dueList(dir, pool) {
             pool = pool || (typeof getPool === 'function' ? getPool() : VOCAB);
@@ -1270,7 +2098,9 @@
             for (const w of pool) {
                 for (const d of dirs) {
                     const s = state.srs[srsKey(w.key, d)];
-                    if (s && s.due <= limit) out.push({ w: w, dir: d, due: s.due });
+                    if (!s || s.due > limit) continue;
+                    if (siblingStudiedToday(w.key, d)) continue;
+                    out.push({ w: w, dir: d, due: s.due });
                 }
             }
             out.sort((a, b) => a.due - b.due);
@@ -1278,13 +2108,21 @@
         }
         function dueCount(dir, pool) { return dueList(dir, pool).length; }
 
-        // Thẻ chưa từng học, giữ thứ tự giáo trình (HSK 1 → 3), nhận mặt trước rồi mới tới viết
+        // Thẻ chưa từng học, giữ thứ tự giáo trình (HSK 1 → 3).
+        // Hướng viết chỉ mở sau khi hướng nhận mặt của cùng từ đã được chấm đạt ít nhất một lần:
+        // chưa nhận ra mặt chữ thì chưa viết được, và từ mới không còn hiện hai lần ngay ngày đầu.
         function newCardList(pool) {
             pool = pool || (typeof getPool === 'function' ? getPool() : VOCAB);
             const out = [];
             for (const w of pool) {
                 for (const d of DIR_ORDER) {
-                    if (!state.srs[srsKey(w.key, d)]) out.push({ w: w, dir: d });
+                    if (state.srs[srsKey(w.key, d)]) continue;
+                    if (d === DIR.PROD) {
+                        const recog = state.srs[srsKey(w.key, DIR.RECOG)];
+                        if (!recog || recog.reps < 1) continue;
+                    }
+                    if (siblingStudiedToday(w.key, d)) continue;
+                    out.push({ w: w, dir: d });
                 }
             }
             return out;
@@ -1296,13 +2134,37 @@
             return state.newToday.count;
         }
 
-        // Phiên học = thẻ tới hạn (tối đa maxReviews) + thẻ mới (phần còn lại của newPerDay)
+        // Phiên học = thẻ tới hạn (tối đa maxReviews) + thẻ mới (phần còn lại của newPerDay).
+        // Mỗi từ chỉ góp MỘT thẻ vào phiên; hướng còn lại đợi phiên sau — xem siblingStudiedToday().
         function buildSession(pool) {
             const st = state.settings;
-            const due = dueList(null, pool).slice(0, st.maxReviews);
+            const seen = {};
+            const pick = (list, limit) => {
+                const out = [];
+                for (const e of list) {
+                    if (out.length >= limit) break;
+                    if (seen[e.w.key]) continue;
+                    seen[e.w.key] = true;
+                    out.push({ w: e.w, dir: e.dir, isNew: !state.srs[srsKey(e.w.key, e.dir)] });
+                }
+                return out;
+            };
+            const due = pick(dueList(null, pool), st.maxReviews);
             const remainNew = Math.max(0, st.newPerDay - newTodayCount());
-            const fresh = remainNew > 0 ? newCardList(pool).slice(0, remainNew) : [];
-            return due.concat(fresh).map(e => ({ w: e.w, dir: e.dir }));
+            const fresh = remainNew > 0 ? pick(newCardList(pool), remainNew) : [];
+            return due.concat(fresh);
+        }
+
+        // Con số hiện trên màn hình Hôm nay và banner phải khớp đúng phiên sẽ chạy,
+        // nên đếm thẳng trên phiên thay vì cộng hai hướng rồi lệch vì phần lọc trùng ở trên.
+        function sessionStats(pool) {
+            const s = buildSession(pool);
+            return {
+                total: s.length,
+                recog: s.filter(e => e.dir === DIR.RECOG).length,
+                prod: s.filter(e => e.dir === DIR.PROD).length,
+                fresh: s.filter(e => e.isNew).length
+            };
         }
 
         function renderReviewBanner() {
@@ -1321,21 +2183,21 @@
                 exitBtn.hidden = false;
                 return;
             }
-            const nRecog = dueCount(DIR.RECOG);
-            const nProd = dueCount(DIR.PROD);
-            const n = nRecog + nProd;
-            if (n === 0) { banner.hidden = true; return; }
+            const st = sessionStats();
+            if (st.total === 0) { banner.hidden = true; return; }
             banner.hidden = false;
             icon.textContent = "🔥";
-            text.innerHTML = `<strong id="reviewDueCount">${n}</strong> thẻ tới hạn · ${nRecog} nhận mặt · ${nProd} viết chữ`;
+            text.innerHTML = `<strong id="reviewDueCount">${st.total}</strong> thẻ hôm nay · ${st.recog} nhận mặt · ${st.prod} viết chữ`;
             startBtn.hidden = false;
             exitBtn.hidden = true;
         }
         function exitReviewMode(silent) {
             state.reviewMode = false;
-            state.flashOrder = [];
+            state.flashOrder = freeOrder(getPool());
+            state.flashSource = "free";
             state.flashIdx = 0;
-            initFlash();
+            renderFlash();
+            updateChrome();
             renderReviewBanner();
             if (!silent) toast("Quay lại thư viện thẻ");
         }
@@ -1344,33 +2206,25 @@
             const root = document.getElementById("reviewForecast");
             if (!root) return;
             const pool = getPool();
-            const now = Date.now();
-            const startOfDay = (offset) => {
-                const d = new Date();
-                d.setHours(0,0,0,0);
-                d.setDate(d.getDate() + offset);
-                return d.getTime();
-            };
+            // Mốc 0h của hôm nay → hôm nay + 7
+            const dayStart = Array.from({length: 8}, (_, i) => startOfDay() + i * DAY_MS);
+
+            // Đếm THẺ, không đếm TỪ: mỗi từ có hai hướng với hai lịch riêng nên khoá là
+            // "<từ>_<cấp>:<hướng>". Biểu đồ chỉ nói về thẻ ĐÃ CÓ LỊCH — thẻ mới chưa học thì
+            // chưa có ngày để xếp vào, nên cột hôm nay thấp hơn số ở màn hình Hôm nay.
+            // Cột hôm nay lấy thẳng dueList(): đã gộp thẻ quá hạn và trừ thẻ hoãn sang hôm sau.
             const buckets = Array.from({length: 7}, () => 0);
-            let overdue = 0;
-            pool.forEach(w => {
-                if (state.progress[w.key] === STATUS.MASTERED) return;
-                const s = state.srs[w.key];
-                if (!s) return;
-                if (s.due <= now) {
-                    overdue++;
-                    buckets[0]++;
-                    return;
+            buckets[0] = dueList(null, pool).length;
+            for (const w of pool) {
+                for (const d of DIR_ORDER) {
+                    const s = state.srs[srsKey(w.key, d)];
+                    if (!s || s.due < dayStart[1] || s.due >= dayStart[7]) continue;
+                    for (let i = 1; i < 7; i++) {
+                        if (s.due < dayStart[i + 1]) { buckets[i]++; break; }
+                    }
                 }
-                for (let i = 0; i < 7; i++) {
-                    const lo = startOfDay(i);
-                    const hi = startOfDay(i + 1);
-                    if (s.due >= lo && s.due < hi) { buckets[i]++; break; }
-                }
-            });
+            }
             const max = Math.max(1, ...buckets);
-            const labels = ["Hôm nay","Mai","T2","T3","T4","T5","T6"];
-            // Generate proper short day labels for next 7 days starting today
             const dayShort = ["CN","T2","T3","T4","T5","T6","T7"];
             const today = new Date();
             const labelArr = [];
@@ -1394,7 +2248,7 @@
                       <div class="fc-label ${isToday ? 'today' : ''}">${labelArr[i]}</div>
                     </div>`;
             }).join("");
-            root.innerHTML = html + (overdue > 0 ? `<div style="position:absolute"></div>` : "");
+            root.innerHTML = html;
         }
 
         // ============ HELPERS ============
@@ -1624,13 +2478,58 @@
         });
 
         // ============ TAB SWITCHING ============
+        // Thanh tab dưới (điện thoại) chỉ có 5 mục; Luyện và Tra là nhóm gom ba màn hình mỗi bên.
+        const VIEW_GROUPS = {
+            practice: { views: ["quiz", "match", "similar"], label: { quiz: "Trắc nghiệm", match: "Ghép cặp", similar: "Phân biệt" } },
+            lookup:   { views: ["browse", "write", "radical"], label: { browse: "Từ điển", write: "Viết chữ", radical: "Bộ thủ" } }
+        };
+        const GROUP_LAST_KEY = "hsk_group_last_v1";
+        function groupOf(v) { return Object.keys(VIEW_GROUPS).find(g => VIEW_GROUPS[g].views.includes(v)) || null; }
+        function lastViewOfGroup(g) {
+            try {
+                const saved = JSON.parse(localStorage.getItem(GROUP_LAST_KEY) || "{}");
+                if (VIEW_GROUPS[g].views.includes(saved[g])) return saved[g];
+            } catch (e) {}
+            return VIEW_GROUPS[g].views[0];
+        }
+        function rememberGroupView(g, v) {
+            try {
+                const saved = JSON.parse(localStorage.getItem(GROUP_LAST_KEY) || "{}");
+                saved[g] = v;
+                localStorage.setItem(GROUP_LAST_KEY, JSON.stringify(saved));
+            } catch (e) {}
+        }
+        function renderSubNav(v) {
+            const root = $("#subNav");
+            const g = groupOf(v);
+            if (!g) { root.hidden = true; root.innerHTML = ""; return; }
+            root.hidden = false;
+            root.innerHTML = VIEW_GROUPS[g].views.map(x =>
+                `<button class="sub-tab${x === v ? " active" : ""}" data-view="${x}">${VIEW_GROUPS[g].label[x]}</button>`
+            ).join("");
+            $$("#subNav .sub-tab").forEach(b => b.addEventListener("click", () => switchView(b.dataset.view)));
+        }
+
+        // Phần khung dùng chung (mẹo, bộ lọc) chỉ có ích ở màn hình lấy pool đang lọc để học.
+        // Trong phiên ôn thì giấu hết để thẻ và nút chấm điểm nằm gọn trên một màn hình.
+        const VIEWS_WITH_FILTER = ["flash", "quiz", "match", "write"];
+        function updateChrome() {
+            const v = document.querySelector(".view.active")?.id.replace("view-", "") || "home";
+            const inSession = v === "flash" && state.flashSource === "session" && state.flashOrder.length > 0;
+            document.body.classList.toggle("on-home", v === "home");
+            document.body.classList.toggle("in-session", inSession);
+            document.body.classList.toggle("no-filter", !VIEWS_WITH_FILTER.includes(v));
+        }
+
         function switchView(v) {
+            const g = groupOf(v);
             $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
-            $$(".bn-tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
+            $$(".bn-tab").forEach(t => t.classList.toggle("active", t.dataset.view === v || (!!g && t.dataset.group === g)));
             $$(".view").forEach(s => s.classList.remove("active"));
             $("#view-" + v).classList.add("active");
-            // Tab Hôm nay cần gọn: ẩn banner mẹo và bộ lọc để số thẻ + nút ôn nằm trên màn hình đầu
-            document.body.classList.toggle("on-home", v === "home");
+            if (g) rememberGroupView(g, v);
+            renderSubNav(v);
+            updateChrome();
             if (v === "home") renderHomeToday();
             if (v === "flash") initFlash();
             if (v === "quiz") initQuiz();
@@ -1645,7 +2544,10 @@
         }
 
         $$(".tab").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.view)));
-        $$(".bn-tab").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.view)));
+        $$(".bn-tab").forEach(btn => btn.addEventListener("click", () => {
+            // Mục nhóm mở lại màn hình dùng gần nhất trong nhóm đó
+            switchView(btn.dataset.view || lastViewOfGroup(btn.dataset.group));
+        }));
 
         function refreshActiveView() {
             const active = document.querySelector(".tab.active")?.dataset.view || "home";
@@ -1661,8 +2563,12 @@
         }
 
         // ============ TIP BANNER ============
+        // Đóng một lần là nhớ — mẹo hiện lại sau mỗi lần mở app thì thành rác
+        const TIP_KEY = "hsk_tip_closed_v1";
+        try { if (localStorage.getItem(TIP_KEY) === "1") $("#tipBanner").style.display = "none"; } catch (e) {}
         $("#closeTip").addEventListener("click", () => {
             $("#tipBanner").style.display = "none";
+            try { localStorage.setItem(TIP_KEY, "1"); } catch (e) {}
         });
 
         // ============ FILTER COLLAPSE ============
@@ -1687,7 +2593,9 @@
         (function initFilterToggle() {
             let saved = null;
             try { saved = localStorage.getItem(FILTER_VIS_KEY); } catch (e) {}
-            setFilterVisible(saved !== "0"); // default visible
+            // Chưa có lựa chọn: desktop mở sẵn, điện thoại gập lại — bảng pinyin A–Z chiếm nửa màn hình
+            const isPhone = window.matchMedia("(max-width: 700px)").matches;
+            setFilterVisible(saved == null ? !isPhone : saved !== "0");
             $("#filterToggle").addEventListener("click", () => {
                 const cur = $("#filterToggle").getAttribute("aria-expanded") === "true";
                 setFilterVisible(!cur);
@@ -1706,7 +2614,7 @@
 
         function initFlash() {
             const pool = getPool();
-            if (pool.length === 0) return;
+            if (pool.length === 0) { updateChrome(); return; }
             if (state.flashOrder.length === 0) {
                 const session = buildSession(pool);
                 if (session.length) {
@@ -1720,12 +2628,13 @@
                 state.flashIdx = 0;
             }
             renderFlash();
+            updateChrome();
         }
 
         function finishSession() {
             if (state.flashSource === "session") {
-                const left = dueCount();
-                toast(left ? "Còn " + left + " thẻ tới hạn" : "🎉 Xong phiên hôm nay!");
+                const left = sessionStats().total;
+                toast(left ? "Còn " + left + " thẻ hôm nay" : "🎉 Xong phiên hôm nay!");
                 state.flashOrder = [];
                 state.flashIdx = 0;
                 initFlash();
@@ -1799,6 +2708,16 @@
             $$("#cardActions .ivl").forEach(el => {
                 el.textContent = srsPreview(key, parseInt(el.dataset.ivl, 10));
             });
+
+            // Câu ví dụ — cả hai hướng đều cần, vì mặt sau là lúc đối chiếu cách dùng
+            const ex = EXAMPLES[w.key];
+            const exBox = $("#backExample");
+            exBox.hidden = !ex;
+            if (ex) {
+                $("#exZh").textContent = ex[0];
+                $("#exPy").textContent = ex[1];
+                $("#exVi").textContent = ex[2];
+            }
 
             // Radical breakdown on back
             const existingRad = $("#backContent .radical-box");
@@ -2178,6 +3097,7 @@
         <div class="p">${w.p}</div>
         <div class="hv">${w.hv}</div>
         <div class="m">${w.v}</div>
+        ${EXAMPLES[w.key] ? `<div class="ex" lang="zh">${EXAMPLES[w.key][0]}<span class="ex-vi">${EXAMPLES[w.key][2]}</span></div>` : ""}
         <div class="meta-row">
           <span>${STATUS_LABEL[s]}</span>
           <span class="lv-badge">HSK ${w.lv}</span>
@@ -2773,6 +3693,7 @@
             const flashTab = document.querySelector('.tab[data-view="flash"]');
             if (flashTab) flashTab.click();
             renderFlash();
+            updateChrome();
             renderReviewBanner();
             toast("Bắt đầu phiên " + session.length + " thẻ");
         }
@@ -2783,19 +3704,15 @@
         function renderHomeToday() {
             if (!document.getElementById("view-home")) return;
             const pool = getPool();
-            const nRecog = dueCount(DIR.RECOG, pool);
-            const nProd = dueCount(DIR.PROD, pool);
-            const remainNew = Math.max(0, state.settings.newPerDay - newTodayCount());
-            const fresh = remainNew > 0 ? Math.min(remainNew, newCardList(pool).length) : 0;
-            const total = Math.min(nRecog + nProd, state.settings.maxReviews) + fresh;
+            const st = sessionStats(pool);
 
-            document.getElementById("homeDueNum").textContent = total;
-            document.getElementById("homeRecog").textContent = nRecog;
-            document.getElementById("homeProd").textContent = nProd;
-            document.getElementById("homeNew").textContent = fresh;
+            document.getElementById("homeDueNum").textContent = st.total;
+            document.getElementById("homeRecog").textContent = st.recog;
+            document.getElementById("homeProd").textContent = st.prod;
+            document.getElementById("homeNew").textContent = st.fresh;
             const startBtn = document.getElementById("homeStartBtn");
-            startBtn.disabled = total === 0;
-            startBtn.textContent = total === 0 ? "Hôm nay xong rồi 🎉" : "Bắt đầu ôn";
+            startBtn.disabled = st.total === 0;
+            startBtn.textContent = st.total === 0 ? "Hôm nay xong rồi 🎉" : "Bắt đầu ôn";
 
             // Phiên học chỉ lấy trong pool đang lọc — nói rõ nếu đang lọc
             const fl = document.getElementById("homeFilter");
@@ -2817,18 +3734,21 @@
         function renderLeechBox() {
             const box = document.getElementById("homeLeech");
             if (!box) return;
+            // Gộp theo TỪ: hai hướng cùng là thẻ khó thì vẫn chỉ một chip, số là hướng quên nhiều hơn.
+            // Hiện hai chip 爱 cạnh nhau trông như lỗi lặp từ; chi tiết từng hướng để ở tooltip.
             const items = [];
             for (const w of VOCAB) {
-                for (const d of DIR_ORDER) {
-                    const k = srsKey(w.key, d);
-                    if (isLeech(k)) items.push({ w: w, dir: d, lapses: state.srs[k].lapses });
-                }
+                const dirs = DIR_ORDER.filter(d => isLeech(srsKey(w.key, d)));
+                if (dirs.length === 0) continue;
+                const lapses = Math.max(...dirs.map(d => state.srs[srsKey(w.key, d)].lapses));
+                items.push({ w: w, dirs: dirs, lapses: lapses });
             }
             if (items.length === 0) { box.hidden = true; return; }
             items.sort((a, b) => b.lapses - a.lapses);
-            const rows = items.slice(0, 8).map(it =>
-                `<span class="leech-chip" title="${DIR_LABEL[it.dir]} · quên ${it.lapses} lần">${it.w.h}<em>${it.lapses}</em></span>`
-            ).join("");
+            const rows = items.slice(0, 8).map(it => {
+                const detail = it.dirs.map(d => DIR_LABEL[d] + " " + state.srs[srsKey(it.w.key, d)].lapses + " lần").join(" · ");
+                return `<span class="leech-chip" title="quên: ${detail}">${it.w.h}<em>${it.lapses}</em></span>`;
+            }).join("");
             box.hidden = false;
             box.innerHTML = `<div class="leech-title">🐢 Hay quên (${items.length}) — thử tách bộ thủ để nhớ</div>
                 <div class="leech-list">${rows}</div>`;

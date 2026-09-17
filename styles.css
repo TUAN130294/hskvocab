@@ -932,12 +932,14 @@ nav.tabs::-webkit-scrollbar { display: none; }
 .back-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    justify-content: center;
+    min-height: 100%;
+    justify-content: safe center;   /* dài quá thì neo lên trên rồi cuộn, không cắt mất đầu */
     align-items: center;
     text-align: center;
     gap: 12px;
 }
+.face.back { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.face.back::-webkit-scrollbar { display: none; }
 .back-hanzi {
     font-family: var(--font-han);
     font-weight: 600;
@@ -1774,6 +1776,15 @@ nav.tabs::-webkit-scrollbar { display: none; }
     letter-spacing: -0.01em;
 }
 
+/* Ghi chú nhỏ dưới tiêu đề mục — nói rõ phạm vi của con số bên dưới */
+.section-note {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ink-mute);
+    margin: -12px 0 14px;
+}
+
 .level-progress-block { margin-bottom: 18px; }
 .level-progress-block:last-child { margin-bottom: 0; }
 .lpb-header {
@@ -2455,9 +2466,9 @@ nav.tabs::-webkit-scrollbar { display: none; }
 [data-theme="ink"] .word-card .speak-mini:hover, [data-theme="ink"] .word-card .speak-mini.speaking {
     background: var(--accent); border-color: var(--accent); color: #0e1411;
 }
-[data-theme="ink"] .stat-pill.new .num,
+[data-theme="ink"] .stat-pill.new .num { color: var(--accent); }
 [data-theme="ink"] .word-card.s-new::before,
-[data-theme="ink"] .stat-card.s-new::before { color: var(--accent); background: var(--accent); }
+[data-theme="ink"] .stat-card.s-new::before { background: var(--accent); }
 [data-theme="ink"] .bn-tab.active .bn-icon { color: var(--accent); }
 [data-theme="ink"] .bn-tab.active::before { background: var(--accent); }
 [data-theme="ink"] .tip-banner::before { background: var(--accent); }
@@ -2912,7 +2923,7 @@ nav.tabs {
 .speak-btn svg { width: 14px; height: 14px; }
 
 /* Hanzi — slightly larger, optical center */
-.hanzi-big { font-size: clamp(96px, 16vw, 144px); margin-top: -8px; }
+.hanzi-big { font-size: clamp(96px, 16vw, 144px); }
 
 /* Tap hint — subtler */
 .tap-hint {
@@ -3275,10 +3286,129 @@ button:focus:not(:focus-visible) { outline: none; }
 }
 .data-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 
-/* Tab "Hôm nay": bỏ mọi thứ không cần, để số thẻ và nút ôn nằm trên màn hình đầu */
+/* Mẹo + bộ lọc chỉ hiện ở màn lấy pool đang lọc để học (Thẻ học, Trắc nghiệm, Ghép cặp, Viết).
+   Hôm nay, Tiến độ, Từ điển, Bộ thủ, Phân biệt không cần; trong phiên ôn cũng giấu để thẻ
+   và nút chấm điểm nằm gọn trên một màn hình điện thoại. */
 body.on-home #tipBanner,
 body.on-home #filterToggle,
-body.on-home #filterCollapsible { display: none !important; }
+body.on-home #filterCollapsible,
+body.no-filter #tipBanner,
+body.no-filter #filterToggle,
+body.no-filter #filterCollapsible,
+body.in-session #tipBanner,
+body.in-session #filterToggle,
+body.in-session #filterCollapsible { display: none !important; }
+
+/* ===== CÂU VÍ DỤ ================================================ */
+/* Mặt sau thẻ: dưới nghĩa, trên ô bộ thủ. Câu Trung to hơn pinyin và nghĩa một bậc. */
+.example-box {
+    width: 100%;
+    max-width: 380px;
+    margin-top: 4px;
+    padding: 10px 14px;
+    border-left: 2px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    text-align: left;
+}
+.example-box .ex-zh {
+    font-family: var(--font-han);
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--ink);
+}
+.example-box .ex-py {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-mute);
+    margin-top: 2px;
+}
+.example-box .ex-vi {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.4;
+}
+/* Thẻ từ điển: một dòng câu Trung, nghĩa Việt mờ hơn bên dưới */
+.word-card .ex {
+    font-family: var(--font-han);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--hairline);
+}
+.word-card .ex .ex-vi {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    color: var(--ink-mute);
+    margin-top: 1px;
+}
+
+/* ===== HÀNG CHỌN PHỤ (nhóm Luyện / Tra, chỉ điện thoại) ========= */
+.sub-nav {
+    display: none;
+    gap: 6px;
+    padding: 4px;
+    margin-bottom: 14px;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-pill);
+}
+.sub-tab {
+    flex: 1;
+    padding: 9px 8px;
+    border: none;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--ink-mute);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .15s ease, color .15s ease;
+}
+.sub-tab.active { background: var(--accent); color: #fff; }
+[data-theme="ink"] .sub-tab.active { color: #0e1411; }
+
+@media (max-width: 700px) {
+    .sub-nav:not([hidden]) { display: flex; }
+
+    /* Nhãn hướng nằm dưới hàng nhãn góc, không đè lên "ĐÃ THUỘC" / "汉字 · HANZI" hay chữ Hán */
+    .dir-tag { top: 46px; }
+
+    /* Trong phiên ôn: 4 nút chấm điểm dính đáy ngay trên thanh tab.
+       Lật thẻ → chấm → thẻ tiếp, không phải cuộn lên xuống mỗi thẻ. */
+    body.in-session #app { padding-bottom: calc(176px + env(safe-area-inset-bottom)); }
+    body.in-session .card-actions.rate-4 {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: calc(62px + env(safe-area-inset-bottom));
+        z-index: 49;
+        width: auto;            /* .card-actions gốc có width:100% — cố định thì phải để left/right quyết định */
+        max-width: none;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        padding: 8px;
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: var(--r-lg);
+        box-shadow: var(--shadow-lg);
+    }
+    body.in-session .card-actions.rate-4 .action-btn { padding: 11px 4px; font-size: 14px; }
+    body.in-session .card-actions.rate-4 .action-btn .ivl { font-size: 10px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body.in-session .flash-toggles,
+    body.in-session .swipe-hint { display: none; }
+    body.in-session .flash-wrap { gap: 12px; }
+    body.in-session .review-banner { padding: 10px 12px; }
+    body.in-session .toast { bottom: calc(220px + env(safe-area-inset-bottom)); }
+}
 
 .home-filter {
     font-family: var(--font-sans);

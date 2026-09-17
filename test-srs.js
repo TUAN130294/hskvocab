@@ -10,7 +10,7 @@ function slice(startMark, endMark) {
 }
 
 const consts = slice('const DIR = { RECOG', 'function srsKey(wordKey, dir) { return wordKey + ":" + dir; }');
-const core = slice('function startOfDay(ts) {', 'return due.concat(fresh).map(e => ({ w: e.w, dir: e.dir }));\n        }');
+const core = slice('function startOfDay(ts) {', 'return due.concat(fresh);\n        }');
 
 const VOCAB = [
   { h: "爱", lv: 1 }, { h: "八", lv: 1 }, { h: "杯子", lv: 1 },
@@ -26,11 +26,13 @@ function todayStr() { const d = new Date(); return new Date(d.getTime() - d.getT
 function getPool() { return VOCAB; }
 ${core}
 return { state, srsKey, srsApply, srsNext, srsPreview, srsDue, isLeech, dueList, dueCount,
-         newCardList, buildSession, newTodayCount, migrateSrsV1, newSrsCard, DIR, RATE, startOfDay, endOfToday };
+         newCardList, buildSession, newTodayCount, migrateSrsV1, newSrsCard, siblingStudiedToday,
+         DIR, RATE, startOfDay, endOfToday };
 `;
 
 const api = new Function("VOCAB", harness)(VOCAB);
-const { state, srsKey, srsApply, srsPreview, isLeech, dueList, dueCount, buildSession, migrateSrsV1, DIR, RATE } = api;
+const { state, srsKey, srsApply, srsPreview, isLeech, dueList, dueCount, buildSession,
+        newCardList, migrateSrsV1, DIR, RATE } = api;
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.log("  ✗ " + msg); } }
@@ -78,6 +80,7 @@ state.srs = {};
 const kr = srsKey("时间_2", DIR.RECOG), kp = srsKey("时间_2", DIR.PROD);
 srsApply(kr, RATE.GOOD); srsApply(kr, RATE.GOOD); srsApply(kr, RATE.EASY);
 srsApply(kp, RATE.FORGOT);
+state.srs[kr].last = Date.now() - 3 * 86400000;   // nhận mặt học từ mấy hôm trước, không dính phần hoãn
 ok(state.srs[kr].interval > 5, "hướng nhận mặt đi xa (" + state.srs[kr].interval + " ngày)");
 eq(state.srs[kp].interval, 0, "hướng viết vẫn ở mức 0 — lịch không bị kéo theo");
 eq(dueCount(DIR.RECOG), 0, "nhận mặt chưa tới hạn");
@@ -129,6 +132,34 @@ srsApply(srsKey("爱_1", DIR.RECOG), RATE.FORGOT);
 state.srs[srsKey("八_1", DIR.RECOG)] = { ease: 2.5, interval: 0, reps: 1, lapses: 0, due: 0, last: 0 };
 const dl = dueList();
 ok(dl.length === 2 && dl[0].w.key === "八_1", "dueList sắp xếp overdue trước");
+
+// --- 12. Một từ chỉ hiện MỘT lần mỗi ngày, không kèm bản tiếng Việt ngay sau ---
+state.srs = {};
+state.newToday = { date: "", count: 0 };
+state.settings = { newPerDay: 10, maxReviews: 120 };
+const s12 = buildSession();
+ok(s12.length > 0 && s12.every(e => e.dir === DIR.RECOG), "từ mới chỉ mở hướng nhận mặt");
+eq(new Set(s12.map(e => e.w.key)).size, s12.length, "không từ nào lặp lại trong phiên");
+
+const kw = "杯子_1";
+const prodOf = k => newCardList().filter(e => e.w.key === k && e.dir === DIR.PROD).length;
+eq(prodOf(kw), 0, "chưa học nhận mặt → hướng viết chưa mở");
+srsApply(srsKey(kw, DIR.RECOG), RATE.GOOD);
+eq(prodOf(kw), 0, "vừa học nhận mặt hôm nay → hướng viết đợi hôm sau");
+state.srs[srsKey(kw, DIR.RECOG)].last = Date.now() - 86400000;
+eq(prodOf(kw), 1, "sang hôm sau → hướng viết mới mở");
+
+// --- 13. Hai hướng cùng tới hạn → phiên chỉ lấy một ---
+state.srs = {};
+state.settings = { newPerDay: 0, maxReviews: 120 };
+const twoDaysAgo = Date.now() - 2 * 86400000;
+state.srs[srsKey("说_2", DIR.RECOG)] = { ease: 2.5, interval: 1, reps: 2, lapses: 0, due: twoDaysAgo, last: twoDaysAgo };
+state.srs[srsKey("说_2", DIR.PROD)] = { ease: 2.5, interval: 1, reps: 1, lapses: 0, due: twoDaysAgo, last: twoDaysAgo };
+eq(dueList().length, 2, "cả hai hướng đều tới hạn");
+eq(buildSession().length, 1, "phiên chỉ lấy một hướng của mỗi từ");
+srsApply(srsKey("说_2", DIR.RECOG), RATE.GOOD);
+eq(dueCount(DIR.PROD), 0, "vừa ôn nhận mặt hôm nay → hướng viết hoãn sang hôm sau");
+eq(buildSession().length, 0, "hết thẻ cho hôm nay, không lặp lại từ vừa học");
 
 console.log("\n" + (fail === 0 ? "PASS" : "FAIL") + ": " + pass + " đạt, " + fail + " hỏng");
 process.exit(fail === 0 ? 0 : 1);
