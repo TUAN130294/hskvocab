@@ -55,6 +55,15 @@ Dưới mỗi nút hiện khoảng cách ôn tiếp theo để chấm cho chính
 Nhận mặt chữ dễ hơn viết chữ rất nhiều. Gộp chung một lịch sẽ kéo giãn khoảng cách ôn của
 hướng viết một cách sai lệch, nên mỗi từ sinh hai thẻ với hai lịch riêng.
 
+**Mỗi ngày một từ chỉ hiện đúng một lần.** Hai lịch độc lập nhưng không bao giờ gặp nhau trong
+cùng một phiên: nếu cả hai hướng cùng tới hạn, hướng còn lại đợi sang hôm sau (Anki gọi là
+*bury sibling*). Học liền hai mặt của một từ chỉ đo được trí nhớ ngắn hạn. Cùng lý do, từ mới
+chỉ mở hướng **nhận mặt**; hướng **viết chữ** mở ra sau khi hướng nhận mặt đã được chấm đạt ít
+nhất một lần — chưa nhận ra mặt chữ thì chưa viết được.
+
+Vì vậy con số trên màn hình Hôm nay là **số thẻ của phiên hôm nay** (đã trừ phần hoãn), không
+phải tổng thô hai hướng: `Nhận mặt + Viết chữ` = tổng, `trong đó thẻ mới` nằm bên trong tổng đó.
+
 Nhịp độ mặc định: **15 thẻ mới/ngày**, tối đa **120 thẻ ôn/ngày** (chỉnh trong tab Tiến độ).
 Chấm *Quên* đẩy thẻ về cuối hàng đợi, ôn lại ngay trong phiên. Thẻ quên ≥ 6 lần được gắn cờ
 🐢 ở màn hình Hôm nay kèm gợi ý học lại bằng bộ thủ.

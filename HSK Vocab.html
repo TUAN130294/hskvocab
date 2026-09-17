@@ -146,14 +146,14 @@
             <div class="home-wrap">
                 <div class="home-due">
                     <div class="home-num" id="homeDueNum">0</div>
-                    <div class="home-lbl">thẻ đến hạn</div>
+                    <div class="home-lbl">thẻ hôm nay</div>
                     <div class="home-filter" id="homeFilter" hidden></div>
                     <button class="home-start" id="homeStartBtn">Bắt đầu ôn</button>
                 </div>
                 <div class="home-split">
                     <div class="hs-row"><span class="hs-name">Nhận mặt</span><span class="hs-val" id="homeRecog">0</span></div>
                     <div class="hs-row"><span class="hs-name">Viết chữ</span><span class="hs-val" id="homeProd">0</span></div>
-                    <div class="hs-row"><span class="hs-name">Thẻ mới hôm nay</span><span class="hs-val" id="homeNew">0</span></div>
+                    <div class="hs-row"><span class="hs-name">trong đó thẻ mới</span><span class="hs-val" id="homeNew">0</span></div>
                 </div>
                 <div class="home-leech" id="homeLeech" hidden></div>
                 <div class="home-heat">
@@ -555,6 +555,7 @@
         const DIR = { RECOG: "recog", PROD: "prod" };
         const DIR_LABEL = { recog: "Nhận mặt", prod: "Viết chữ" };
         const DIR_ORDER = [DIR.RECOG, DIR.PROD];
+        const DIR_SIBLING = { recog: "prod", prod: "recog" };   // hai thẻ của cùng một từ
         const LEECH_LAPSES = 6;               // quên quá số lần này → gắn cờ thẻ khó
         const DEFAULT_SETTINGS = { newPerDay: 15, maxReviews: 120 };
         const RATE = { FORGOT: 1, HARD: 2, GOOD: 3, EASY: 4 };
@@ -1261,6 +1262,15 @@
             return s ? s.due : -Infinity;
         }
 
+        // Hai hướng của cùng một từ là "thẻ anh em". Học cả hai trong cùng một ngày khiến từ đó
+        // hiện hai lần — một lần mặt Hán tự, một lần mặt tiếng Việt — và lần thứ hai chỉ còn là
+        // nhớ ngắn hạn chứ không đo được gì. Anki gọi cách hoãn này là "bury sibling": lịch hai
+        // hướng vẫn độc lập, chỉ đẩy hướng thứ hai sang ngày sau.
+        function siblingStudiedToday(wordKey, dir) {
+            const sib = state.srs[srsKey(wordKey, DIR_SIBLING[dir])];
+            return !!sib && sib.last >= startOfDay();
+        }
+
         // Thẻ tới hạn — mảng {w, dir, due} sắp xếp due tăng dần. dir rỗng = cả hai hướng.
         function dueList(dir, pool) {
             pool = pool || (typeof getPool === 'function' ? getPool() : VOCAB);
@@ -1270,7 +1280,9 @@
             for (const w of pool) {
                 for (const d of dirs) {
                     const s = state.srs[srsKey(w.key, d)];
-                    if (s && s.due <= limit) out.push({ w: w, dir: d, due: s.due });
+                    if (!s || s.due > limit) continue;
+                    if (siblingStudiedToday(w.key, d)) continue;
+                    out.push({ w: w, dir: d, due: s.due });
                 }
             }
             out.sort((a, b) => a.due - b.due);
@@ -1278,13 +1290,21 @@
         }
         function dueCount(dir, pool) { return dueList(dir, pool).length; }
 
-        // Thẻ chưa từng học, giữ thứ tự giáo trình (HSK 1 → 3), nhận mặt trước rồi mới tới viết
+        // Thẻ chưa từng học, giữ thứ tự giáo trình (HSK 1 → 3).
+        // Hướng viết chỉ mở sau khi hướng nhận mặt của cùng từ đã được chấm đạt ít nhất một lần:
+        // chưa nhận ra mặt chữ thì chưa viết được, và từ mới không còn hiện hai lần ngay ngày đầu.
         function newCardList(pool) {
             pool = pool || (typeof getPool === 'function' ? getPool() : VOCAB);
             const out = [];
             for (const w of pool) {
                 for (const d of DIR_ORDER) {
-                    if (!state.srs[srsKey(w.key, d)]) out.push({ w: w, dir: d });
+                    if (state.srs[srsKey(w.key, d)]) continue;
+                    if (d === DIR.PROD) {
+                        const recog = state.srs[srsKey(w.key, DIR.RECOG)];
+                        if (!recog || recog.reps < 1) continue;
+                    }
+                    if (siblingStudiedToday(w.key, d)) continue;
+                    out.push({ w: w, dir: d });
                 }
             }
             return out;
@@ -1296,13 +1316,37 @@
             return state.newToday.count;
         }
 
-        // Phiên học = thẻ tới hạn (tối đa maxReviews) + thẻ mới (phần còn lại của newPerDay)
+        // Phiên học = thẻ tới hạn (tối đa maxReviews) + thẻ mới (phần còn lại của newPerDay).
+        // Mỗi từ chỉ góp MỘT thẻ vào phiên; hướng còn lại đợi phiên sau — xem siblingStudiedToday().
         function buildSession(pool) {
             const st = state.settings;
-            const due = dueList(null, pool).slice(0, st.maxReviews);
+            const seen = {};
+            const pick = (list, limit) => {
+                const out = [];
+                for (const e of list) {
+                    if (out.length >= limit) break;
+                    if (seen[e.w.key]) continue;
+                    seen[e.w.key] = true;
+                    out.push({ w: e.w, dir: e.dir, isNew: !state.srs[srsKey(e.w.key, e.dir)] });
+                }
+                return out;
+            };
+            const due = pick(dueList(null, pool), st.maxReviews);
             const remainNew = Math.max(0, st.newPerDay - newTodayCount());
-            const fresh = remainNew > 0 ? newCardList(pool).slice(0, remainNew) : [];
-            return due.concat(fresh).map(e => ({ w: e.w, dir: e.dir }));
+            const fresh = remainNew > 0 ? pick(newCardList(pool), remainNew) : [];
+            return due.concat(fresh);
+        }
+
+        // Con số hiện trên màn hình Hôm nay và banner phải khớp đúng phiên sẽ chạy,
+        // nên đếm thẳng trên phiên thay vì cộng hai hướng rồi lệch vì phần lọc trùng ở trên.
+        function sessionStats(pool) {
+            const s = buildSession(pool);
+            return {
+                total: s.length,
+                recog: s.filter(e => e.dir === DIR.RECOG).length,
+                prod: s.filter(e => e.dir === DIR.PROD).length,
+                fresh: s.filter(e => e.isNew).length
+            };
         }
 
         function renderReviewBanner() {
@@ -1321,13 +1365,11 @@
                 exitBtn.hidden = false;
                 return;
             }
-            const nRecog = dueCount(DIR.RECOG);
-            const nProd = dueCount(DIR.PROD);
-            const n = nRecog + nProd;
-            if (n === 0) { banner.hidden = true; return; }
+            const st = sessionStats();
+            if (st.total === 0) { banner.hidden = true; return; }
             banner.hidden = false;
             icon.textContent = "🔥";
-            text.innerHTML = `<strong id="reviewDueCount">${n}</strong> thẻ tới hạn · ${nRecog} nhận mặt · ${nProd} viết chữ`;
+            text.innerHTML = `<strong id="reviewDueCount">${st.total}</strong> thẻ hôm nay · ${st.recog} nhận mặt · ${st.prod} viết chữ`;
             startBtn.hidden = false;
             exitBtn.hidden = true;
         }
@@ -1724,8 +1766,8 @@
 
         function finishSession() {
             if (state.flashSource === "session") {
-                const left = dueCount();
-                toast(left ? "Còn " + left + " thẻ tới hạn" : "🎉 Xong phiên hôm nay!");
+                const left = sessionStats().total;
+                toast(left ? "Còn " + left + " thẻ hôm nay" : "🎉 Xong phiên hôm nay!");
                 state.flashOrder = [];
                 state.flashIdx = 0;
                 initFlash();
@@ -2783,19 +2825,15 @@
         function renderHomeToday() {
             if (!document.getElementById("view-home")) return;
             const pool = getPool();
-            const nRecog = dueCount(DIR.RECOG, pool);
-            const nProd = dueCount(DIR.PROD, pool);
-            const remainNew = Math.max(0, state.settings.newPerDay - newTodayCount());
-            const fresh = remainNew > 0 ? Math.min(remainNew, newCardList(pool).length) : 0;
-            const total = Math.min(nRecog + nProd, state.settings.maxReviews) + fresh;
+            const st = sessionStats(pool);
 
-            document.getElementById("homeDueNum").textContent = total;
-            document.getElementById("homeRecog").textContent = nRecog;
-            document.getElementById("homeProd").textContent = nProd;
-            document.getElementById("homeNew").textContent = fresh;
+            document.getElementById("homeDueNum").textContent = st.total;
+            document.getElementById("homeRecog").textContent = st.recog;
+            document.getElementById("homeProd").textContent = st.prod;
+            document.getElementById("homeNew").textContent = st.fresh;
             const startBtn = document.getElementById("homeStartBtn");
-            startBtn.disabled = total === 0;
-            startBtn.textContent = total === 0 ? "Hôm nay xong rồi 🎉" : "Bắt đầu ôn";
+            startBtn.disabled = st.total === 0;
+            startBtn.textContent = st.total === 0 ? "Hôm nay xong rồi 🎉" : "Bắt đầu ôn";
 
             // Phiên học chỉ lấy trong pool đang lọc — nói rõ nếu đang lọc
             const fl = document.getElementById("homeFilter");
