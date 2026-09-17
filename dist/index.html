@@ -141,6 +141,8 @@
             <button class="tab" data-view="similar"><span class="ch">辨</span> Phân biệt</button>
             <button class="tab" data-view="stats"><span class="ch">计</span> Tiến độ</button>
         </nav>
+        <!-- Hàng chọn phụ cho nhóm Luyện / Tra trên điện thoại — desktop đã có đủ 9 tab ở trên -->
+        <div class="sub-nav" id="subNav" hidden></div>
 
         <section class="view active" id="view-home">
             <div class="home-wrap">
@@ -430,6 +432,7 @@
     </div>
 
     <!-- Bottom navigation (mobile only) -->
+    <!-- 5 mục: hai mục "Luyện" và "Tra" là nhóm — chọn xong sẽ hiện hàng chọn phụ phía trên nội dung -->
     <nav class="bottom-nav" id="bottomNav">
         <button class="bn-tab active" data-view="home">
             <span class="bn-icon">今</span>
@@ -439,29 +442,13 @@
             <span class="bn-icon">卡</span>
             <span class="bn-lbl">Thẻ học</span>
         </button>
-        <button class="bn-tab" data-view="quiz">
-            <span class="bn-icon">测</span>
-            <span class="bn-lbl">Quiz</span>
+        <button class="bn-tab" data-group="practice">
+            <span class="bn-icon">练</span>
+            <span class="bn-lbl">Luyện</span>
         </button>
-        <button class="bn-tab" data-view="match">
-            <span class="bn-icon">配</span>
-            <span class="bn-lbl">Ghép cặp</span>
-        </button>
-        <button class="bn-tab" data-view="browse">
+        <button class="bn-tab" data-group="lookup">
             <span class="bn-icon">典</span>
-            <span class="bn-lbl">Từ điển</span>
-        </button>
-        <button class="bn-tab" data-view="write">
-            <span class="bn-icon">笔</span>
-            <span class="bn-lbl">Viết</span>
-        </button>
-        <button class="bn-tab" data-view="radical">
-            <span class="bn-icon">部</span>
-            <span class="bn-lbl">Bộ thủ</span>
-        </button>
-        <button class="bn-tab" data-view="similar">
-            <span class="bn-icon">辨</span>
-            <span class="bn-lbl">Phân biệt</span>
+            <span class="bn-lbl">Tra</span>
         </button>
         <button class="bn-tab" data-view="stats">
             <span class="bn-icon">计</span>
@@ -1376,9 +1363,11 @@
         }
         function exitReviewMode(silent) {
             state.reviewMode = false;
-            state.flashOrder = [];
+            state.flashOrder = freeOrder(getPool());
+            state.flashSource = "free";
             state.flashIdx = 0;
-            initFlash();
+            renderFlash();
+            updateChrome();
             renderReviewBanner();
             if (!silent) toast("Quay lại thư viện thẻ");
         }
@@ -1659,13 +1648,58 @@
         });
 
         // ============ TAB SWITCHING ============
+        // Thanh tab dưới (điện thoại) chỉ có 5 mục; Luyện và Tra là nhóm gom ba màn hình mỗi bên.
+        const VIEW_GROUPS = {
+            practice: { views: ["quiz", "match", "similar"], label: { quiz: "Trắc nghiệm", match: "Ghép cặp", similar: "Phân biệt" } },
+            lookup:   { views: ["browse", "write", "radical"], label: { browse: "Từ điển", write: "Viết chữ", radical: "Bộ thủ" } }
+        };
+        const GROUP_LAST_KEY = "hsk_group_last_v1";
+        function groupOf(v) { return Object.keys(VIEW_GROUPS).find(g => VIEW_GROUPS[g].views.includes(v)) || null; }
+        function lastViewOfGroup(g) {
+            try {
+                const saved = JSON.parse(localStorage.getItem(GROUP_LAST_KEY) || "{}");
+                if (VIEW_GROUPS[g].views.includes(saved[g])) return saved[g];
+            } catch (e) {}
+            return VIEW_GROUPS[g].views[0];
+        }
+        function rememberGroupView(g, v) {
+            try {
+                const saved = JSON.parse(localStorage.getItem(GROUP_LAST_KEY) || "{}");
+                saved[g] = v;
+                localStorage.setItem(GROUP_LAST_KEY, JSON.stringify(saved));
+            } catch (e) {}
+        }
+        function renderSubNav(v) {
+            const root = $("#subNav");
+            const g = groupOf(v);
+            if (!g) { root.hidden = true; root.innerHTML = ""; return; }
+            root.hidden = false;
+            root.innerHTML = VIEW_GROUPS[g].views.map(x =>
+                `<button class="sub-tab${x === v ? " active" : ""}" data-view="${x}">${VIEW_GROUPS[g].label[x]}</button>`
+            ).join("");
+            $$("#subNav .sub-tab").forEach(b => b.addEventListener("click", () => switchView(b.dataset.view)));
+        }
+
+        // Phần khung dùng chung (mẹo, bộ lọc) chỉ có ích ở màn hình lấy pool đang lọc để học.
+        // Trong phiên ôn thì giấu hết để thẻ và nút chấm điểm nằm gọn trên một màn hình.
+        const VIEWS_WITH_FILTER = ["flash", "quiz", "match", "write"];
+        function updateChrome() {
+            const v = document.querySelector(".view.active")?.id.replace("view-", "") || "home";
+            const inSession = v === "flash" && state.flashSource === "session" && state.flashOrder.length > 0;
+            document.body.classList.toggle("on-home", v === "home");
+            document.body.classList.toggle("in-session", inSession);
+            document.body.classList.toggle("no-filter", !VIEWS_WITH_FILTER.includes(v));
+        }
+
         function switchView(v) {
+            const g = groupOf(v);
             $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
-            $$(".bn-tab").forEach(t => t.classList.toggle("active", t.dataset.view === v));
+            $$(".bn-tab").forEach(t => t.classList.toggle("active", t.dataset.view === v || (!!g && t.dataset.group === g)));
             $$(".view").forEach(s => s.classList.remove("active"));
             $("#view-" + v).classList.add("active");
-            // Tab Hôm nay cần gọn: ẩn banner mẹo và bộ lọc để số thẻ + nút ôn nằm trên màn hình đầu
-            document.body.classList.toggle("on-home", v === "home");
+            if (g) rememberGroupView(g, v);
+            renderSubNav(v);
+            updateChrome();
             if (v === "home") renderHomeToday();
             if (v === "flash") initFlash();
             if (v === "quiz") initQuiz();
@@ -1680,7 +1714,10 @@
         }
 
         $$(".tab").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.view)));
-        $$(".bn-tab").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.view)));
+        $$(".bn-tab").forEach(btn => btn.addEventListener("click", () => {
+            // Mục nhóm mở lại màn hình dùng gần nhất trong nhóm đó
+            switchView(btn.dataset.view || lastViewOfGroup(btn.dataset.group));
+        }));
 
         function refreshActiveView() {
             const active = document.querySelector(".tab.active")?.dataset.view || "home";
@@ -1696,8 +1733,12 @@
         }
 
         // ============ TIP BANNER ============
+        // Đóng một lần là nhớ — mẹo hiện lại sau mỗi lần mở app thì thành rác
+        const TIP_KEY = "hsk_tip_closed_v1";
+        try { if (localStorage.getItem(TIP_KEY) === "1") $("#tipBanner").style.display = "none"; } catch (e) {}
         $("#closeTip").addEventListener("click", () => {
             $("#tipBanner").style.display = "none";
+            try { localStorage.setItem(TIP_KEY, "1"); } catch (e) {}
         });
 
         // ============ FILTER COLLAPSE ============
@@ -1722,7 +1763,9 @@
         (function initFilterToggle() {
             let saved = null;
             try { saved = localStorage.getItem(FILTER_VIS_KEY); } catch (e) {}
-            setFilterVisible(saved !== "0"); // default visible
+            // Chưa có lựa chọn: desktop mở sẵn, điện thoại gập lại — bảng pinyin A–Z chiếm nửa màn hình
+            const isPhone = window.matchMedia("(max-width: 700px)").matches;
+            setFilterVisible(saved == null ? !isPhone : saved !== "0");
             $("#filterToggle").addEventListener("click", () => {
                 const cur = $("#filterToggle").getAttribute("aria-expanded") === "true";
                 setFilterVisible(!cur);
@@ -1741,7 +1784,7 @@
 
         function initFlash() {
             const pool = getPool();
-            if (pool.length === 0) return;
+            if (pool.length === 0) { updateChrome(); return; }
             if (state.flashOrder.length === 0) {
                 const session = buildSession(pool);
                 if (session.length) {
@@ -1755,6 +1798,7 @@
                 state.flashIdx = 0;
             }
             renderFlash();
+            updateChrome();
         }
 
         function finishSession() {
@@ -2808,6 +2852,7 @@
             const flashTab = document.querySelector('.tab[data-view="flash"]');
             if (flashTab) flashTab.click();
             renderFlash();
+            updateChrome();
             renderReviewBanner();
             toast("Bắt đầu phiên " + session.length + " thẻ");
         }
@@ -2848,18 +2893,21 @@
         function renderLeechBox() {
             const box = document.getElementById("homeLeech");
             if (!box) return;
+            // Gộp theo TỪ: hai hướng cùng là thẻ khó thì vẫn chỉ một chip, số là hướng quên nhiều hơn.
+            // Hiện hai chip 爱 cạnh nhau trông như lỗi lặp từ; chi tiết từng hướng để ở tooltip.
             const items = [];
             for (const w of VOCAB) {
-                for (const d of DIR_ORDER) {
-                    const k = srsKey(w.key, d);
-                    if (isLeech(k)) items.push({ w: w, dir: d, lapses: state.srs[k].lapses });
-                }
+                const dirs = DIR_ORDER.filter(d => isLeech(srsKey(w.key, d)));
+                if (dirs.length === 0) continue;
+                const lapses = Math.max(...dirs.map(d => state.srs[srsKey(w.key, d)].lapses));
+                items.push({ w: w, dirs: dirs, lapses: lapses });
             }
             if (items.length === 0) { box.hidden = true; return; }
             items.sort((a, b) => b.lapses - a.lapses);
-            const rows = items.slice(0, 8).map(it =>
-                `<span class="leech-chip" title="${DIR_LABEL[it.dir]} · quên ${it.lapses} lần">${it.w.h}<em>${it.lapses}</em></span>`
-            ).join("");
+            const rows = items.slice(0, 8).map(it => {
+                const detail = it.dirs.map(d => DIR_LABEL[d] + " " + state.srs[srsKey(it.w.key, d)].lapses + " lần").join(" · ");
+                return `<span class="leech-chip" title="quên: ${detail}">${it.w.h}<em>${it.lapses}</em></span>`;
+            }).join("");
             box.hidden = false;
             box.innerHTML = `<div class="leech-title">🐢 Hay quên (${items.length}) — thử tách bộ thủ để nhớ</div>
                 <div class="leech-list">${rows}</div>`;
