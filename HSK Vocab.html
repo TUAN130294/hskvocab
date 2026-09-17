@@ -332,6 +332,7 @@
             </div>
             <div class="progress-section">
                 <h3>Lịch ôn 7 ngày tới</h3>
+                <div class="section-note">Chỉ tính thẻ đã có lịch, chưa gồm thẻ mới</div>
                 <div id="reviewForecast"></div>
             </div>
             <div class="progress-section">
@@ -1386,33 +1387,25 @@
             const root = document.getElementById("reviewForecast");
             if (!root) return;
             const pool = getPool();
-            const now = Date.now();
-            const startOfDay = (offset) => {
-                const d = new Date();
-                d.setHours(0,0,0,0);
-                d.setDate(d.getDate() + offset);
-                return d.getTime();
-            };
+            // Mốc 0h của hôm nay → hôm nay + 7
+            const dayStart = Array.from({length: 8}, (_, i) => startOfDay() + i * DAY_MS);
+
+            // Đếm THẺ, không đếm TỪ: mỗi từ có hai hướng với hai lịch riêng nên khoá là
+            // "<từ>_<cấp>:<hướng>". Biểu đồ chỉ nói về thẻ ĐÃ CÓ LỊCH — thẻ mới chưa học thì
+            // chưa có ngày để xếp vào, nên cột hôm nay thấp hơn số ở màn hình Hôm nay.
+            // Cột hôm nay lấy thẳng dueList(): đã gộp thẻ quá hạn và trừ thẻ hoãn sang hôm sau.
             const buckets = Array.from({length: 7}, () => 0);
-            let overdue = 0;
-            pool.forEach(w => {
-                if (state.progress[w.key] === STATUS.MASTERED) return;
-                const s = state.srs[w.key];
-                if (!s) return;
-                if (s.due <= now) {
-                    overdue++;
-                    buckets[0]++;
-                    return;
+            buckets[0] = dueList(null, pool).length;
+            for (const w of pool) {
+                for (const d of DIR_ORDER) {
+                    const s = state.srs[srsKey(w.key, d)];
+                    if (!s || s.due < dayStart[1] || s.due >= dayStart[7]) continue;
+                    for (let i = 1; i < 7; i++) {
+                        if (s.due < dayStart[i + 1]) { buckets[i]++; break; }
+                    }
                 }
-                for (let i = 0; i < 7; i++) {
-                    const lo = startOfDay(i);
-                    const hi = startOfDay(i + 1);
-                    if (s.due >= lo && s.due < hi) { buckets[i]++; break; }
-                }
-            });
+            }
             const max = Math.max(1, ...buckets);
-            const labels = ["Hôm nay","Mai","T2","T3","T4","T5","T6"];
-            // Generate proper short day labels for next 7 days starting today
             const dayShort = ["CN","T2","T3","T4","T5","T6","T7"];
             const today = new Date();
             const labelArr = [];
@@ -1436,7 +1429,7 @@
                       <div class="fc-label ${isToday ? 'today' : ''}">${labelArr[i]}</div>
                     </div>`;
             }).join("");
-            root.innerHTML = html + (overdue > 0 ? `<div style="position:absolute"></div>` : "");
+            root.innerHTML = html;
         }
 
         // ============ HELPERS ============

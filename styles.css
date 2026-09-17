@@ -1774,6 +1774,15 @@ nav.tabs::-webkit-scrollbar { display: none; }
     letter-spacing: -0.01em;
 }
 
+/* Ghi chú nhỏ dưới tiêu đề mục — nói rõ phạm vi của con số bên dưới */
+.section-note {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ink-mute);
+    margin: -12px 0 14px;
+}
+
 .level-progress-block { margin-bottom: 18px; }
 .level-progress-block:last-child { margin-bottom: 0; }
 .lpb-header {
