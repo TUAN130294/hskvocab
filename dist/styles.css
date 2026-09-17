@@ -3134,6 +3134,65 @@ button:focus:not(:focus-visible) { outline: none; }
     cursor: default;
 }
 
+/* Bộ chọn "học gì hôm nay": cấp HSK và số từ mới/ngày, ngay dưới nút Bắt đầu ôn */
+.home-setup {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    padding: 4px 16px;
+}
+.hsu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    border-bottom: 1px solid var(--hairline);
+}
+.hsu-row:last-child { border-bottom: none; }
+.hsu-name { color: var(--ink-soft); white-space: nowrap; }
+.hl-chips { display: flex; gap: 4px; }
+.hl-chip {
+    min-width: 34px;
+    padding: 7px 10px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.hl-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+[data-theme="ink"] .hl-chip.active { color: #0e1411; }
+.hsu-stepper { display: flex; align-items: center; gap: 2px; }
+.hsu-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.hsu-btn:hover { border-color: var(--accent); color: var(--accent); }
+.hsu-val {
+    min-width: 36px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
 .home-split {
     background: var(--surface);
     border: 1px solid var(--hairline);
