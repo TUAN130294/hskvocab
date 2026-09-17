@@ -1,6 +1,6 @@
 # 汉语 · HSK Vocab
 
-Web app học từ vựng tiếng Trung HSK 1-2-3 cho người Việt. Lịch ôn spaced repetition (SM-2),
+Web app học từ vựng tiếng Trung HSK 1-2-3-4 cho người Việt (1.199 từ). Lịch ôn spaced repetition (SM-2),
 hai hướng thẻ độc lập, khai thác âm Hán-Việt làm neo ghi nhớ.
 
 **Live:** https://hskvocab.pages.dev
@@ -86,9 +86,10 @@ Tab **Tiến độ** có nút tải file sao lưu / khôi phục JSON. Đăng nh
 
 - **Hôm nay** — số thẻ đến hạn, tách theo hai hướng, nút bắt đầu ôn, heatmap 30 ngày
 - Flashcard 3D flip: hanzi · pinyin · Hán-Việt · nghĩa · **câu ví dụ** · phân tách bộ thủ
-- **599/599 từ có câu ví dụ** (`EXAMPLES`, khoá theo `<từ>_<cấp>`): tiếng Trung · pinyin · tiếng Việt,
-  chỉ dùng từ trong phạm vi HSK 1–3. Hiện ở mặt sau thẻ và thẻ từ điển.
-- **500 chữ có phân tách bộ thủ** (`RADICALS`) — phủ chữ đầu của toàn bộ 599 từ.
+- **1.199/1.199 từ có câu ví dụ** (`EXAMPLES`, khoá theo `<từ>_<cấp>`): tiếng Trung · pinyin · tiếng Việt,
+  chỉ dùng từ trong phạm vi cấp đó trở xuống. Hiện ở mặt sau thẻ và thẻ từ điển.
+- **821 chữ có phân tách bộ thủ** (`RADICALS`) — phủ chữ đầu của toàn bộ 1.199 từ.
+- **Hôm nay** có bộ chọn cấp HSK (1 / 2 / 3 / 4 / tất cả, được lưu) và số từ mới mỗi ngày.
 - **Bộ thủ** — deck 96 mảnh cấu tạo, âm Hán-Việt, nghĩa, chữ ví dụ, có tìm kiếm
 - **Viết thử ngay trên thẻ** hướng viết chữ — HanziWriter quiz chấm từng nét trước khi lật
 - Stroke order practice riêng (HanziWriter)
