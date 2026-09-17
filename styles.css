@@ -3299,6 +3299,56 @@ body.in-session #tipBanner,
 body.in-session #filterToggle,
 body.in-session #filterCollapsible { display: none !important; }
 
+/* ===== CÂU VÍ DỤ ================================================ */
+/* Mặt sau thẻ: dưới nghĩa, trên ô bộ thủ. Câu Trung to hơn pinyin và nghĩa một bậc. */
+.example-box {
+    width: 100%;
+    max-width: 380px;
+    margin-top: 4px;
+    padding: 10px 14px;
+    border-left: 2px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    text-align: left;
+}
+.example-box .ex-zh {
+    font-family: var(--font-han);
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--ink);
+}
+.example-box .ex-py {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-mute);
+    margin-top: 2px;
+}
+.example-box .ex-vi {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.4;
+}
+/* Thẻ từ điển: một dòng câu Trung, nghĩa Việt mờ hơn bên dưới */
+.word-card .ex {
+    font-family: var(--font-han);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--hairline);
+}
+.word-card .ex .ex-vi {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    color: var(--ink-mute);
+    margin-top: 1px;
+}
+
 /* ===== HÀNG CHỌN PHỤ (nhóm Luyện / Tra, chỉ điện thoại) ========= */
 .sub-nav {
     display: none;

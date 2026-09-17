@@ -85,14 +85,19 @@ Tab **Tiến độ** có nút tải file sao lưu / khôi phục JSON. Đăng nh
 ## Tính năng
 
 - **Hôm nay** — số thẻ đến hạn, tách theo hai hướng, nút bắt đầu ôn, heatmap 30 ngày
-- Flashcard 3D flip: hanzi · pinyin · Hán-Việt · nghĩa · phân tách bộ thủ
-- **Bộ thủ** — 96 mảnh cấu tạo, âm Hán-Việt, nghĩa, chữ ví dụ, có tìm kiếm
+- Flashcard 3D flip: hanzi · pinyin · Hán-Việt · nghĩa · **câu ví dụ** · phân tách bộ thủ
+- **599/599 từ có câu ví dụ** (`EXAMPLES`, khoá theo `<từ>_<cấp>`): tiếng Trung · pinyin · tiếng Việt,
+  chỉ dùng từ trong phạm vi HSK 1–3. Hiện ở mặt sau thẻ và thẻ từ điển.
+- **500 chữ có phân tách bộ thủ** (`RADICALS`) — phủ chữ đầu của toàn bộ 599 từ.
+- **Bộ thủ** — deck 96 mảnh cấu tạo, âm Hán-Việt, nghĩa, chữ ví dụ, có tìm kiếm
 - **Viết thử ngay trên thẻ** hướng viết chữ — HanziWriter quiz chấm từng nét trước khi lật
 - Stroke order practice riêng (HanziWriter)
 - Quiz mode · Ghép cặp · Từ điển · Phân biệt chữ giống nhau
 - Phát âm bằng Web Speech API
 - Thống kê **chữ hay sai nhất** xếp theo số lần quên, tách hai hướng
 - 3 themes: Clean (warm white) · Ink (dark CJK gold) · Soft (indigo)
-- Mobile-first, hoạt động offline sau lần tải đầu
+- Mobile-first, hoạt động offline sau lần tải đầu. Trên điện thoại: thanh tab 5 mục
+  (Hôm nay · Thẻ học · Luyện · Tra · Tiến độ); trong phiên ôn, thẻ + 4 nút chấm điểm nằm gọn
+  trên một màn hình, nút chấm dính đáy, không phải cuộn giữa các thẻ.
 
 Không có streak counter — đứt chuỗi là lý do bỏ app. Heatmap cho thấy xu hướng mà không phạt ngày nghỉ.
