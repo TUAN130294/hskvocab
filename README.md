@@ -75,6 +75,7 @@ Chấm *Quên* đẩy thẻ về cuối hàng đợi, ôn lại ngay trong phiê
 | `hsk123_srs_v2` | `{ cards, settings, newToday }` — `cards` khoá theo `"<từ>_<cấp>:<hướng>"` |
 | `hsk123_progress_v2` | Trạng thái hiển thị (chưa học / đang học / đã thuộc) |
 | `hsk_streak_v2` | Số hành động theo ngày, dùng vẽ heatmap |
+| `hsk_levels_v2` | Mảng cấp HSK đang chọn, `[]` = tất cả (`hsk_level_v1` cũ chỉ đọc để chuyển) |
 | `hsk123_srs_v1` | Lịch cũ 1 chiều — chỉ đọc một lần để migrate, không ghi nữa |
 
 Lịch v1 khi migrate được gán cho hướng **nhận mặt**; hướng viết bắt đầu từ đầu.
@@ -89,7 +90,7 @@ Tab **Tiến độ** có nút tải file sao lưu / khôi phục JSON. Đăng nh
 - **1.199/1.199 từ có câu ví dụ** (`EXAMPLES`, khoá theo `<từ>_<cấp>`): tiếng Trung · pinyin · tiếng Việt,
   chỉ dùng từ trong phạm vi cấp đó trở xuống. Hiện ở mặt sau thẻ và thẻ từ điển.
 - **821 chữ có phân tách bộ thủ** (`RADICALS`) — phủ chữ đầu của toàn bộ 1.199 từ.
-- **Hôm nay** có bộ chọn cấp HSK (1 / 2 / 3 / 4 / tất cả, được lưu) và số từ mới mỗi ngày.
+- **Hôm nay** có bộ chọn cấp HSK — chọn được nhiều cấp cùng lúc (ví dụ 1+2+3), được lưu — và số từ mới mỗi ngày.
 - **Bộ thủ** — deck 96 mảnh cấu tạo, âm Hán-Việt, nghĩa, chữ ví dụ, có tìm kiếm
 - **Viết thử ngay trên thẻ** hướng viết chữ — HanziWriter quiz chấm từng nét trước khi lật
 - Stroke order practice riêng (HanziWriter)
