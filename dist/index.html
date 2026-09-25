@@ -1851,7 +1851,7 @@
             settings: Object.assign({}, DEFAULT_SETTINGS),
             newToday: { date: "", count: 0 },
             flashSource: "free",
-            level: "all",
+            levels: [],                  // cấp HSK đang chọn, rỗng = tất cả; chọn được nhiều cấp
             alphaFrom: "all",
             alphaTo: "all",
             flashOrder: [],
@@ -3280,7 +3280,7 @@
 
         // Get currently selected vocab pool (filtered by level)
         function getPool() {
-            let pool = state.level === "all" ? VOCAB : VOCAB.filter(w => w.lv === parseInt(state.level));
+            let pool = levelsAll() ? VOCAB : VOCAB.filter(w => state.levels.includes(w.lv));
             // Global pinyin alpha range filter
             if (state.alphaFrom !== "all" || state.alphaTo !== "all") {
                 const from = state.alphaFrom === "all" ? "a" : state.alphaFrom;
@@ -3364,13 +3364,25 @@
         }
 
         // ============ LEVEL SWITCHING ============
-        // Cấp độ được lưu lại — trước đây tải lại trang là về "Tất cả"
-        const LEVEL_KEY = "hsk_level_v1";
-        function setLevel(lv) {
-            state.level = lv;
-            $$(".level-btn").forEach(b => b.classList.toggle("active", b.dataset.lv === lv));
-            $$("#homeLevel .hl-chip").forEach(b => b.classList.toggle("active", b.dataset.lv === lv));
-            try { localStorage.setItem(LEVEL_KEY, lv); } catch (e) {}
+        // Cấp độ: chọn được NHIỀU cấp cùng lúc (học 1+2+3 chẳng hạn), lưu lại giữa các lần mở.
+        // Đang "Tất cả" mà bấm một số → chỉ còn cấp đó; bấm thêm số khác → gộp; bỏ hết → về Tất cả.
+        const ALL_LEVELS = [1, 2, 3, 4];
+        const LEVELS_KEY = "hsk_levels_v2";
+        const LEVEL_KEY_OLD = "hsk_level_v1";   // bản một cấp — chỉ đọc để chuyển, không ghi nữa
+        function levelsAll() { return state.levels.length === 0 || state.levels.length === ALL_LEVELS.length; }
+        function levelLabel() { return levelsAll() ? "Tất cả" : "HSK " + state.levels.join("+"); }
+        function renderLevelButtons() {
+            const all = levelsAll();
+            $$(".level-btn, #homeLevel .hl-chip").forEach(b => {
+                const lv = b.dataset.lv;
+                b.classList.toggle("active", lv === "all" ? all : (!all && state.levels.includes(parseInt(lv, 10))));
+            });
+        }
+        function applyLevels(levels) {
+            state.levels = ALL_LEVELS.filter(lv => levels.includes(lv));   // giữ thứ tự 1→4, bỏ giá trị lạ
+            if (state.levels.length === ALL_LEVELS.length) state.levels = [];
+            renderLevelButtons();
+            try { localStorage.setItem(LEVELS_KEY, JSON.stringify(state.levels)); } catch (e) {}
             state.flashOrder = [];
             state.quiz = null;
             state.match = null;
@@ -3379,15 +3391,26 @@
             refreshActiveView();
             renderHeaderStats();
         }
-        $$(".level-btn").forEach(btn => btn.addEventListener("click", () => setLevel(btn.dataset.lv)));
-        $$("#homeLevel .hl-chip").forEach(btn => btn.addEventListener("click", () => setLevel(btn.dataset.lv)));
-        (function restoreLevel() {
-            let saved = null;
-            try { saved = localStorage.getItem(LEVEL_KEY); } catch (e) {}
-            const ok = saved && (saved === "all" || VOCAB.some(w => String(w.lv) === saved));
-            state.level = ok ? saved : "all";
-            $$(".level-btn").forEach(b => b.classList.toggle("active", b.dataset.lv === state.level));
-            $$("#homeLevel .hl-chip").forEach(b => b.classList.toggle("active", b.dataset.lv === state.level));
+        function toggleLevel(lv) {
+            if (lv === "all") { applyLevels([]); return; }
+            const n = parseInt(lv, 10);
+            if (levelsAll()) { applyLevels([n]); return; }               // từ Tất cả → chỉ cấp vừa bấm
+            applyLevels(state.levels.includes(n) ? state.levels.filter(x => x !== n) : state.levels.concat(n));
+        }
+        $$(".level-btn, #homeLevel .hl-chip").forEach(btn => btn.addEventListener("click", () => toggleLevel(btn.dataset.lv)));
+        (function restoreLevels() {
+            let levels = [];
+            try {
+                const saved = localStorage.getItem(LEVELS_KEY);
+                if (saved) levels = JSON.parse(saved);
+                else {
+                    const old = localStorage.getItem(LEVEL_KEY_OLD);
+                    if (old && old !== "all") levels = [parseInt(old, 10)];
+                }
+            } catch (e) {}
+            state.levels = ALL_LEVELS.filter(lv => Array.isArray(levels) && levels.includes(lv));
+            if (state.levels.length === ALL_LEVELS.length) state.levels = [];
+            renderLevelButtons();
         })();
 
         // Số từ mới mỗi ngày — chỉnh ngay ở Hôm nay, đồng bộ với ô nhập ở tab Tiến độ
@@ -3408,7 +3431,7 @@
 
         function getLettersForCurrentLevel() {
             // Only show letters that exist in the level pool (ignoring alpha range for this)
-            const lvPool = state.level === "all" ? VOCAB : VOCAB.filter(w => w.lv === parseInt(state.level));
+            const lvPool = levelsAll() ? VOCAB : VOCAB.filter(w => state.levels.includes(w.lv));
             const s = new Set();
             lvPool.forEach(w => s.add(firstLetter(w.p)));
             return s;
@@ -3605,7 +3628,7 @@
         // ============ FILTER COLLAPSE ============
         const FILTER_VIS_KEY = "hsk_filter_visible_v1";
         function updateFilterSummary() {
-            const lv = state.level === "all" ? "Tất cả" : "HSK " + state.level;
+            const lv = levelLabel();
             let alpha = "";
             if (state.alphaFrom !== "all" || state.alphaTo !== "all") {
                 const f = (state.alphaFrom === "all" ? "?" : state.alphaFrom).toUpperCase();
@@ -4177,7 +4200,7 @@
             const c = counts();
             const pool = getPool();
             const pct = n => pool.length > 0 ? Math.round((n / pool.length) * 100) : 0;
-            const lvLabel = state.level === "all" ? "Tất cả HSK 1-4" : "HSK " + state.level;
+            const lvLabel = levelsAll() ? "Tất cả HSK 1-4" : levelLabel();
 
             $("#statsGrid").innerHTML = `
     <div class="stat-card s-total">
@@ -4750,7 +4773,7 @@
             // Phiên học chỉ lấy trong pool đang lọc — nói rõ nếu đang lọc
             const fl = document.getElementById("homeFilter");
             if (fl) {
-                const lv = state.level === "all" ? "" : "HSK " + state.level;
+                const lv = levelsAll() ? "" : levelLabel();
                 const alpha = (state.alphaFrom === "all" && state.alphaTo === "all") ? ""
                     : "pinyin " + (state.alphaFrom === "all" ? "?" : state.alphaFrom).toUpperCase()
                       + "–" + (state.alphaTo === "all" ? "?" : state.alphaTo).toUpperCase();
